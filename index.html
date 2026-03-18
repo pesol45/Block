@@ -2,38 +2,128 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Pascal to Flowchart</title>
+    <title>Pascal Flowchart Pro</title>
     <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
     <style>
-        body { font-family: sans-serif; padding: 20px; background: #f4f4f9; }
-        .container { display: flex; gap: 20px; }
-        textarea { width: 40%; height: 400px; padding: 10px; font-family: monospace; border: 1px solid #ccc; }
-        #diagram { width: 55%; background: white; border: 1px solid #ccc; padding: 10px; overflow: auto; }
-        button { padding: 10px 20px; margin-bottom: 10px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 4px; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; }
+        header { background: #2c3e50; color: white; padding: 15px; text-align: center; }
+        .main { display: flex; flex: 1; overflow: hidden; }
+        #pascalCode { width: 40%; border: none; border-right: 2px solid #ddd; padding: 20px; font-family: 'Consolas', monospace; font-size: 14px; outline: none; background: #f8f9fa; }
+        #diagram-container { width: 60%; padding: 20px; overflow: auto; display: flex; justify-content: center; background: white; }
+        .controls { background: #ecf0f1; padding: 10px; display: flex; justify-content: center; gap: 10px; }
+        button { padding: 8px 25px; cursor: pointer; background: #27ae60; color: white; border: none; border-radius: 4px; font-weight: bold; }
+        button:hover { background: #2ecc71; }
     </style>
 </head>
 <body>
 
-    <h2>Преобразователь Pascal в Блок-схему</h2>
+<header>Pascal to Flowchart Generator</header>
+<div class="controls">
     <button onclick="generateFlowchart()">Построить схему</button>
+</div>
 
-    <div class="container">
-        <textarea id="pascalCode" placeholder="Вставьте код Pascal сюда...">
-program Example;
+<div class="main">
+    <textarea id="pascalCode" placeholder="Вставьте код Pascal сюда...">
+program Test;
+var
+  x, y: real;
 begin
+  writeln('Введите x:');
   readln(x);
-  if x > 0 then
-    writeln('Positive')
+  
+  if x > 2 then
+    y := sqrt(x) + (sqrt(cos(x)) / (2 * x))
   else
-    writeln('Negative');
-  writeln('Done');
+    y := 5 * sqr(x) + 4 * x + 1;
+    
+  writeln('Ответ y = ', y:0:2);
 end.</textarea>
+    <div id="diagram-container">
+        <div id="mermaidGraph" class="mermaid">
+            graph TD
+            A([Начало]) --> B[Введите код] --> C([Конец])
+        </div>
+    </div>
+</div>
 
-        <div id="diagram">
-            <div class="mermaid" id="mermaidGraph">
-                graph TD
-                Start((Начало)) --> End((Конец))
-            </div>
+<script>
+    mermaid.initialize({ startOnLoad: true, theme: 'default' });
+
+    function clean(text) {
+        return text.replace(/['";]/g, '').trim();
+    }
+
+    async function generateFlowchart() {
+        const code = document.getElementById('pascalCode').value;
+        const container = document.getElementById('mermaidGraph');
+        
+        let lines = code.split('\n').map(l => l.trim()).filter(l => l !== '' && !l.toLowerCase().startsWith('program') && !l.toLowerCase().startsWith('var') && l.toLowerCase() !== 'begin' && l.toLowerCase() !== 'end.');
+
+        let graph = "graph TD\n  Start([Начало]) --> ";
+        let lastNode = "Start";
+        let i = 0;
+
+        while (i < lines.length) {
+            let line = lines[i];
+            let lineLower = line.toLowerCase();
+
+            // Обработка IF
+            if (lineLower.startsWith('if ')) {
+                let condition = line.match(/if\s+(.*)\s+then/i);
+                condition = condition ? condition[1] : line.replace(/if|then/ig, '');
+                
+                let ifNode = `IfNode${i}`;
+                let thenNode = `ThenNode${i}`;
+                let elseNode = `ElseNode${i}`;
+                let mergeNode = `Merge${i}`;
+
+                graph += `${ifNode}{${clean(condition)}}\n`;
+                
+                // Ветка THEN
+                let thenAction = (lines[i+1] && !lines[i+1].toLowerCase().startsWith('else')) ? lines[i+1] : "Действие";
+                graph += `  ${ifNode} -- Да --> ${thenNode}[${clean(thenAction)}]\n`;
+                
+                // Ветка ELSE
+                let elseIdx = -1;
+                for(let j=i; j<i+4; j++) if(lines[j]?.toLowerCase().startsWith('else')) elseIdx = j;
+
+                if (elseIdx !== -1) {
+                    let elseAction = lines[elseIdx+1] || "Действие";
+                    graph += `  ${ifNode} -- Нет --> ${elseNode}[${clean(elseAction)}]\n`;
+                    graph += `  ${thenNode} --> ${mergeNode}(( ))\n`;
+                    graph += `  ${elseNode} --> ${mergeNode}\n`;
+                    i = elseIdx + 1; 
+                } else {
+                    graph += `  ${ifNode} -- Нет --> ${mergeNode}(( ))\n`;
+                    graph += `  ${thenNode} --> ${mergeNode}\n`;
+                }
+
+                lastNode = mergeNode;
+                i += 2;
+                if(i < lines.length) graph += `  ${lastNode} --> `;
+            } 
+            // Обычные строки (не в составе if)
+            else if (!lineLower.startsWith('else') && !lineLower.includes('real')) {
+                let nodeId = `Node${i}`;
+                graph += `${nodeId}[${clean(line)}] --> `;
+                lastNode = nodeId;
+                i++;
+            } else {
+                i++;
+            }
+        }
+
+        graph += "End([Конец])";
+
+        // Рендеринг
+        container.removeAttribute('data-processed');
+        container.innerHTML = graph;
+        const { svg } = await mermaid.render('renderId', graph);
+        container.innerHTML = svg;
+    }
+</script>
+</body>
+</html>
         </div>
     </div>
 
