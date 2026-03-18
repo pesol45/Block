@@ -2,26 +2,24 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Pascal Flowchart Compact</title>
+    <title>Pascal Flowchart Final</title>
     <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f0f2f5; display: flex; flex-direction: column; height: 100vh; }
-        header { background: #202124; color: white; padding: 10px; text-align: center; }
-        .content { display: flex; flex: 1; overflow: hidden; padding: 10px; gap: 10px; }
-        textarea { width: 30%; background: #282c34; color: #abb2bf; padding: 15px; font-family: monospace; border-radius: 8px; border: none; }
-        #diagram { flex: 1; background: white; border-radius: 8px; border: 1px solid #ccc; overflow: auto; display: flex; justify-content: center; align-items: flex-start; padding: 20px; }
-        .controls { background: #fff; padding: 10px; text-align: center; border-bottom: 1px solid #ddd; }
-        button { padding: 10px 30px; background: #1a73e8; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        body { font-family: sans-serif; margin: 0; background: #f4f4f9; display: flex; flex-direction: column; height: 100vh; }
+        .controls { padding: 15px; background: #fff; border-bottom: 1px solid #ddd; text-align: center; }
+        .main { display: flex; flex: 1; overflow: hidden; }
+        textarea { width: 30%; padding: 15px; font-family: monospace; background: #282c34; color: #fff; border: none; font-size: 13px; }
+        #diagram { flex: 1; background: #fff; overflow: auto; padding: 20px; display: flex; justify-content: center; }
+        button { padding: 10px 25px; background: #1a73e8; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<header>Pascal Flowchart Generator 9.0 (Compact)</header>
 <div class="controls">
-    <button onclick="generate()">ПОСТРОИТЬ КОМПАКТНУЮ СХЕМУ</button>
+    <button onclick="render()">ПОСТРОИТЬ ПРАВИЛЬНУЮ СХЕМУ</button>
 </div>
 
-<div class="content">
+<div class="main">
     <textarea id="code">
 program Task;
 begin
@@ -34,21 +32,19 @@ begin
     writeln('Не определено');
   writeln(y);
 end.</textarea>
-    <div id="diagram">
-        <div id="graph" class="mermaid"></div>
-    </div>
+    <div id="diagram"><div id="graph" class="mermaid"></div></div>
 </div>
 
 <script>
-    mermaid.initialize({ startOnLoad: false, theme: 'neutral', flowchart: { rankSpacing: 30, nodeSpacing: 50 } });
+    mermaid.initialize({ startOnLoad: false, theme: 'neutral' });
 
     function clean(t) {
         return t.replace(/;/g, '').replace(/'/g, '').replace(/\(/g, '[').replace(/\)/g, ']').trim();
     }
 
-    async function generate() {
+    async function render() {
         const input = document.getElementById('code').value;
-        const out = document.getElementById('graph');
+        const output = document.getElementById('graph');
         
         const lines = input.split('\n')
             .map(l => l.trim())
@@ -57,49 +53,55 @@ end.</textarea>
         let m = "graph TD\n  Start([Начало])\n";
         let lastNode = "Start";
         let nodeIdx = 0;
+        let mergeNodes = [];
 
         for (let i = 0; i < lines.length; i++) {
             let line = lines[i];
             let low = line.toLowerCase();
 
-            if (low.startsWith('if ') || (low.startsWith('else if'))) {
+            if (low.startsWith('if ') || low.includes('else if')) {
                 let cond = line.replace(/if|then|else/gi, '').trim();
-                let ifId = `if${nodeIdx++}`;
-                let thenId = `then${nodeIdx++}`;
-                let nextMergeId = `m${nodeIdx++}`;
-
+                let ifId = `if_${nodeIdx++}`;
+                let thenId = `then_${i}`;
+                
                 m += `  ${lastNode} --> ${ifId}{"${clean(cond)}"}\n`;
-                // Ветка Да идет вбок (используем --> для вертикали, но Mermaid сам распределит при наличии веток)
                 m += `  ${ifId} -- Да --> ${thenId}["${clean(lines[i+1])}"]\n`;
-                m += `  ${thenId} --> ${nextMergeId}(( ))\n`;
                 
-                // Ветка Нет ведет к следующему узлу
+                let mId = `m_${nodeIdx++}`;
+                m += `  ${thenId} --> ${mId}(( ))\n`;
+                mergeNodes.push(mId);
+
                 m += `  ${ifId} -- Нет --> `;
-                lastNode = ifId; // Следующая итерация (else или следующий блок) пойдет от ветки "Нет"
-                
-                // Если следующий блок - это просто действие в Else (не If)
-                if (lines[i+2] && lines[i+2].toLowerCase().startsWith('else') && !lines[i+2].toLowerCase().includes('if')) {
-                    let elseId = `else${nodeIdx++}`;
-                    m += `${elseId}["${clean(lines[i+3])}"]\n`;
-                    m += `  ${elseId} --> ${nextMergeId}\n`;
-                    lastNode = nextMergeId;
-                    i += 3; 
-                } else {
-                    // Если там еще один Else If, оставляем lastNode на ifId и продолжаем
-                    i++; 
-                }
+                lastNode = ifId;
+                i++; 
+            } else if (low.startsWith('else')) {
+                let elseId = `else_${i}`;
+                m += `${elseId}["${clean(lines[i+1])}"]\n`;
+                let mFinal = mergeNodes[mergeNodes.length-1];
+                m += `  ${elseId} --> ${mFinal}\n`;
+                lastNode = mFinal;
+                i++;
+            } else if (low.startsWith('write') || low.startsWith('read')) {
+                let ioId = `io_${i}`;
+                m += `  ${lastNode} --> ${ioId}[/"${clean(line)}"/]\n`;
+                lastNode = ioId;
             } else {
-                let sId = `s${nodeIdx++}`;
+                let sId = `s_${i}`;
                 m += `  ${lastNode} --> ${sId}["${clean(line)}"]\n`;
                 lastNode = sId;
             }
         }
 
+        // Соединяем все точки слияния, если они зависли
+        mergeNodes.forEach(mId => {
+            if (!m.includes(`--> ${mId}`)) return; 
+        });
+
         m += `\n  ${lastNode} --> End([Конец])`;
 
-        out.removeAttribute('data-processed');
-        out.innerHTML = m;
-        await mermaid.run({ nodes: [out] });
+        output.removeAttribute('data-processed');
+        output.innerHTML = m;
+        await mermaid.run({ nodes: [output] });
     }
 </script>
 </body>
