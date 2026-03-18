@@ -2,28 +2,29 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Pascal Flowchart Final</title>
+    <title>Pascal Flowchart Fix 5.0</title>
     <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; background: #f0f2f5; }
-        .header { background: #1a73e8; color: white; padding: 15px; text-align: center; }
-        .main { display: flex; flex: 1; overflow: hidden; padding: 10px; gap: 10px; }
-        #pascalCode { width: 35%; padding: 15px; font-family: 'Consolas', monospace; border: 1px solid #ccc; border-radius: 8px; resize: none; background: #282c34; color: #abb2bf; }
-        #diagram-container { flex: 1; background: white; border-radius: 8px; border: 1px solid #ccc; display: flex; flex-direction: column; overflow: hidden; }
-        .controls { padding: 10px; text-align: center; background: white; border-bottom: 1px solid #ddd; }
-        button { padding: 12px 30px; font-size: 16px; background: #34a853; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; background: #f4f7f6; }
+        .header { background: #1a73e8; color: white; padding: 15px; text-align: center; font-weight: bold; }
+        .main { display: flex; flex: 1; overflow: hidden; padding: 15px; gap: 15px; }
+        #pascalCode { width: 40%; padding: 15px; font-family: 'Consolas', 'Monaco', monospace; border-radius: 8px; border: 1px solid #ddd; background: #1e1e1e; color: #d4d4d4; font-size: 14px; outline: none; }
+        #diagram-container { flex: 1; background: white; border-radius: 8px; border: 1px solid #ddd; display: flex; flex-direction: column; }
+        .controls { padding: 10px; text-align: center; border-bottom: 1px solid #ddd; }
+        button { padding: 12px 40px; font-size: 16px; background: #28a745; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #218838; }
         #mermaidGraph { flex: 1; overflow: auto; padding: 20px; display: flex; justify-content: center; }
     </style>
 </head>
 <body>
 
-<div class="header"><h1>Pascal Flowchart Generatr</h1></div>
+<div class="header">PASCAL TO FLOWCHART GENERATOR 5.0</div>
 <div class="controls">
-    <button onclick="buildFlowchart()">Построить блок-схему</button>
+    <button onclick="buildFlowchart()">ПОСТРОИТЬ БЛОК-СХЕМУ</button>
 </div>
 
 <div class="main">
-    <textarea id="pascalCode">
+    <textarea id="pascalCode" placeholder="Вставьте код здесь...">
 program Test;
 var
   x, y: real;
@@ -41,209 +42,88 @@ begin
 end.</textarea>
     
     <div id="diagram-container">
-        <div id="mermaidGraph" class="mermaid">
-            graph TD
-            A([Начало]) --> B[Вставьте код и нажмите кнопку] --> C([Конец])
-        </div>
+        <div id="mermaidGraph"></div>
     </div>
 </div>
 
 <script>
-    mermaid.initialize({ startOnLoad: true, theme: 'neutral' });
+    mermaid.initialize({ startOnLoad: false, theme: 'neutral' });
 
-    // Функция для безопасного вывода текста в Mermaid
-    function safeText(text) {
-        let clean = text.replace(/;/g, '')
-                        .replace(/'/g, '')
-                        .trim();
-        return `"${clean}"`; // Обертывание в кавычки решает проблему Syntax Error
+    // Супер-очистка текста для Mermaid
+    function fixForMermaid(text) {
+        if (!text) return "Действие";
+        return text.replace(/;/g, '')
+                   .replace(/'/g, '')
+                   .replace(/\(/g, '[') // Заменяем круглые скобки на квадратные
+                   .replace(/\)/g, ']')
+                   .replace(/\//g, 'div') // Заменяем слэш на слово или другой символ
+                   .replace(/\*/g, 'x')   // Заменяем звездочку
+                   .trim();
     }
 
     async function buildFlowchart() {
         const code = document.getElementById('pascalCode').value;
-        const container = document.getElementById('mermaidGraph');
+        const output = document.getElementById('mermaidGraph');
         
         const lines = code.split('\n')
-            .map(line => line.trim())
-            .filter(line => line !== '' && 
-                    !line.toLowerCase().startsWith('program') && 
-                    !line.toLowerCase().startsWith('var') && 
-                    line.toLowerCase() !== 'begin' && 
-                    line.toLowerCase() !== 'end.' && 
-                    !line.includes(': real') &&
-                    !line.includes(': integer'));
+            .map(l => l.trim())
+            .filter(l => l !== '' && !l.toLowerCase().includes('program') && !l.toLowerCase().includes('var') && !l.toLowerCase().includes(': real') && !l.toLowerCase().includes(': integer') && l.toLowerCase() !== 'begin' && l.toLowerCase() !== 'end.');
 
         let graph = "graph TD\n";
-        let lastNodeId = "Start";
-        graph += `  Start([Начало])\n`;
+        graph += "  Start([Начало]) --> ";
+        let lastId = "Start";
 
-        let i = 0;
-        while (i < lines.length) {
+        for (let i = 0; i < lines.length; i++) {
             let line = lines[i];
-            let lowerLine = line.toLowerCase();
+            let low = line.toLowerCase();
 
-            if (lowerLine.startsWith('if ')) {
-                let condMatch = line.match(/if\s+(.*)\s+then/i);
-                let condition = condMatch ? condMatch[1] : line.replace(/if|then/ig, '');
-                
-                let ifId = `if_${i}`;
-                let thenId = `then_${i}`;
-                let elseId = `else_${i}`;
-                let mergeId = `merge_${i}`;
+            if (low.startsWith('if ')) {
+                let cond = line.match(/if\s+(.*)\s+then/i)?.[1] || "Условие";
+                let ifId = `if${i}`;
+                let thenId = `then${i}`;
+                let elseId = `else${i}`;
+                let mergeId = `merge${i}`;
 
-                graph += `  ${lastNodeId} --> ${ifId}{${safeText(condition)}}\n`;
+                graph += `${ifId}{"${fixForMermaid(cond)}"}\n`;
                 
-                // Ветка THEN
-                let thenAction = lines[i+1];
-                graph += `  ${ifId} -- Да --> ${thenId}[${safeText(thenAction)}]\n`;
+                // Ветка Да
+                graph += `  ${ifId} -- Да --> ${thenId}["${fixForMermaid(lines[i+1])}"]\n`;
                 
-                // Проверка ELSE
-                let elseIdx = -1;
-                for(let j = i; j < Math.min(i + 5, lines.length); j++) {
-                    if(lines[j].toLowerCase().startsWith('else')) { elseIdx = j; break; }
+                // Ищем Else
+                let elseLineIdx = -1;
+                for(let j=i; j<i+5; j++) {
+                    if(lines[j] && lines[j].toLowerCase().startsWith('else')) { elseLineIdx = j; break; }
                 }
 
-                if (elseIdx !== -1) {
-                    let elseAction = lines[elseIdx+1] || "Действие";
-                    graph += `  ${ifId} -- Нет --> ${elseId}[${safeText(elseAction)}]\n`;
+                if (elseLineIdx !== -1) {
+                    graph += `  ${ifId} -- Нет --> ${elseId}["${fixForMermaid(lines[elseLineIdx+1])}"]\n`;
                     graph += `  ${thenId} --> ${mergeId}(( ))\n`;
                     graph += `  ${elseId} --> ${mergeId}\n`;
-                    i = elseIdx + 1;
+                    i = elseLineIdx + 1;
                 } else {
                     graph += `  ${ifId} -- Нет --> ${mergeId}(( ))\n`;
                     graph += `  ${thenId} --> ${mergeId}\n`;
                     i++;
                 }
-                lastNodeId = mergeId;
-            } 
-            else if (!lowerLine.startsWith('else') && !lowerLine.startsWith('readln')) {
-                // Если readln без параметров в конце (просто пауза) - игнорируем или пишем "Конец"
-                if (lowerLine === 'readln' || lowerLine === 'readln;') { i++; continue; }
-                
-                let nodeId = `step_${i}`;
-                graph += `  ${lastNodeId} --> ${nodeId}[${safeText(line)}]\n`;
-                lastNodeId = nodeId;
+                lastId = mergeId;
+                if (i < lines.length - 1) graph += `  ${lastId} --> `;
+            } else if (!low.startsWith('else') && !low.startsWith('readln')) {
+                let stepId = `step${i}`;
+                graph += `${stepId}["${fixForMermaid(line)}"]\n`;
+                lastId = stepId;
+                if (i < lines.length - 1) graph += `  ${lastId} --> `;
             }
-            i++;
         }
 
-        graph += `  ${lastNodeId} --> Finish([Конец])`;
+        graph += `  ${lastId} --> Finish([Конец])`;
 
         try {
-            container.removeAttribute('data-processed');
-            const { svg } = await mermaid.render('render' + Date.now(), graph);
-            container.innerHTML = svg;
-        } catch (e) {
-            console.error("Mermaid error:", e);
-            container.innerHTML = "<p style='color:red'>Ошибка в логике кода. Проверьте структуру begin/end или if/then/else.</p>";
+            output.innerHTML = `<div class="mermaid">${graph}</div>`;
+            await mermaid.run({ nodes: [output.querySelector('.mermaid')] });
+        } catch (err) {
+            console.error(err);
+            output.innerHTML = "<p style='color:red; padding:20px;'>Ошибка отрисовки. Попробуйте упростить формулы в коде.</p>";
         }
-    }
-</script>
-</body>
-</html>
-    y := sqrt(x) + (sqrt(cos(x)) / (2 * x))
-  else
-    y := 5 * sqr(x) + 4 * x + 1;
-    
-  writeln('Ответ y = ', y:0:2);
-  readln;
-end.</textarea>
-    
-    <div id="diagram-container">
-        <div id="mermaidGraph" class="mermaid">
-            graph TD
-            Start([Начало]) --> End([Конец])
-        </div>
-    </div>
-</div>
-
-<script>
-    mermaid.initialize({ startOnLoad: true, theme: 'neutral' });
-
-    function clean(text) {
-        return text.replace(/;/g, '').replace(/writeln/g, 'Вывод: ').replace(/readln/g, 'Ввод: ').replace(/'/g, '').trim();
-    }
-
-    async function buildFlowchart() {
-        const code = document.getElementById('pascalCode').value;
-        const container = document.getElementById('mermaidGraph');
-        
-        // Очищаем код от лишних элементов
-        const lines = code.split('\n')
-            .map(line => line.trim())
-            .filter(line => line !== '' && !line.toLowerCase().startsWith('program') && !line.toLowerCase().startsWith('var') && line.toLowerCase() !== 'begin' && line.toLowerCase() !== 'end.' && !line.includes(': real'));
-
-        let graphDefinition = "graph TD\n";
-        let currentNode = "Start([Начало])";
-        let i = 0;
-
-        while (i < lines.length) {
-            let line = lines[i];
-            let lowerLine = line.toLowerCase();
-
-            if (lowerLine.startsWith('if ')) {
-                // Извлекаем условие
-                let conditionMatch = line.match(/if\s+(.*)\s+then/i);
-                let condition = conditionMatch ? conditionMatch[1] : line.replace(/if|then/ig, '');
-                
-                let ifId = `if_${i}`;
-                let thenId = `then_${i}`;
-                let elseId = `else_${i}`;
-                let mergeId = `merge_${i}`;
-
-                // Рисуем ромб условия
-                graphDefinition += `  ${lastId(currentNode)} --> ${ifId}{${clean(condition)}}\n`;
-                
-                // Ветка THEN
-                let nextLine = lines[i+1] ? clean(lines[i+1]) : "Действие";
-                graphDefinition += `  ${ifId} -- Да --> ${thenId}[${nextLine}]\n`;
-                
-                // Проверяем наличие ELSE
-                let hasElse = false;
-                let elseLineIndex = -1;
-                for(let j = i; j < Math.min(i + 5, lines.length); j++) {
-                    if(lines[j].toLowerCase().startsWith('else')) {
-                        hasElse = true;
-                        elseLineIndex = j;
-                        break;
-                    }
-                }
-
-                if (hasElse) {
-                    let elseAction = clean(lines[elseLineIndex + 1] || "Действие");
-                    graphDefinition += `  ${ifId} -- Нет --> ${elseId}[${elseAction}]\n`;
-                    graphDefinition += `  ${thenId} --> ${mergeId}(( ))\n`;
-                    graphDefinition += `  ${elseId} --> ${mergeId}\n`;
-                    i = elseLineIndex + 1; // Пропускаем обработанный else
-                } else {
-                    graphDefinition += `  ${ifId} -- Нет --> ${mergeId}(( ))\n`;
-                    graphDefinition += `  ${thenId} --> ${mergeId}\n`;
-                }
-
-                currentNode = mergeId;
-                i++;
-            } else if (!lowerLine.startsWith('else')) {
-                let nodeId = `step_${i}`;
-                graphDefinition += `  ${lastId(currentNode)} --> ${nodeId}[${clean(line)}]\n`;
-                currentNode = nodeId;
-            }
-            i++;
-        }
-
-        graphDefinition += `  ${lastId(currentNode)} --> Finish([Конец])`;
-
-        // Функция для получения только ID узла
-        function lastId(nodeStr) {
-            if (nodeStr.includes('[')) return nodeStr.split('[')[0];
-            if (nodeStr.includes('(')) return nodeStr.split('(')[0];
-            if (nodeStr.includes('{')) return nodeStr.split('{')[0];
-            return nodeStr;
-        }
-
-        // Рендеринг
-        container.removeAttribute('data-processed');
-        const { svg } = await mermaid.render('graphId' + Date.now(), graphDefinition);
-        container.innerHTML = svg;
     }
 </script>
 </body>
