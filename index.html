@@ -3,519 +3,695 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pascal to Flowchart — Исправленная версия</title>
-    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <title>Pascal to Flowchart - конвертер кода в блок-схемы</title>
     <style>
         * {
             box-sizing: border-box;
             margin: 0;
+            padding: 0;
         }
+
         body {
-            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
-            background: #1e2b3a;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
             padding: 20px;
         }
-        .card {
-            width: 1400px;
-            max-width: 100%;
-            background: #f8fafc;
-            border-radius: 32px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             overflow: hidden;
         }
-        .header {
-            background: #0f172a;
+
+        header {
+            background: #2c3e50;
             color: white;
-            padding: 24px 32px;
+            padding: 20px 30px;
+            text-align: center;
         }
-        .header h2 {
-            font-weight: 500;
-            font-size: 1.8rem;
-            margin-bottom: 8px;
+
+        header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            color: #bdc3c7;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            padding: 20px;
+            background: #f5f7fa;
+        }
+
+        .panel {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .panel h2 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.3em;
             display: flex;
             align-items: center;
             gap: 10px;
         }
-        .header h2 span {
-            background: #3b82f6;
-            padding: 4px 12px;
-            font-size: 0.9rem;
-            border-radius: 40px;
-            font-weight: 400;
+
+        .code-input {
+            width: 100%;
+            height: 500px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            resize: vertical;
+            background: #1e1e1e;
+            color: #d4d4d4;
         }
-        .toolbar {
-            background: white;
-            padding: 16px 32px;
+
+        .code-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .button-group {
+            margin-top: 15px;
             display: flex;
-            gap: 12px;
-            border-bottom: 1px solid #e2e8f0;
+            gap: 10px;
             flex-wrap: wrap;
         }
-        button {
-            background: #3b82f6;
+
+        .btn {
+            padding: 12px 24px;
             border: none;
-            color: white;
-            font-weight: 500;
-            padding: 10px 24px;
-            border-radius: 60px;
-            font-size: 0.95rem;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            cursor: pointer;
-            box-shadow: 0 4px 6px -2px rgba(0, 0, 0, 0.1);
-            transition: 0.2s;
-            border: 1px solid rgba(255,255,255,0.2);
         }
-        button:hover {
-            background: #2563eb;
-            transform: scale(1.02);
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
         }
-        button.secondary {
-            background: #334155;
+
+        .btn-primary:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
         }
-        .main-panel {
-            display: flex;
-            flex-direction: row;
-            padding: 24px;
-            gap: 24px;
-            background: #f1f5f9;
+
+        .btn-secondary {
+            background: #48bb78;
+            color: white;
         }
-        .editor-section {
-            flex: 1;
-            min-width: 0;
-            display: flex;
-            flex-direction: column;
+
+        .btn-secondary:hover {
+            background: #38a169;
+            transform: translateY(-2px);
+        }
+
+        .btn-example {
+            background: #ed8936;
+            color: white;
+        }
+
+        .btn-example:hover {
+            background: #dd6b20;
+            transform: translateY(-2px);
+        }
+
+        .flowchart-container {
             background: white;
-            border-radius: 24px;
-            overflow: hidden;
-        }
-        .editor-header {
-            background: #e6edf5;
-            padding: 12px 20px;
-            font-weight: 600;
-            color: #0f172a;
-            border-bottom: 1px solid #cbd5e1;
-        }
-        textarea {
-            width: 100%;
+            border-radius: 10px;
+            padding: 20px;
             min-height: 500px;
-            padding: 24px;
-            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            border: 2px solid #e0e0e0;
+            overflow-x: auto;
+            position: relative;
+        }
+
+        .flowchart-svg {
+            display: block;
+            margin: 0 auto;
+            background: white;
+        }
+
+        .node {
+            cursor: pointer;
+            transition: filter 0.3s ease;
+        }
+
+        .node:hover {
+            filter: brightness(0.95);
+        }
+
+        .start-node { fill: #48bb78; }
+        .process-node { fill: #4299e1; }
+        .decision-node { fill: #ed8936; }
+        .input-node { fill: #9f7aea; }
+        .output-node { fill: #fbbf24; }
+        .end-node { fill: #f56565; }
+
+        .node-text {
+            fill: white;
+            font-size: 12px;
+            font-weight: 500;
+            text-anchor: middle;
+            dominant-baseline: middle;
+            pointer-events: none;
+        }
+
+        .edge {
+            stroke: #718096;
+            stroke-width: 2;
+            marker-end: url(#arrowhead);
+        }
+
+        .stats {
+            margin-top: 15px;
+            padding: 10px;
+            background: #f7fafc;
+            border-radius: 8px;
+            color: #4a5568;
             font-size: 14px;
-            line-height: 1.6;
-            background: #fcfcfd;
-            color: #0f172a;
-            border: none;
-            resize: vertical;
-            outline: none;
         }
-        .diagram-section {
-            flex: 1.2;
-            background: white;
-            border-radius: 24px;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
+
+        .error-message {
+            color: #e53e3e;
+            padding: 10px;
+            background: #fff5f5;
+            border-radius: 8px;
+            margin-top: 10px;
+            display: none;
         }
-        .diagram-header {
-            background: #e6edf5;
-            padding: 12px 20px;
-            font-weight: 600;
-            color: #0f172a;
-            border-bottom: 1px solid #cbd5e1;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+
+        .examples-list {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f7fafc;
+            border-radius: 8px;
         }
-        .zoom-controls {
-            display: flex;
-            gap: 8px;
-        }
-        .zoom-btn {
-            background: white;
-            border: 1px solid #cbd5e1;
-            border-radius: 30px;
-            width: 34px;
-            height: 34px;
-            font-weight: bold;
-            color: #1e293b;
+
+        .example-item {
+            padding: 8px;
             cursor: pointer;
+            border-radius: 5px;
+            transition: background 0.3s ease;
         }
-        #diagram-container {
-            flex: 1;
-            padding: 24px;
-            overflow: auto;
-            background: #ffffff;
-            min-height: 500px;
-        }
-        .mermaid {
-            display: flex;
-            justify-content: center;
-            transition: transform 0.1s;
-            transform-origin: top center;
-        }
-        .status-bar {
+
+        .example-item:hover {
             background: #e2e8f0;
-            padding: 12px 32px;
-            font-size: 0.9rem;
-            color: #334155;
-            border-top: 1px solid #cbd5e1;
         }
-        .example-selector {
-            margin-left: auto;
-            display: flex;
-            gap: 8px;
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
-<div class="card">
-    <div class="header">
-        <h2>
-            ⚡ Pascal → Блок-схема
-            <span>v2.1 — исправлено экранирование</span>
-        </h2>
-        <p>Корректно работает с математическими выражениями и скобками</p>
-    </div>
+    <div class="container">
+        <header>
+            <h1>📊 Pascal to Flowchart Converter</h1>
+            <p>Введите код на Pascal и получите блок-схему алгоритма</p>
+        </header>
 
-    <div class="toolbar">
-        <button onclick="generateFlowchart()">
-            <span>🔄</span> Построить схему
-        </button>
-        <button class="secondary" onclick="clearCode()">
-            <span>🗑️</span> Очистить
-        </button>
-        <div class="example-selector">
-            <button class="secondary" onclick="loadExample('simple')">Простой</button>
-            <button class="secondary" onclick="loadExample('math')">С математ. формулами</button>
-        </div>
-    </div>
-
-    <div class="main-panel">
-        <div class="editor-section">
-            <div class="editor-header">📄 Исходный код Pascal</div>
-            <textarea id="pascalCode" placeholder="Введите код Pascal...">program Test;
+        <div class="main-content">
+            <div class="panel">
+                <h2>📝 Исходный код (Pascal)</h2>
+                <textarea id="pascalCode" class="code-input" placeholder="Введите код на Pascal...">program Example;
 var
-  x, y: real;
+  a, b, c: integer;
 begin
-  writeln('Введите x:');
-  readln(x);
+  writeln('Введите два числа:');
+  readln(a, b);
   
-  if x > 2 then
-    y := sqrt(x) + (sqrt(cos(x)) / (2 * x))
+  if a > b then
+    c := a
   else
-    y := 5 * sqr(x) + 4 * x + 1;
+    c := b;
     
-  writeln('Ответ y = ', y:0:2);
+  writeln('Максимальное число: ', c);
   readln;
 end.</textarea>
-        </div>
-
-        <div class="diagram-section">
-            <div class="diagram-header">
-                <span>📊 Блок-схема</span>
-                <div class="zoom-controls">
-                    <button class="zoom-btn" onclick="zoomMermaid(0.1)">+</button>
-                    <button class="zoom-btn" onclick="zoomMermaid(-0.1)">−</button>
-                    <button class="zoom-btn" onclick="resetZoom()">↺</button>
+                
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="generateFlowchart()">
+                        🔄 Сгенерировать блок-схему
+                    </button>
+                    <button class="btn btn-secondary" onclick="clearCode()">
+                        🗑️ Очистить
+                    </button>
+                    <button class="btn btn-example" onclick="loadExample()">
+                        📋 Загрузить пример
+                    </button>
                 </div>
+
+                <div class="examples-list">
+                    <h3>Примеры кода:</h3>
+                    <div class="example-item" onclick="loadExample('factorial')">
+                        🔢 Вычисление факториала
+                    </div>
+                    <div class="example-item" onclick="loadExample('sum')">
+                        ➕ Сумма чисел от 1 до N
+                    </div>
+                    <div class="example-item" onclick="loadExample('fibonacci')">
+                        📊 Числа Фибоначчи
+                    </div>
+                </div>
+
+                <div id="errorMessage" class="error-message"></div>
+                <div id="stats" class="stats"></div>
             </div>
-            <div id="diagram-container">
-                <div class="mermaid" id="mermaidGraph" style="transform: scale(1);">
-                    graph TD
-                    Start([Начало]) --> Finish([Конец])
+
+            <div class="panel">
+                <h2>📊 Блок-схема</h2>
+                <div class="flowchart-container" id="flowchartContainer">
+                    <svg id="flowchartSvg" width="800" height="500" class="flowchart-svg">
+                        <defs>
+                            <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+                                <polygon points="0 0, 10 5, 0 10" fill="#718096" />
+                            </marker>
+                        </defs>
+                    </svg>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="status-bar" id="status">
-        ✅ Готов. Нажмите «Построить схему» для генерации.
-    </div>
-</div>
+    <script>
+        // Простой парсер Pascal для создания блок-схемы
+        class PascalParser {
+            constructor(code) {
+                this.code = code;
+                this.lines = code.split('\n');
+                this.nodes = [];
+                this.edges = [];
+                this.nodeCounter = 0;
+                this.currentNode = null;
+            }
 
-<script>
-    // Инициализация Mermaid
-    mermaid.initialize({
-        startOnLoad: true,
-        theme: 'default',
-        flowchart: {
-            useMaxWidth: false,
-            htmlLabels: true,
-            curve: 'basis',
-            padding: 20
-        },
-        securityLevel: 'loose',
-    });
+            parse() {
+                this.nodes = [];
+                this.edges = [];
+                this.nodeCounter = 0;
+                
+                // Начальный узел
+                this.addNode('start', 'START');
+                
+                let inBegin = false;
+                let inIf = false;
+                let ifLevel = 0;
+                
+                for (let i = 0; i < this.lines.length; i++) {
+                    const line = this.lines[i].trim();
+                    
+                    if (line === '' || line.startsWith('//')) continue;
+                    
+                    if (line.toLowerCase().includes('program')) {
+                        // Пропускаем объявление программы
+                        continue;
+                    }
+                    
+                    if (line.toLowerCase().includes('var')) {
+                        // Добавляем узел объявления переменных
+                        this.addNode('process', 'Объявление переменных');
+                        continue;
+                    }
+                    
+                    if (line.toLowerCase().includes('begin')) {
+                        inBegin = true;
+                        continue;
+                    }
+                    
+                    if (line.toLowerCase().includes('end.') || line.toLowerCase().includes('end')) {
+                        this.addNode('end', 'END');
+                        break;
+                    }
+                    
+                    if (!inBegin) continue;
+                    
+                    // Обработка различных конструкций Pascal
+                    if (line.toLowerCase().startsWith('writeln') || line.toLowerCase().startsWith('write')) {
+                        const match = line.match(/['"](.*?)['"]/);
+                        const text = match ? match[1] : 'вывод';
+                        this.addNode('output', `Вывод: ${text.substring(0, 20)}`);
+                    }
+                    else if (line.toLowerCase().startsWith('readln') || line.toLowerCase().startsWith('read')) {
+                        this.addNode('input', 'Ввод данных');
+                    }
+                    else if (line.toLowerCase().startsWith('if')) {
+                        const condition = line.substring(2, line.toLowerCase().indexOf('then')).trim();
+                        this.addNode('decision', `Условие: ${condition}`);
+                        inIf = true;
+                        ifLevel++;
+                    }
+                    else if (line.toLowerCase().startsWith('else')) {
+                        // Добавляем узел для else
+                        if (ifLevel > 0) {
+                            this.addNode('process', 'Иначе');
+                        }
+                    }
+                    else if (line.includes(':=')) {
+                        const parts = line.split(':=');
+                        this.addNode('process', `${parts[0].trim()} := ...`);
+                    }
+                    else if (line.toLowerCase().startsWith('for') || line.toLowerCase().startsWith('while') || line.toLowerCase().startsWith('repeat')) {
+                        this.addNode('process', 'Цикл');
+                    }
+                }
+                
+                // Если нет узлов, добавляем заглушку
+                if (this.nodes.length <= 1) {
+                    this.addNode('process', 'Код не содержит выполняемых операторов');
+                }
+                
+                // Соединяем узлы
+                this.createEdges();
+                
+                return { nodes: this.nodes, edges: this.edges };
+            }
 
-    // Управление зумом
-    let currentScale = 1.0;
-    const mermaidElement = document.getElementById('mermaidGraph');
+            addNode(type, label) {
+                const node = {
+                    id: `node_${this.nodeCounter++}`,
+                    type: type,
+                    label: label,
+                    x: 0,
+                    y: 0
+                };
+                this.nodes.push(node);
+                return node;
+            }
 
-    window.zoomMermaid = function(delta) {
-        currentScale = Math.min(2.0, Math.max(0.5, currentScale + delta));
-        mermaidElement.style.transform = `scale(${currentScale})`;
-    };
-
-    window.resetZoom = function() {
-        currentScale = 1.0;
-        mermaidElement.style.transform = 'scale(1)';
-    };
-
-    window.clearCode = function() {
-        document.getElementById('pascalCode').value = '';
-        updateStatus('Поле очищено', '#64748b');
-    };
-
-    // Загрузка примеров
-    window.loadExample = function(type) {
-        const examples = {
-            simple: `program Simple;
-var a: integer;
-begin
-  readln(a);
-  if a > 0 then
-    writeln('Positive')
-  else
-    writeln('Negative');
-  writeln('Done');
-end.`,
-            math: `program Test;
-var
-  x, y: real;
-begin
-  writeln('Введите x:');
-  readln(x);
-  
-  if x > 2 then
-    y := sqrt(x) + (sqrt(cos(x)) / (2 * x))
-  else
-    y := 5 * sqr(x) + 4 * x + 1;
-    
-  writeln('Ответ y = ', y:0:2);
-  readln;
-end.`
-        };
-        document.getElementById('pascalCode').value = examples[type] || examples.simple;
-        updateStatus(`📂 Загружен пример: ${type}`, '#2563eb');
-    };
-
-    function updateStatus(text, color = '#334155') {
-        const status = document.getElementById('status');
-        status.innerHTML = text;
-        status.style.color = color;
-    }
-
-    // Функция для экранирования спецсимволов в тексте для Mermaid
-    function escapeMermaidText(text) {
-        if (!text) return '';
-        // Удаляем лишние пробелы
-        text = text.trim();
-        // Заменяем кавычки
-        text = text.replace(/"/g, '#quot;');
-        // Заменяем скобки на безопасные аналоги (для Mermaid важны только круглые в некоторых контекстах)
-        // Но мы просто экранируем все потенциально опасные символы
-        text = text.replace(/[\(\)\[\]\{\}]/g, function(match) {
-            return '#' + match.charCodeAt(0) + ';';
-        });
-        // Ограничиваем длину, чтобы не сломать граф
-        if (text.length > 50) {
-            text = text.substring(0, 47) + '...';
+            createEdges() {
+                for (let i = 0; i < this.nodes.length - 1; i++) {
+                    this.edges.push({
+                        from: this.nodes[i].id,
+                        to: this.nodes[i + 1].id
+                    });
+                }
+            }
         }
-        return text;
-    }
 
-    // Основная функция генерации
-    function generateFlowchart() {
-        const code = document.getElementById('pascalCode').value;
-        const outputDiv = document.getElementById('mermaidGraph');
-        
-        try {
-            // Предобработка кода
-            const cleanCode = preprocessPascal(code);
-            
-            // Построение графа
-            const graphDefinition = buildGraph(cleanCode);
-            
-            // Проверка, что граф не пустой
-            if (!graphDefinition || graphDefinition.length < 10) {
-                throw new Error('Не удалось построить граф');
+        // Класс для рендеринга блок-схемы
+        class FlowchartRenderer {
+            constructor(svgId) {
+                this.svg = document.getElementById(svgId);
+                this.nodeWidth = 120;
+                this.nodeHeight = 50;
+                this.horizontalSpacing = 150;
+                this.verticalSpacing = 80;
             }
-            
-            // Отрисовка
-            outputDiv.removeAttribute('data-processed');
-            outputDiv.innerHTML = graphDefinition;
-            
-            mermaid.render('preparedScheme', graphDefinition).then(res => {
-                outputDiv.innerHTML = res.svg;
-                updateStatus('✅ Блок-схема успешно построена', '#0f7b3a');
-            }).catch(err => {
-                console.error('Mermaid render error:', err);
-                console.log('Graph definition:', graphDefinition);
-                outputDiv.innerHTML = `<div style="color:red;padding:2rem;">
-                    ❌ Ошибка отрисовки: ${err.message}<br>
-                    <pre style="background:#f0f0f0;padding:1rem;margin-top:1rem;text-align:left;">${escapeMermaidText(graphDefinition)}</pre>
-                </div>`;
-                updateStatus('❌ Ошибка отрисовки графа', '#b91c1c');
-            });
-        } catch (e) {
-            console.error(e);
-            outputDiv.innerHTML = `<div style="color:#b91c1c; background:#fee; padding:2rem;border-radius:16px;">
-                <strong>Ошибка построения схемы:</strong><br>${e.message}
-            </div>`;
-            updateStatus('⚠️ Ошибка при генерации', '#b91c1c');
-        }
-    }
 
-    // Предобработка Pascal кода
-    function preprocessPascal(src) {
-        // Удаляем комментарии
-        src = src.replace(/\(\*.*?\*\)/gs, ' ').replace(/\{.*?\}/gs, ' ');
-        // Разбиваем на строки и удаляем пустые
-        return src.split('\n')
-            .map(l => l.trim())
-            .filter(l => l.length > 0)
-            .join('\n');
-    }
+            render(nodes, edges) {
+                // Очищаем SVG
+                while (this.svg.firstChild) {
+                    this.svg.removeChild(this.svg.firstChild);
+                }
 
-    // Упрощённый, но надёжный построитель графа
-    function buildGraph(src) {
-        const lines = src.split('\n');
-        let graph = 'graph TD\n';
-        let nodeCounter = 0;
-        let lastNodeId = 'Start';
-        
-        // Начальный узел
-        graph += '  Start([Начало])\n';
-        
-        let currentId = 'Start';
-        let inThen = false;
-        let inElse = false;
-        let conditionNode = null;
-        let afterIfNode = null;
-        let ifStack = [];
-        
-        for (let i = 0; i < lines.length; i++) {
-            let line = lines[i].toLowerCase();
-            let originalLine = lines[i];
-            
-            // Пропускаем program, var, begin
-            if (line.startsWith('program') || line.startsWith('var') || line.startsWith('begin')) {
-                continue;
-            }
-            
-            // Конец программы
-            if (line.startsWith('end.') || line === 'end;' || line === 'end') {
-                nodeCounter++;
-                let endNodeId = `N${nodeCounter}`;
-                graph += `  ${endNodeId}([Конец])\n`;
-                graph += `  ${currentId} --> ${endNodeId}\n`;
-                currentId = endNodeId;
-                break;
-            }
-            
-            // Обработка if
-            if (line.includes('if ') && line.includes(' then')) {
-                let condition = originalLine.substring(
-                    originalLine.toLowerCase().indexOf('if') + 2,
-                    originalLine.toLowerCase().indexOf('then')
-                ).trim();
+                // Восстанавливаем defs
+                const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+                const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+                marker.setAttribute('id', 'arrowhead');
+                marker.setAttribute('markerWidth', '10');
+                marker.setAttribute('markerHeight', '10');
+                marker.setAttribute('refX', '9');
+                marker.setAttribute('refY', '5');
+                marker.setAttribute('orient', 'auto');
                 
-                // Экранируем условие
-                condition = escapeMermaidText(condition);
+                const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+                polygon.setAttribute('points', '0 0, 10 5, 0 10');
+                polygon.setAttribute('fill', '#718096');
                 
-                // Узел условия
-                nodeCounter++;
-                conditionNode = `N${nodeCounter}`;
-                graph += `  ${conditionNode}{${condition}}\n`;
-                graph += `  ${currentId} --> ${conditionNode}\n`;
-                
-                // Узел слияния после if-else
-                nodeCounter++;
-                afterIfNode = `N${nodeCounter}`;
-                graph += `  ${afterIfNode}([объединение])\n`;
-                
-                // Сохраняем в стек
-                ifStack.push({
-                    conditionNode: conditionNode,
-                    afterIfNode: afterIfNode,
-                    elseNode: null
+                marker.appendChild(polygon);
+                defs.appendChild(marker);
+                this.svg.appendChild(defs);
+
+                if (nodes.length === 0) return;
+
+                // Позиционируем узлы
+                const startY = 50;
+                const centerX = 400; // Центр SVG
+
+                nodes.forEach((node, index) => {
+                    node.x = centerX - this.nodeWidth / 2;
+                    node.y = startY + index * (this.nodeHeight + this.verticalSpacing);
                 });
-                
-                // Временный узел для then
-                nodeCounter++;
-                let thenNode = `N${nodeCounter}`;
-                graph += `  ${thenNode}[then]\n`;
-                graph += `  ${conditionNode} -- "Да" --> ${thenNode}\n`;
-                
-                currentId = thenNode;
-                inThen = true;
-                continue;
+
+                // Рисуем соединения
+                edges.forEach(edge => {
+                    const fromNode = nodes.find(n => n.id === edge.from);
+                    const toNode = nodes.find(n => n.id === edge.to);
+                    
+                    if (fromNode && toNode) {
+                        this.drawEdge(fromNode, toNode);
+                    }
+                });
+
+                // Рисуем узлы
+                nodes.forEach(node => {
+                    this.drawNode(node);
+                });
+
+                // Устанавливаем размер SVG
+                const lastNode = nodes[nodes.length - 1];
+                const height = lastNode.y + this.nodeHeight + 50;
+                this.svg.setAttribute('height', height);
             }
-            
-            // Обработка else
-            if (line.startsWith('else')) {
-                if (ifStack.length > 0) {
-                    let lastIf = ifStack[ifStack.length - 1];
-                    
-                    // Узел для else
-                    nodeCounter++;
-                    let elseNode = `N${nodeCounter}`;
-                    graph += `  ${elseNode}[else]\n`;
-                    graph += `  ${lastIf.conditionNode} -- "Нет" --> ${elseNode}\n`;
-                    
-                    // Сохраняем ссылку на else узел
-                    lastIf.elseNode = elseNode;
-                    
-                    currentId = elseNode;
-                    inThen = false;
-                    inElse = true;
+
+            drawNode(node) {
+                const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                group.setAttribute('class', 'node');
+                group.setAttribute('data-id', node.id);
+
+                // Прямоугольник узла
+                const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                rect.setAttribute('x', node.x);
+                rect.setAttribute('y', node.y);
+                rect.setAttribute('width', this.nodeWidth);
+                rect.setAttribute('height', this.nodeHeight);
+                rect.setAttribute('rx', '8');
+                rect.setAttribute('ry', '8');
+                
+                // Выбираем цвет в зависимости от типа узла
+                let colorClass = 'process-node';
+                if (node.type === 'start') colorClass = 'start-node';
+                else if (node.type === 'end') colorClass = 'end-node';
+                else if (node.type === 'decision') colorClass = 'decision-node';
+                else if (node.type === 'input') colorClass = 'input-node';
+                else if (node.type === 'output') colorClass = 'output-node';
+                
+                rect.setAttribute('class', colorClass);
+
+                // Текст узла
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', node.x + this.nodeWidth / 2);
+                text.setAttribute('y', node.y + this.nodeHeight / 2);
+                text.setAttribute('class', 'node-text');
+                
+                // Разбиваем длинный текст
+                const words = node.label.split(' ');
+                let textContent = node.label;
+                if (node.label.length > 20) {
+                    textContent = node.label.substring(0, 20) + '...';
                 }
-                continue;
+                text.textContent = textContent;
+
+                group.appendChild(rect);
+                group.appendChild(text);
+                this.svg.appendChild(group);
             }
-            
-            // Обычные операторы (readln, writeln, присваивания)
-            if (line.length > 0 && !line.startsWith('end;') && !line.startsWith('end')) {
-                // Очищаем строку от точки с запятой в конце
-                let cleanLine = originalLine.replace(/;$/, '').trim();
+
+            drawEdge(fromNode, toNode) {
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
                 
-                // Экранируем спецсимволы
-                cleanLine = escapeMermaidText(cleanLine);
-                
-                // Создаем узел
-                nodeCounter++;
-                let newNodeId = `N${nodeCounter}`;
-                graph += `  ${newNodeId}[${cleanLine}]\n`;
-                graph += `  ${currentId} --> ${newNodeId}\n`;
-                
-                currentId = newNodeId;
-            }
-            
-            // Проверяем, не закончился ли блок if (после end;)
-            if (line === 'end;' && ifStack.length > 0) {
-                let lastIf = ifStack.pop();
-                
-                // Соединяем текущий узел с узлом слияния
-                graph += `  ${currentId} --> ${lastIf.afterIfNode}\n`;
-                
-                // Если был else, соединяем else с afterIf
-                if (lastIf.elseNode) {
-                    // Проверяем, не соединен ли уже elseNode
-                    graph += `  ${lastIf.elseNode} --> ${lastIf.afterIfNode}\n`;
-                }
-                
-                // Текущим узлом становится узел слияния
-                currentId = lastIf.afterIfNode;
+                const startX = fromNode.x + this.nodeWidth / 2;
+                const startY = fromNode.y + this.nodeHeight;
+                const endX = toNode.x + this.nodeWidth / 2;
+                const endY = toNode.y;
+
+                line.setAttribute('x1', startX);
+                line.setAttribute('y1', startY);
+                line.setAttribute('x2', endX);
+                line.setAttribute('y2', endY);
+                line.setAttribute('class', 'edge');
+
+                this.svg.appendChild(line);
             }
         }
-        
-        return graph;
-    }
-</script>
+
+        // Основные функции
+        const parser = new PascalParser('');
+        const renderer = new FlowchartRenderer('flowchartSvg');
+
+        function generateFlowchart() {
+            const code = document.getElementById('pascalCode').value;
+            const errorDiv = document.getElementById('errorMessage');
+            const statsDiv = document.getElementById('stats');
+            
+            try {
+                parser.code = code;
+                parser.lines = code.split('\n');
+                
+                const { nodes, edges } = parser.parse();
+                
+                renderer.render(nodes, edges);
+                
+                // Обновляем статистику
+                statsDiv.innerHTML = `
+                    <strong>Статистика:</strong> Найдено ${nodes.length - 2} операторов | 
+                    Узлов: ${nodes.length} | 
+                    Соединений: ${edges.length}
+                `;
+                
+                errorDiv.style.display = 'none';
+            } catch (error) {
+                errorDiv.textContent = 'Ошибка при разборе кода: ' + error.message;
+                errorDiv.style.display = 'block';
+            }
+        }
+
+        function clearCode() {
+            document.getElementById('pascalCode').value = '';
+            document.getElementById('stats').innerHTML = '';
+            
+            // Очищаем SVG
+            const svg = document.getElementById('flowchartSvg');
+            while (svg.firstChild) {
+                svg.removeChild(svg.firstChild);
+            }
+            
+            // Восстанавливаем defs
+            const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+            const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+            marker.setAttribute('id', 'arrowhead');
+            marker.setAttribute('markerWidth', '10');
+            marker.setAttribute('markerHeight', '10');
+            marker.setAttribute('refX', '9');
+            marker.setAttribute('refY', '5');
+            marker.setAttribute('orient', 'auto');
+            
+            const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+            polygon.setAttribute('points', '0 0, 10 5, 0 10');
+            polygon.setAttribute('fill', '#718096');
+            
+            marker.appendChild(polygon);
+            defs.appendChild(marker);
+            svg.appendChild(defs);
+        }
+
+        function loadExample(type = 'default') {
+            let code = '';
+            
+            switch(type) {
+                case 'factorial':
+                    code = `program Factorial;
+var
+  n, i, fact: integer;
+begin
+  writeln('Введите число:');
+  readln(n);
+  fact := 1;
+  
+  for i := 1 to n do
+    fact := fact * i;
+    
+  writeln('Факториал = ', fact);
+  readln;
+end.`;
+                    break;
+                    
+                case 'sum':
+                    code = `program SumNumbers;
+var
+  n, i, sum: integer;
+begin
+  writeln('Введите N:');
+  readln(n);
+  sum := 0;
+  
+  i := 1;
+  while i <= n do
+  begin
+    sum := sum + i;
+    i := i + 1;
+  end;
+  
+  writeln('Сумма от 1 до ', n, ' = ', sum);
+  readln;
+end.`;
+                    break;
+                    
+                case 'fibonacci':
+                    code = `program Fibonacci;
+var
+  n, i, a, b, c: integer;
+begin
+  writeln('Введите количество чисел Фибоначчи:');
+  readln(n);
+  
+  a := 0;
+  b := 1;
+  writeln('Числа Фибоначчи:');
+  writeln(a);
+  writeln(b);
+  
+  for i := 3 to n do
+  begin
+    c := a + b;
+    writeln(c);
+    a := b;
+    b := c;
+  end;
+  
+  readln;
+end.`;
+                    break;
+                    
+                default:
+                    code = `program Example;
+var
+  a, b, c: integer;
+begin
+  writeln('Введите два числа:');
+  readln(a, b);
+  
+  if a > b then
+    c := a
+  else
+    c := b;
+    
+  writeln('Максимальное число: ', c);
+  readln;
+end.`;
+            }
+            
+            document.getElementById('pascalCode').value = code;
+            generateFlowchart();
+        }
+
+        // Автоматически генерируем блок-схему при загрузке страницы
+        window.onload = function() {
+            generateFlowchart();
+        };
+    </script>
 </body>
 </html>
