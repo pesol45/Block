@@ -2,118 +2,104 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Pascal Flowchart 8.0 Fixed</title>
+    <title>Pascal Flowchart Compact</title>
     <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; background: #f0f2f5; }
-        .header { background: #1a73e8; color: white; padding: 10px 20px; text-align: center; }
-        .main { display: flex; flex: 1; overflow: hidden; padding: 10px; gap: 10px; }
-        #pascalCode { width: 35%; padding: 15px; font-family: 'Consolas', monospace; border: 1px solid #ccc; border-radius: 8px; background: #282c34; color: #abb2bf; font-size: 13px; }
-        #diagram-container { flex: 1; background: white; border-radius: 8px; border: 1px solid #ccc; display: flex; flex-direction: column; overflow: hidden; }
-        .controls { padding: 10px; text-align: center; background: #fff; border-bottom: 1px solid #ddd; }
-        button { padding: 10px 25px; background: #34a853; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        #mermaidGraph { flex: 1; overflow: auto; padding: 20px; display: flex; justify-content: center; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f0f2f5; display: flex; flex-direction: column; height: 100vh; }
+        header { background: #202124; color: white; padding: 10px; text-align: center; }
+        .content { display: flex; flex: 1; overflow: hidden; padding: 10px; gap: 10px; }
+        textarea { width: 30%; background: #282c34; color: #abb2bf; padding: 15px; font-family: monospace; border-radius: 8px; border: none; }
+        #diagram { flex: 1; background: white; border-radius: 8px; border: 1px solid #ccc; overflow: auto; display: flex; justify-content: center; align-items: flex-start; padding: 20px; }
+        .controls { background: #fff; padding: 10px; text-align: center; border-bottom: 1px solid #ddd; }
+        button { padding: 10px 30px; background: #1a73e8; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<div class="header">Pascal Flowchart Generator 8.0</div>
+<header>Pascal Flowchart Generator 9.0 (Compact)</header>
 <div class="controls">
-    <button onclick="build()">ПОСТРОИТЬ СХЕМУ</button>
+    <button onclick="generate()">ПОСТРОИТЬ КОМПАКТНУЮ СХЕМУ</button>
 </div>
 
-<div class="main">
-    <textarea id="pascalCode">
+<div class="content">
+    <textarea id="code">
 program Task;
-var x, y: real;
 begin
-  write('x = ');
   readln(x);
-  
   if x > 6 then
     y := sqr(sin(sqrt(x))) + cos(sqrt(x))
   else if x <= 2 then
     y := 8 * (x * x * x) + 5 * sqr(x) - sin(2 * x)
   else
     writeln('Не определено');
-    
-  writeln('y = ', y);
+  writeln(y);
 end.</textarea>
-    
-    <div id="diagram-container">
-        <div id="mermaidGraph" class="mermaid"></div>
+    <div id="diagram">
+        <div id="graph" class="mermaid"></div>
     </div>
 </div>
 
 <script>
-    mermaid.initialize({ startOnLoad: false, theme: 'neutral' });
+    mermaid.initialize({ startOnLoad: false, theme: 'neutral', flowchart: { rankSpacing: 30, nodeSpacing: 50 } });
 
-    function clean(text) {
-        if(!text) return "";
-        return text.replace(/;/g, '').replace(/'/g, '').replace(/\(/g, '[').replace(/\)/g, ']').trim();
+    function clean(t) {
+        return t.replace(/;/g, '').replace(/'/g, '').replace(/\(/g, '[').replace(/\)/g, ']').trim();
     }
 
-    async function build() {
-        const input = document.getElementById('pascalCode').value;
-        const container = document.getElementById('mermaidGraph');
+    async function generate() {
+        const input = document.getElementById('code').value;
+        const out = document.getElementById('graph');
         
-        // Фильтруем мусор
         const lines = input.split('\n')
             .map(l => l.trim())
-            .filter(l => l !== '' && !l.toLowerCase().startsWith('program') && 
-                    !l.toLowerCase().startsWith('var') && !l.toLowerCase().includes(': real') && 
-                    l.toLowerCase() !== 'begin' && !l.toLowerCase().startsWith('end'));
+            .filter(l => l !== '' && !l.toLowerCase().includes('program') && !l.toLowerCase().includes('var') && l.toLowerCase() !== 'begin' && !l.toLowerCase().startsWith('end'));
 
-        let mCode = "graph TD\n  Start([Начало])\n";
+        let m = "graph TD\n  Start([Начало])\n";
         let lastNode = "Start";
-        let nodeCount = 0;
+        let nodeIdx = 0;
 
         for (let i = 0; i < lines.length; i++) {
             let line = lines[i];
             let low = line.toLowerCase();
 
-            // Если это IF или ELSE IF
-            if (low.startsWith('if ') || low.includes('else if')) {
+            if (low.startsWith('if ') || (low.startsWith('else if'))) {
                 let cond = line.replace(/if|then|else/gi, '').trim();
-                let ifId = `if${nodeCount++}`;
-                mCode += `  ${lastNode} --> ${ifId}{"${clean(cond)}"}\n`;
+                let ifId = `if${nodeIdx++}`;
+                let thenId = `then${nodeIdx++}`;
+                let nextMergeId = `m${nodeIdx++}`;
+
+                m += `  ${lastNode} --> ${ifId}{"${clean(cond)}"}\n`;
+                // Ветка Да идет вбок (используем --> для вертикали, но Mermaid сам распределит при наличии веток)
+                m += `  ${ifId} -- Да --> ${thenId}["${clean(lines[i+1])}"]\n`;
+                m += `  ${thenId} --> ${nextMergeId}(( ))\n`;
                 
-                // Для простоты в этой версии ведем ветку "Да" к следующей строке
-                let nextActionId = `act${nodeCount++}`;
-                let actionText = lines[i+1] || "Действие";
-                mCode += `  ${ifId} -- Да --> ${nextActionId}["${clean(actionText)}"]\n`;
+                // Ветка Нет ведет к следующему узлу
+                m += `  ${ifId} -- Нет --> `;
+                lastNode = ifId; // Следующая итерация (else или следующий блок) пойдет от ветки "Нет"
                 
-                // Ветку "Нет" пускаем к следующему шагу (или к следующему IF)
-                let exitId = `exit${nodeCount++}`;
-                mCode += `  ${ifId} -- Нет --> ${exitId}(( ))\n`;
-                mCode += `  ${nextActionId} --> ${exitId}\n`;
-                
-                lastNode = exitId;
-                i++; // Пропускаем строку с действием, так как уже отрисовали её
-            } 
-            // Ввод/Вывод
-            else if (low.startsWith('write') || low.startsWith('read')) {
-                let ioId = `io${nodeCount++}`;
-                mCode += `  ${lastNode} --> ${ioId}[/"${clean(line)}"/]\n`;
-                lastNode = ioId;
-            }
-            // Обычное действие
-            else {
-                let pId = `p${nodeCount++}`;
-                mCode += `  ${lastNode} --> ${pId}["${clean(line)}"]\n`;
-                lastNode = pId;
+                // Если следующий блок - это просто действие в Else (не If)
+                if (lines[i+2] && lines[i+2].toLowerCase().startsWith('else') && !lines[i+2].toLowerCase().includes('if')) {
+                    let elseId = `else${nodeIdx++}`;
+                    m += `${elseId}["${clean(lines[i+3])}"]\n`;
+                    m += `  ${elseId} --> ${nextMergeId}\n`;
+                    lastNode = nextMergeId;
+                    i += 3; 
+                } else {
+                    // Если там еще один Else If, оставляем lastNode на ifId и продолжаем
+                    i++; 
+                }
+            } else {
+                let sId = `s${nodeIdx++}`;
+                m += `  ${lastNode} --> ${sId}["${clean(line)}"]\n`;
+                lastNode = sId;
             }
         }
 
-        mCode += `  ${lastNode} --> End([Конец])`;
+        m += `\n  ${lastNode} --> End([Конец])`;
 
-        try {
-            container.removeAttribute('data-processed');
-            container.innerHTML = mCode;
-            await mermaid.run({ nodes: [container] });
-        } catch (e) {
-            container.innerHTML = "<b style='color:red'>Ошибка в коде Pascal. Попробуйте упростить его.</b>";
-        }
+        out.removeAttribute('data-processed');
+        out.innerHTML = m;
+        await mermaid.run({ nodes: [out] });
     }
 </script>
 </body>
