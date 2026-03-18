@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Pascal to Flowchart</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: #f4f4f9; }
+        .container { display: flex; gap: 20px; }
+        textarea { width: 40%; height: 400px; padding: 10px; font-family: monospace; border: 1px solid #ccc; }
+        #diagram { width: 55%; background: white; border: 1px solid #ccc; padding: 10px; overflow: auto; }
+        button { padding: 10px 20px; margin-bottom: 10px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+    <h2>Преобразователь Pascal в Блок-схему</h2>
+    <button onclick="generateFlowchart()">Построить схему</button>
+
+    <div class="container">
+        <textarea id="pascalCode" placeholder="Вставьте код Pascal сюда...">
+program Example;
+begin
+  readln(x);
+  if x > 0 then
+    writeln('Positive')
+  else
+    writeln('Negative');
+  writeln('Done');
+end.</textarea>
+
+        <div id="diagram">
+            <div class="mermaid" id="mermaidGraph">
+                graph TD
+                Start((Начало)) --> End((Конец))
+            </div>
+        </div>
+    </div>
+
+    <script>
+        mermaid.initialize({ startOnLoad: true });
+
+        function generateFlowchart() {
+            const code = document.getElementById('pascalCode').value;
+            const output = document.getElementById('mermaidGraph');
+            
+            // Базовая логика парсинга (упрощенная)
+            let graphDefinition = "graph TD\n";
+            let lines = code.split('\n').map(l => l.trim()).filter(l => l !== '');
+            let nodeCount = 0;
+
+            graphDefinition += "  Start([Начало]) --> ";
+
+            lines.forEach((line) => {
+                nodeCount++;
+                let cleanLine = line.replace(/['"()]/g, '').replace(';', '');
+
+                if (line.toLowerCase().includes('if')) {
+                    let condition = cleanLine.split('then')[0].replace('if', '').trim();
+                    graphDefinition += `Node${nodeCount}{${condition}}\n`;
+                    graphDefinition += `  Node${nodeCount} -- Да --> Node${nodeCount}Yes[Инструкция]\n`;
+                    graphDefinition += `  Node${nodeCount} -- Нет --> Node${nodeCount}No[Инструкция]\n`;
+                } else if (!line.toLowerCase().match(/begin|end|program/)) {
+                    graphDefinition += `Node${nodeCount}[${cleanLine}] --> `;
+                }
+            });
+
+            graphDefinition += "End([Конец])";
+
+            // Очистка и перерисовка
+            output.removeAttribute('data-processed');
+            output.innerHTML = graphDefinition;
+            mermaid.render('preparedScheme', graphDefinition).then(res => {
+                output.innerHTML = res.svg;
+            });
+        }
+    </script>
+</body>
+</html>
