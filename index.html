@@ -2,30 +2,28 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Pascal Flowchart Fix</title>
+    <title>Pascal Flowchart Final</title>
     <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
     <style>
         body { font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; background: #f0f2f5; }
-        .header { background: #1a73e8; color: white; padding: 15px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .header { background: #1a73e8; color: white; padding: 15px; text-align: center; }
         .main { display: flex; flex: 1; overflow: hidden; padding: 10px; gap: 10px; }
-        #pascalCode { width: 35%; padding: 15px; font-family: 'Consolas', monospace; border: 1px solid #ccc; border-radius: 8px; resize: none; }
-        #diagram-container { flex: 1; background: white; border-radius: 8px; border: 1px solid #ccc; display: flex; flex-direction: column; }
-        .controls { padding: 10px; text-align: center; }
-        button { padding: 12px 30px; font-size: 16px; background: #34a853; color: white; border: none; border-radius: 5px; cursor: pointer; transition: 0.3s; }
-        button:hover { background: #2d8e47; }
-        #mermaidGraph { flex: 1; overflow: auto; padding: 20px; }
+        #pascalCode { width: 35%; padding: 15px; font-family: 'Consolas', monospace; border: 1px solid #ccc; border-radius: 8px; resize: none; background: #282c34; color: #abb2bf; }
+        #diagram-container { flex: 1; background: white; border-radius: 8px; border: 1px solid #ccc; display: flex; flex-direction: column; overflow: hidden; }
+        .controls { padding: 10px; text-align: center; background: white; border-bottom: 1px solid #ddd; }
+        button { padding: 12px 30px; font-size: 16px; background: #34a853; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        #mermaidGraph { flex: 1; overflow: auto; padding: 20px; display: flex; justify-content: center; }
     </style>
 </head>
 <body>
 
-<div class="header"><h1>Pascal Flowchart Generator</h1></div>
-
+<div class="header"><h1>Pascal Flowchart Generatr</h1></div>
 <div class="controls">
-    <button onclick="buildFlowchart()">Построить правильную схему</button>
+    <button onclick="buildFlowchart()">Построить блок-схему</button>
 </div>
 
 <div class="main">
-    <textarea id="pascalCode" placeholder="Вставьте код Pascal...">
+    <textarea id="pascalCode">
 program Test;
 var
   x, y: real;
@@ -34,6 +32,115 @@ begin
   readln(x);
   
   if x > 2 then
+    y := sqrt(x) + (sqrt(cos(x)) / (2 * x))
+  else
+    y := 5 * sqr(x) + 4 * x + 1;
+    
+  writeln('Ответ y = ', y:0:2);
+  readln;
+end.</textarea>
+    
+    <div id="diagram-container">
+        <div id="mermaidGraph" class="mermaid">
+            graph TD
+            A([Начало]) --> B[Вставьте код и нажмите кнопку] --> C([Конец])
+        </div>
+    </div>
+</div>
+
+<script>
+    mermaid.initialize({ startOnLoad: true, theme: 'neutral' });
+
+    // Функция для безопасного вывода текста в Mermaid
+    function safeText(text) {
+        let clean = text.replace(/;/g, '')
+                        .replace(/'/g, '')
+                        .trim();
+        return `"${clean}"`; // Обертывание в кавычки решает проблему Syntax Error
+    }
+
+    async function buildFlowchart() {
+        const code = document.getElementById('pascalCode').value;
+        const container = document.getElementById('mermaidGraph');
+        
+        const lines = code.split('\n')
+            .map(line => line.trim())
+            .filter(line => line !== '' && 
+                    !line.toLowerCase().startsWith('program') && 
+                    !line.toLowerCase().startsWith('var') && 
+                    line.toLowerCase() !== 'begin' && 
+                    line.toLowerCase() !== 'end.' && 
+                    !line.includes(': real') &&
+                    !line.includes(': integer'));
+
+        let graph = "graph TD\n";
+        let lastNodeId = "Start";
+        graph += `  Start([Начало])\n`;
+
+        let i = 0;
+        while (i < lines.length) {
+            let line = lines[i];
+            let lowerLine = line.toLowerCase();
+
+            if (lowerLine.startsWith('if ')) {
+                let condMatch = line.match(/if\s+(.*)\s+then/i);
+                let condition = condMatch ? condMatch[1] : line.replace(/if|then/ig, '');
+                
+                let ifId = `if_${i}`;
+                let thenId = `then_${i}`;
+                let elseId = `else_${i}`;
+                let mergeId = `merge_${i}`;
+
+                graph += `  ${lastNodeId} --> ${ifId}{${safeText(condition)}}\n`;
+                
+                // Ветка THEN
+                let thenAction = lines[i+1];
+                graph += `  ${ifId} -- Да --> ${thenId}[${safeText(thenAction)}]\n`;
+                
+                // Проверка ELSE
+                let elseIdx = -1;
+                for(let j = i; j < Math.min(i + 5, lines.length); j++) {
+                    if(lines[j].toLowerCase().startsWith('else')) { elseIdx = j; break; }
+                }
+
+                if (elseIdx !== -1) {
+                    let elseAction = lines[elseIdx+1] || "Действие";
+                    graph += `  ${ifId} -- Нет --> ${elseId}[${safeText(elseAction)}]\n`;
+                    graph += `  ${thenId} --> ${mergeId}(( ))\n`;
+                    graph += `  ${elseId} --> ${mergeId}\n`;
+                    i = elseIdx + 1;
+                } else {
+                    graph += `  ${ifId} -- Нет --> ${mergeId}(( ))\n`;
+                    graph += `  ${thenId} --> ${mergeId}\n`;
+                    i++;
+                }
+                lastNodeId = mergeId;
+            } 
+            else if (!lowerLine.startsWith('else') && !lowerLine.startsWith('readln')) {
+                // Если readln без параметров в конце (просто пауза) - игнорируем или пишем "Конец"
+                if (lowerLine === 'readln' || lowerLine === 'readln;') { i++; continue; }
+                
+                let nodeId = `step_${i}`;
+                graph += `  ${lastNodeId} --> ${nodeId}[${safeText(line)}]\n`;
+                lastNodeId = nodeId;
+            }
+            i++;
+        }
+
+        graph += `  ${lastNodeId} --> Finish([Конец])`;
+
+        try {
+            container.removeAttribute('data-processed');
+            const { svg } = await mermaid.render('render' + Date.now(), graph);
+            container.innerHTML = svg;
+        } catch (e) {
+            console.error("Mermaid error:", e);
+            container.innerHTML = "<p style='color:red'>Ошибка в логике кода. Проверьте структуру begin/end или if/then/else.</p>";
+        }
+    }
+</script>
+</body>
+</html>
     y := sqrt(x) + (sqrt(cos(x)) / (2 * x))
   else
     y := 5 * sqr(x) + 4 * x + 1;
