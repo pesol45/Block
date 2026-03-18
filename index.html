@@ -3,65 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pascal to Flowchart - конвертер кода в блок-схемы</title>
+    <title>Pascal to Flowchart - профессиональный конвертер</title>
     <style>
         * {
-            box-sizing: border-box;
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
         }
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #1a1a2e;
             min-height: 100vh;
             padding: 20px;
         }
 
         .container {
-            max-width: 1400px;
+            max-width: 1600px;
             margin: 0 auto;
-            background: white;
+            background: #16213e;
             border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
         }
 
         header {
-            background: #2c3e50;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 30px;
             color: white;
-            padding: 20px 30px;
             text-align: center;
         }
 
         header h1 {
-            font-size: 2em;
+            font-size: 2.5em;
             margin-bottom: 10px;
-        }
-
-        header p {
-            color: #bdc3c7;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
         }
 
         .main-content {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 400px 1fr;
             gap: 20px;
             padding: 20px;
-            background: #f5f7fa;
+            background: #0f3460;
         }
 
-        .panel {
-            background: white;
+        .code-panel {
+            background: #1a1a2e;
             border-radius: 15px;
             padding: 20px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
         }
 
-        .panel h2 {
-            color: #2c3e50;
+        .code-panel h2 {
+            color: #fff;
             margin-bottom: 15px;
-            font-size: 1.3em;
+            font-size: 1.2em;
             display: flex;
             align-items: center;
             gap: 10px;
@@ -73,12 +70,12 @@
             padding: 15px;
             font-family: 'Courier New', monospace;
             font-size: 14px;
-            line-height: 1.5;
-            border: 2px solid #e0e0e0;
+            line-height: 1.6;
+            background: #0d0d1a;
+            color: #00ff9d;
+            border: 2px solid #2a2a4a;
             border-radius: 10px;
             resize: vertical;
-            background: #1e1e1e;
-            color: #d4d4d4;
         }
 
         .code-input:focus {
@@ -94,79 +91,96 @@
         }
 
         .btn {
-            padding: 12px 24px;
+            padding: 12px 20px;
             border: none;
             border-radius: 8px;
-            font-size: 14px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
-            display: inline-flex;
+            transition: all 0.3s;
+            display: flex;
             align-items: center;
             gap: 8px;
+            flex: 1;
+            justify-content: center;
         }
 
         .btn-primary {
-            background: #667eea;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
         }
 
         .btn-primary:hover {
-            background: #5a67d8;
             transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
         }
 
         .btn-secondary {
-            background: #48bb78;
+            background: #2a2a4a;
             color: white;
-        }
-
-        .btn-secondary:hover {
-            background: #38a169;
-            transform: translateY(-2px);
         }
 
         .btn-example {
-            background: #ed8936;
+            background: #00b894;
             color: white;
         }
 
-        .btn-example:hover {
-            background: #dd6b20;
-            transform: translateY(-2px);
+        .examples-list {
+            margin-top: 20px;
+            padding: 15px;
+            background: #0d0d1a;
+            border-radius: 10px;
+        }
+
+        .examples-list h3 {
+            color: #a8a8c9;
+            margin-bottom: 10px;
+        }
+
+        .example-item {
+            padding: 10px;
+            margin: 5px 0;
+            background: #1f1f3a;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .example-item:hover {
+            background: #2a2a4a;
+        }
+
+        .flowchart-panel {
+            background: #1a1a2e;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            overflow-x: auto;
         }
 
         .flowchart-container {
-            background: white;
+            background: #0d0d1a;
             border-radius: 10px;
             padding: 20px;
-            min-height: 500px;
-            border: 2px solid #e0e0e0;
-            overflow-x: auto;
+            min-height: 600px;
             position: relative;
         }
 
-        .flowchart-svg {
+        #flowchartSvg {
             display: block;
             margin: 0 auto;
-            background: white;
+            background: #0d0d1a;
         }
 
+        /* Стили для узлов */
         .node {
             cursor: pointer;
-            transition: filter 0.3s ease;
+            transition: filter 0.3s;
         }
 
         .node:hover {
-            filter: brightness(0.95);
+            filter: brightness(1.2);
         }
-
-        .start-node { fill: #48bb78; }
-        .process-node { fill: #4299e1; }
-        .decision-node { fill: #ed8936; }
-        .input-node { fill: #9f7aea; }
-        .output-node { fill: #fbbf24; }
-        .end-node { fill: #f56565; }
 
         .node-text {
             fill: white;
@@ -178,48 +192,36 @@
         }
 
         .edge {
-            stroke: #718096;
+            stroke: #4a4a6a;
             stroke-width: 2;
+            fill: none;
             marker-end: url(#arrowhead);
+        }
+
+        .edge-label {
+            fill: #a8a8c9;
+            font-size: 11px;
+            font-weight: bold;
         }
 
         .stats {
             margin-top: 15px;
-            padding: 10px;
-            background: #f7fafc;
-            border-radius: 8px;
-            color: #4a5568;
-            font-size: 14px;
+            padding: 15px;
+            background: #0d0d1a;
+            border-radius: 10px;
+            color: #a8a8c9;
         }
 
         .error-message {
-            color: #e53e3e;
+            background: #ff6b6b;
+            color: white;
             padding: 10px;
-            background: #fff5f5;
-            border-radius: 8px;
+            border-radius: 5px;
             margin-top: 10px;
             display: none;
         }
 
-        .examples-list {
-            margin-top: 10px;
-            padding: 10px;
-            background: #f7fafc;
-            border-radius: 8px;
-        }
-
-        .example-item {
-            padding: 8px;
-            cursor: pointer;
-            border-radius: 5px;
-            transition: background 0.3s ease;
-        }
-
-        .example-item:hover {
-            background: #e2e8f0;
-        }
-
-        @media (max-width: 768px) {
+        @media (max-width: 1024px) {
             .main-content {
                 grid-template-columns: 1fr;
             }
@@ -229,13 +231,13 @@
 <body>
     <div class="container">
         <header>
-            <h1>📊 Pascal to Flowchart Converter</h1>
-            <p>Введите код на Pascal и получите блок-схему алгоритма</p>
+            <h1>📊 Pascal Flowchart Generator</h1>
+            <p>Профессиональное построение блок-схем с ветвлениями и циклами</p>
         </header>
 
         <div class="main-content">
-            <div class="panel">
-                <h2>📝 Исходный код (Pascal)</h2>
+            <div class="code-panel">
+                <h2>📝 Введите код Pascal</h2>
                 <textarea id="pascalCode" class="code-input" placeholder="Введите код на Pascal...">program Example;
 var
   a, b, c: integer;
@@ -244,36 +246,48 @@ begin
   readln(a, b);
   
   if a > b then
-    c := a
+  begin
+    c := a;
+    writeln('a больше b');
+  end
   else
+  begin
     c := b;
-    
+    writeln('b больше или равно a');
+  end;
+  
   writeln('Максимальное число: ', c);
+  
+  if c > 10 then
+    writeln('Число больше 10')
+  else
+    writeln('Число меньше или равно 10');
+    
   readln;
 end.</textarea>
                 
                 <div class="button-group">
                     <button class="btn btn-primary" onclick="generateFlowchart()">
-                        🔄 Сгенерировать блок-схему
+                        🔄 Построить схему
                     </button>
-                    <button class="btn btn-secondary" onclick="clearCode()">
+                    <button class="btn btn-secondary" onclick="clearAll()">
                         🗑️ Очистить
-                    </button>
-                    <button class="btn btn-example" onclick="loadExample()">
-                        📋 Загрузить пример
                     </button>
                 </div>
 
                 <div class="examples-list">
-                    <h3>Примеры кода:</h3>
-                    <div class="example-item" onclick="loadExample('factorial')">
-                        🔢 Вычисление факториала
+                    <h3>📚 Примеры:</h3>
+                    <div class="example-item" onclick="loadExample('ifElse')">
+                        🔀 Условный оператор (If-Then-Else)
                     </div>
-                    <div class="example-item" onclick="loadExample('sum')">
-                        ➕ Сумма чисел от 1 до N
+                    <div class="example-item" onclick="loadExample('loop')">
+                        🔄 Цикл с предусловием (While)
                     </div>
-                    <div class="example-item" onclick="loadExample('fibonacci')">
-                        📊 Числа Фибоначчи
+                    <div class="example-item" onclick="loadExample('forLoop')">
+                        ⏭️ Цикл со счетчиком (For)
+                    </div>
+                    <div class="example-item" onclick="loadExample('nested')">
+                        🌲 Вложенные условия
                     </div>
                 </div>
 
@@ -281,13 +295,13 @@ end.</textarea>
                 <div id="stats" class="stats"></div>
             </div>
 
-            <div class="panel">
-                <h2>📊 Блок-схема</h2>
-                <div class="flowchart-container" id="flowchartContainer">
-                    <svg id="flowchartSvg" width="800" height="500" class="flowchart-svg">
+            <div class="flowchart-panel">
+                <h2 style="color: white; margin-bottom: 15px;">📊 Блок-схема алгоритма</h2>
+                <div class="flowchart-container">
+                    <svg id="flowchartSvg" width="1000" height="600">
                         <defs>
                             <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
-                                <polygon points="0 0, 10 5, 0 10" fill="#718096" />
+                                <polygon points="0 0, 10 5, 0 10" fill="#4a4a6a" />
                             </marker>
                         </defs>
                     </svg>
@@ -297,128 +311,198 @@ end.</textarea>
     </div>
 
     <script>
-        // Простой парсер Pascal для создания блок-схемы
         class PascalParser {
-            constructor(code) {
-                this.code = code;
-                this.lines = code.split('\n');
+            constructor() {
                 this.nodes = [];
                 this.edges = [];
                 this.nodeCounter = 0;
-                this.currentNode = null;
+                this.currentX = 100;
+                this.currentY = 50;
+                this.level = 0;
+                this.conditions = [];
             }
 
-            parse() {
+            parse(code) {
                 this.nodes = [];
                 this.edges = [];
                 this.nodeCounter = 0;
-                
-                // Начальный узел
-                this.addNode('start', 'START');
-                
+                this.currentX = 500;
+                this.currentY = 50;
+                this.level = 0;
+                this.conditions = [];
+
+                const lines = code.split('\n');
                 let inBegin = false;
-                let inIf = false;
-                let ifLevel = 0;
-                
-                for (let i = 0; i < this.lines.length; i++) {
-                    const line = this.lines[i].trim();
+                let programStarted = false;
+
+                // Добавляем начальный блок
+                const startNode = this.addNode('start', 'НАЧАЛО', this.currentX, this.currentY);
+                this.currentY += 80;
+
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i].trim().toLowerCase();
                     
-                    if (line === '' || line.startsWith('//')) continue;
-                    
-                    if (line.toLowerCase().includes('program')) {
-                        // Пропускаем объявление программы
+                    if (line === '' || line.startsWith('//') || line.startsWith('program') || line.startsWith('var')) {
                         continue;
                     }
-                    
-                    if (line.toLowerCase().includes('var')) {
-                        // Добавляем узел объявления переменных
-                        this.addNode('process', 'Объявление переменных');
-                        continue;
-                    }
-                    
-                    if (line.toLowerCase().includes('begin')) {
+
+                    if (line.includes('begin')) {
                         inBegin = true;
+                        programStarted = true;
                         continue;
                     }
-                    
-                    if (line.toLowerCase().includes('end.') || line.toLowerCase().includes('end')) {
-                        this.addNode('end', 'END');
+
+                    if (line.includes('end.') || (line.includes('end') && !line.includes('begin'))) {
                         break;
                     }
-                    
+
                     if (!inBegin) continue;
-                    
-                    // Обработка различных конструкций Pascal
-                    if (line.toLowerCase().startsWith('writeln') || line.toLowerCase().startsWith('write')) {
-                        const match = line.match(/['"](.*?)['"]/);
-                        const text = match ? match[1] : 'вывод';
-                        this.addNode('output', `Вывод: ${text.substring(0, 20)}`);
+
+                    // Парсинг различных конструкций
+                    if (line.includes('writeln') || line.includes('write')) {
+                        const node = this.addNode('output', 'Вывод данных', this.currentX, this.currentY);
+                        this.currentY += 80;
                     }
-                    else if (line.toLowerCase().startsWith('readln') || line.toLowerCase().startsWith('read')) {
-                        this.addNode('input', 'Ввод данных');
+                    else if (line.includes('readln') || line.includes('read')) {
+                        const node = this.addNode('input', 'Ввод данных', this.currentX, this.currentY);
+                        this.currentY += 80;
                     }
-                    else if (line.toLowerCase().startsWith('if')) {
-                        const condition = line.substring(2, line.toLowerCase().indexOf('then')).trim();
-                        this.addNode('decision', `Условие: ${condition}`);
-                        inIf = true;
-                        ifLevel++;
+                    else if (line.includes('if')) {
+                        const condition = line.substring(line.indexOf('if') + 2, line.indexOf('then')).trim();
+                        const node = this.addNode('condition', condition, this.currentX, this.currentY);
+                        
+                        // Сохраняем информацию о условии для последующего соединения
+                        this.conditions.push({
+                            node: node,
+                            y: this.currentY,
+                            trueX: this.currentX - 150,
+                            falseX: this.currentX + 150,
+                            level: this.level++
+                        });
+                        
+                        this.currentY += 80;
                     }
-                    else if (line.toLowerCase().startsWith('else')) {
-                        // Добавляем узел для else
-                        if (ifLevel > 0) {
-                            this.addNode('process', 'Иначе');
-                        }
+                    else if (line.includes('else')) {
+                        // Пропускаем, обрабатывается в условии
+                        continue;
                     }
                     else if (line.includes(':=')) {
                         const parts = line.split(':=');
-                        this.addNode('process', `${parts[0].trim()} := ...`);
+                        const node = this.addNode('process', `${parts[0].trim()} := ...`, this.currentX, this.currentY);
+                        this.currentY += 80;
                     }
-                    else if (line.toLowerCase().startsWith('for') || line.toLowerCase().startsWith('while') || line.toLowerCase().startsWith('repeat')) {
-                        this.addNode('process', 'Цикл');
+                    else if (line.includes('for') || line.includes('while') || line.includes('repeat')) {
+                        const node = this.addNode('loop', 'Цикл', this.currentX, this.currentY);
+                        this.currentY += 80;
                     }
                 }
+
+                // Добавляем конечный блок
+                const endNode = this.addNode('end', 'КОНЕЦ', this.currentX, this.currentY);
                 
-                // Если нет узлов, добавляем заглушку
-                if (this.nodes.length <= 1) {
-                    this.addNode('process', 'Код не содержит выполняемых операторов');
-                }
-                
-                // Соединяем узлы
-                this.createEdges();
+                // Создаем связи с учетом ветвлений
+                this.createSmartEdges();
                 
                 return { nodes: this.nodes, edges: this.edges };
             }
 
-            addNode(type, label) {
+            addNode(type, label, x, y) {
                 const node = {
                     id: `node_${this.nodeCounter++}`,
                     type: type,
                     label: label,
-                    x: 0,
-                    y: 0
+                    x: x,
+                    y: y,
+                    width: this.getNodeWidth(type),
+                    height: this.getNodeHeight(type),
+                    trueBranch: null,
+                    falseBranch: null
                 };
                 this.nodes.push(node);
                 return node;
             }
 
-            createEdges() {
-                for (let i = 0; i < this.nodes.length - 1; i++) {
-                    this.edges.push({
-                        from: this.nodes[i].id,
-                        to: this.nodes[i + 1].id
-                    });
+            getNodeWidth(type) {
+                switch(type) {
+                    case 'condition': return 140;
+                    case 'start':
+                    case 'end': return 100;
+                    case 'input':
+                    case 'output': return 120;
+                    default: return 120;
                 }
+            }
+
+            getNodeHeight(type) {
+                switch(type) {
+                    case 'condition': return 70;
+                    case 'start':
+                    case 'end': return 40;
+                    default: return 50;
+                }
+            }
+
+            createSmartEdges() {
+                for (let i = 0; i < this.nodes.length - 1; i++) {
+                    const currentNode = this.nodes[i];
+                    const nextNode = this.nodes[i + 1];
+                    
+                    if (currentNode.type === 'condition') {
+                        // Для условия создаем две ветки
+                        const trueNode = this.findNextNode(i, true);
+                        const falseNode = this.findNextNode(i, false);
+                        
+                        if (trueNode) {
+                            this.edges.push({
+                                from: currentNode.id,
+                                to: trueNode.id,
+                                type: 'true',
+                                label: 'Да'
+                            });
+                        }
+                        
+                        if (falseNode) {
+                            this.edges.push({
+                                from: currentNode.id,
+                                to: falseNode.id,
+                                type: 'false',
+                                label: 'Нет'
+                            });
+                        }
+                        
+                        // Пропускаем следующий узел, так как он уже обработан
+                        i++;
+                    } else {
+                        // Обычная связь
+                        this.edges.push({
+                            from: currentNode.id,
+                            to: nextNode.id,
+                            type: 'normal',
+                            label: ''
+                        });
+                    }
+                }
+            }
+
+            findNextNode(currentIndex, isTrue) {
+                // Поиск следующего узла для ветки условия
+                for (let i = currentIndex + 1; i < this.nodes.length; i++) {
+                    const node = this.nodes[i];
+                    if (node.type !== 'condition') {
+                        return node;
+                    }
+                }
+                return null;
             }
         }
 
-        // Класс для рендеринга блок-схемы
         class FlowchartRenderer {
             constructor(svgId) {
                 this.svg = document.getElementById(svgId);
                 this.nodeWidth = 120;
                 this.nodeHeight = 50;
-                this.horizontalSpacing = 150;
-                this.verticalSpacing = 80;
+                this.conditionWidth = 140;
+                this.conditionHeight = 70;
             }
 
             render(nodes, edges) {
@@ -439,22 +523,11 @@ end.</textarea>
                 
                 const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
                 polygon.setAttribute('points', '0 0, 10 5, 0 10');
-                polygon.setAttribute('fill', '#718096');
+                polygon.setAttribute('fill', '#4a4a6a');
                 
                 marker.appendChild(polygon);
                 defs.appendChild(marker);
                 this.svg.appendChild(defs);
-
-                if (nodes.length === 0) return;
-
-                // Позиционируем узлы
-                const startY = 50;
-                const centerX = 400; // Центр SVG
-
-                nodes.forEach((node, index) => {
-                    node.x = centerX - this.nodeWidth / 2;
-                    node.y = startY + index * (this.nodeHeight + this.verticalSpacing);
-                });
 
                 // Рисуем соединения
                 edges.forEach(edge => {
@@ -462,7 +535,7 @@ end.</textarea>
                     const toNode = nodes.find(n => n.id === edge.to);
                     
                     if (fromNode && toNode) {
-                        this.drawEdge(fromNode, toNode);
+                        this.drawEdge(fromNode, toNode, edge.type, edge.label);
                     }
                 });
 
@@ -472,9 +545,10 @@ end.</textarea>
                 });
 
                 // Устанавливаем размер SVG
-                const lastNode = nodes[nodes.length - 1];
-                const height = lastNode.y + this.nodeHeight + 50;
-                this.svg.setAttribute('height', height);
+                const maxY = Math.max(...nodes.map(n => n.y + n.height)) + 50;
+                const maxX = Math.max(...nodes.map(n => n.x + n.width)) + 50;
+                this.svg.setAttribute('height', maxY);
+                this.svg.setAttribute('width', Math.max(1000, maxX));
             }
 
             drawNode(node) {
@@ -482,64 +556,163 @@ end.</textarea>
                 group.setAttribute('class', 'node');
                 group.setAttribute('data-id', node.id);
 
-                // Прямоугольник узла
-                const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-                rect.setAttribute('x', node.x);
-                rect.setAttribute('y', node.y);
-                rect.setAttribute('width', this.nodeWidth);
-                rect.setAttribute('height', this.nodeHeight);
-                rect.setAttribute('rx', '8');
-                rect.setAttribute('ry', '8');
+                let shape;
                 
-                // Выбираем цвет в зависимости от типа узла
+                switch(node.type) {
+                    case 'start':
+                    case 'end':
+                        // Овал для начала/конца
+                        shape = this.createEllipse(node);
+                        break;
+                    case 'condition':
+                        // Ромб для условия
+                        shape = this.createDiamond(node);
+                        break;
+                    case 'input':
+                    case 'output':
+                        // Параллелограмм для ввода/вывода
+                        shape = this.createParallelogram(node);
+                        break;
+                    default:
+                        // Прямоугольник для процессов
+                        shape = this.createRectangle(node);
+                }
+
+                // Добавляем класс для цвета
                 let colorClass = 'process-node';
                 if (node.type === 'start') colorClass = 'start-node';
                 else if (node.type === 'end') colorClass = 'end-node';
-                else if (node.type === 'decision') colorClass = 'decision-node';
+                else if (node.type === 'condition') colorClass = 'decision-node';
                 else if (node.type === 'input') colorClass = 'input-node';
                 else if (node.type === 'output') colorClass = 'output-node';
+                else if (node.type === 'loop') colorClass = 'loop-node';
                 
-                rect.setAttribute('class', colorClass);
+                shape.setAttribute('class', colorClass);
+                group.appendChild(shape);
 
-                // Текст узла
+                // Текст
                 const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                text.setAttribute('x', node.x + this.nodeWidth / 2);
-                text.setAttribute('y', node.y + this.nodeHeight / 2);
                 text.setAttribute('class', 'node-text');
                 
-                // Разбиваем длинный текст
-                const words = node.label.split(' ');
-                let textContent = node.label;
-                if (node.label.length > 20) {
-                    textContent = node.label.substring(0, 20) + '...';
+                // Позиционирование текста в зависимости от формы
+                if (node.type === 'condition') {
+                    text.setAttribute('x', node.x + node.width/2);
+                    text.setAttribute('y', node.y + node.height/2);
+                } else if (node.type === 'input' || node.type === 'output') {
+                    text.setAttribute('x', node.x + node.width/2);
+                    text.setAttribute('y', node.y + node.height/2);
+                } else {
+                    text.setAttribute('x', node.x + node.width/2);
+                    text.setAttribute('y', node.y + node.height/2);
                 }
-                text.textContent = textContent;
-
-                group.appendChild(rect);
+                
+                text.textContent = this.shortenText(node.label, 20);
                 group.appendChild(text);
+
                 this.svg.appendChild(group);
             }
 
-            drawEdge(fromNode, toNode) {
-                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                
-                const startX = fromNode.x + this.nodeWidth / 2;
-                const startY = fromNode.y + this.nodeHeight;
-                const endX = toNode.x + this.nodeWidth / 2;
-                const endY = toNode.y;
+            createRectangle(node) {
+                const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                rect.setAttribute('x', node.x);
+                rect.setAttribute('y', node.y);
+                rect.setAttribute('width', node.width);
+                rect.setAttribute('height', node.height);
+                rect.setAttribute('rx', '5');
+                rect.setAttribute('ry', '5');
+                return rect;
+            }
 
+            createEllipse(node) {
+                const ellipse = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+                ellipse.setAttribute('cx', node.x + node.width/2);
+                ellipse.setAttribute('cy', node.y + node.height/2);
+                ellipse.setAttribute('rx', node.width/2);
+                ellipse.setAttribute('ry', node.height/2);
+                return ellipse;
+            }
+
+            createDiamond(node) {
+                const points = [
+                    [node.x + node.width/2, node.y],
+                    [node.x + node.width, node.y + node.height/2],
+                    [node.x + node.width/2, node.y + node.height],
+                    [node.x, node.y + node.height/2]
+                ];
+                
+                const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+                polygon.setAttribute('points', points.map(p => p.join(',')).join(' '));
+                return polygon;
+            }
+
+            createParallelogram(node) {
+                const skew = 15;
+                const points = [
+                    [node.x + skew, node.y],
+                    [node.x + node.width + skew, node.y],
+                    [node.x + node.width, node.y + node.height],
+                    [node.x, node.y + node.height]
+                ];
+                
+                const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+                polygon.setAttribute('points', points.map(p => p.join(',')).join(' '));
+                return polygon;
+            }
+
+            drawEdge(fromNode, toNode, type, label) {
+                let startX, startY, endX, endY;
+                
+                // Определяем точки соединения в зависимости от типа узлов
+                if (fromNode.type === 'condition') {
+                    if (type === 'true') {
+                        startX = fromNode.x + fromNode.width * 0.75;
+                        startY = fromNode.y + fromNode.height * 0.5;
+                        endX = toNode.x;
+                        endY = toNode.y + toNode.height/2;
+                    } else {
+                        startX = fromNode.x + fromNode.width * 0.25;
+                        startY = fromNode.y + fromNode.height * 0.5;
+                        endX = toNode.x + toNode.width;
+                        endY = toNode.y + toNode.height/2;
+                    }
+                } else {
+                    startX = fromNode.x + fromNode.width/2;
+                    startY = fromNode.y + fromNode.height;
+                    endX = toNode.x + toNode.width/2;
+                    endY = toNode.y;
+                }
+
+                // Рисуем линию
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
                 line.setAttribute('x1', startX);
                 line.setAttribute('y1', startY);
                 line.setAttribute('x2', endX);
                 line.setAttribute('y2', endY);
                 line.setAttribute('class', 'edge');
-
+                
                 this.svg.appendChild(line);
+
+                // Добавляем метку для веток условия
+                if (label) {
+                    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    text.setAttribute('x', (startX + endX) / 2);
+                    text.setAttribute('y', (startY + endY) / 2 - 5);
+                    text.setAttribute('class', 'edge-label');
+                    text.textContent = label;
+                    this.svg.appendChild(text);
+                }
+            }
+
+            shortenText(text, maxLength) {
+                if (text.length > maxLength) {
+                    return text.substring(0, maxLength) + '...';
+                }
+                return text;
             }
         }
 
-        // Основные функции
-        const parser = new PascalParser('');
+        // Инициализация
+        const parser = new PascalParser();
         const renderer = new FlowchartRenderer('flowchartSvg');
 
         function generateFlowchart() {
@@ -548,28 +721,24 @@ end.</textarea>
             const statsDiv = document.getElementById('stats');
             
             try {
-                parser.code = code;
-                parser.lines = code.split('\n');
-                
-                const { nodes, edges } = parser.parse();
-                
+                const { nodes, edges } = parser.parse(code);
                 renderer.render(nodes, edges);
                 
-                // Обновляем статистику
                 statsDiv.innerHTML = `
-                    <strong>Статистика:</strong> Найдено ${nodes.length - 2} операторов | 
-                    Узлов: ${nodes.length} | 
-                    Соединений: ${edges.length}
+                    <strong>📊 Статистика:</strong><br>
+                    Блоков: ${nodes.length}<br>
+                    Соединений: ${edges.length}<br>
+                    Условных операторов: ${nodes.filter(n => n.type === 'condition').length}
                 `;
                 
                 errorDiv.style.display = 'none';
             } catch (error) {
-                errorDiv.textContent = 'Ошибка при разборе кода: ' + error.message;
+                errorDiv.textContent = 'Ошибка: ' + error.message;
                 errorDiv.style.display = 'block';
             }
         }
 
-        function clearCode() {
+        function clearAll() {
             document.getElementById('pascalCode').value = '';
             document.getElementById('stats').innerHTML = '';
             
@@ -591,104 +760,107 @@ end.</textarea>
             
             const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
             polygon.setAttribute('points', '0 0, 10 5, 0 10');
-            polygon.setAttribute('fill', '#718096');
+            polygon.setAttribute('fill', '#4a4a6a');
             
             marker.appendChild(polygon);
             defs.appendChild(marker);
             svg.appendChild(defs);
         }
 
-        function loadExample(type = 'default') {
+        function loadExample(type) {
             let code = '';
             
             switch(type) {
-                case 'factorial':
-                    code = `program Factorial;
+                case 'ifElse':
+                    code = `program IfElseExample;
 var
-  n, i, fact: integer;
+  x: integer;
 begin
   writeln('Введите число:');
-  readln(n);
-  fact := 1;
+  readln(x);
   
-  for i := 1 to n do
-    fact := fact * i;
-    
-  writeln('Факториал = ', fact);
+  if x > 0 then
+  begin
+    writeln('Число положительное');
+    if x mod 2 = 0 then
+      writeln('Число четное')
+    else
+      writeln('Число нечетное');
+  end
+  else
+  begin
+    writeln('Число отрицательное или ноль');
+  end;
+  
   readln;
 end.`;
                     break;
                     
-                case 'sum':
-                    code = `program SumNumbers;
+                case 'loop':
+                    code = `program WhileLoop;
 var
-  n, i, sum: integer;
+  i, sum: integer;
 begin
-  writeln('Введите N:');
-  readln(n);
+  i := 1;
   sum := 0;
   
-  i := 1;
-  while i <= n do
+  while i <= 10 do
   begin
     sum := sum + i;
     i := i + 1;
   end;
   
-  writeln('Сумма от 1 до ', n, ' = ', sum);
+  writeln('Сумма чисел от 1 до 10 = ', sum);
   readln;
 end.`;
                     break;
                     
-                case 'fibonacci':
-                    code = `program Fibonacci;
+                case 'forLoop':
+                    code = `program ForLoop;
 var
-  n, i, a, b, c: integer;
+  i, n, fact: integer;
 begin
-  writeln('Введите количество чисел Фибоначчи:');
+  writeln('Введите число:');
   readln(n);
   
-  a := 0;
-  b := 1;
-  writeln('Числа Фибоначчи:');
-  writeln(a);
-  writeln(b);
-  
-  for i := 3 to n do
-  begin
-    c := a + b;
-    writeln(c);
-    a := b;
-    b := c;
-  end;
-  
+  fact := 1;
+  for i := 1 to n do
+    fact := fact * i;
+    
+  writeln(n, '! = ', fact);
   readln;
 end.`;
                     break;
                     
-                default:
-                    code = `program Example;
+                case 'nested':
+                    code = `program NestedConditions;
 var
   a, b, c: integer;
 begin
-  writeln('Введите два числа:');
-  readln(a, b);
+  writeln('Введите три числа:');
+  readln(a, b, c);
   
   if a > b then
-    c := a
+    if a > c then
+      writeln('Максимальное число: ', a)
+    else
+      writeln('Максимальное число: ', c)
   else
-    c := b;
-    
-  writeln('Максимальное число: ', c);
+    if b > c then
+      writeln('Максимальное число: ', b)
+    else
+      writeln('Максимальное число: ', c);
+  
   readln;
 end.`;
+                    break;
             }
             
             document.getElementById('pascalCode').value = code;
             generateFlowchart();
         }
 
-        // Автоматически генерируем блок-схему при загрузке страницы
+        // Генерируем при загрузке
         window.onload = function() {
             generateFlowchart();
         };
