@@ -2,25 +2,25 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Pascal Flowchart Final</title>
+    <title>Pascal Flowchart Final Fixed</title>
     <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
     <style>
-        body { font-family: sans-serif; margin: 0; background: #f4f4f9; display: flex; flex-direction: column; height: 100vh; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f0f2f5; display: flex; flex-direction: column; height: 100vh; }
         .controls { padding: 15px; background: #fff; border-bottom: 1px solid #ddd; text-align: center; }
         .main { display: flex; flex: 1; overflow: hidden; }
-        textarea { width: 30%; padding: 15px; font-family: monospace; background: #282c34; color: #fff; border: none; font-size: 13px; }
-        #diagram { flex: 1; background: #fff; overflow: auto; padding: 20px; display: flex; justify-content: center; }
-        button { padding: 10px 25px; background: #1a73e8; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        textarea { width: 35%; padding: 15px; font-family: 'Consolas', monospace; background: #282c34; color: #abb2bf; border: none; font-size: 13px; outline: none; }
+        #diagram { flex: 1; background: #fff; overflow: auto; display: flex; justify-content: center; align-items: flex-start; padding: 40px; }
+        button { padding: 12px 30px; background: #1a73e8; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="controls">
-    <button onclick="render()">ПОСТРОИТЬ ПРАВИЛЬНУЮ СХЕМУ</button>
+    <button onclick="renderFlowchart()">ПОСТРОИТЬ КРАСИВУЮ СХЕМУ</button>
 </div>
 
 <div class="main">
-    <textarea id="code">
+    <textarea id="pascalCode">
 program Task;
 begin
   readln(x);
@@ -36,14 +36,18 @@ end.</textarea>
 </div>
 
 <script>
-    mermaid.initialize({ startOnLoad: false, theme: 'neutral' });
+    mermaid.initialize({ 
+        startOnLoad: false, 
+        theme: 'neutral',
+        flowchart: { rankSpacing: 40, nodeSpacing: 50, curve: 'basis' }
+    });
 
     function clean(t) {
         return t.replace(/;/g, '').replace(/'/g, '').replace(/\(/g, '[').replace(/\)/g, ']').trim();
     }
 
-    async function render() {
-        const input = document.getElementById('code').value;
+    async function renderFlowchart() {
+        const input = document.getElementById('pascalCode').value;
         const output = document.getElementById('graph');
         
         const lines = input.split('\n')
@@ -51,9 +55,9 @@ end.</textarea>
             .filter(l => l !== '' && !l.toLowerCase().includes('program') && !l.toLowerCase().includes('var') && l.toLowerCase() !== 'begin' && !l.toLowerCase().startsWith('end'));
 
         let m = "graph TD\n  Start([Начало])\n";
-        let lastNode = "Start";
+        let lastId = "Start";
         let nodeIdx = 0;
-        let mergeNodes = [];
+        let finalMerge = `merge_end`;
 
         for (let i = 0; i < lines.length; i++) {
             let line = lines[i];
@@ -62,42 +66,35 @@ end.</textarea>
             if (low.startsWith('if ') || low.includes('else if')) {
                 let cond = line.replace(/if|then|else/gi, '').trim();
                 let ifId = `if_${nodeIdx++}`;
-                let thenId = `then_${i}`;
+                let thenId = `then_${nodeIdx++}`;
                 
-                m += `  ${lastNode} --> ${ifId}{"${clean(cond)}"}\n`;
+                m += `  ${lastId} --> ${ifId}{"${clean(cond)}"}\n`;
                 m += `  ${ifId} -- Да --> ${thenId}["${clean(lines[i+1])}"]\n`;
+                m += `  ${thenId} --> ${finalMerge}(( ))\n`;
                 
-                let mId = `m_${nodeIdx++}`;
-                m += `  ${thenId} --> ${mId}(( ))\n`;
-                mergeNodes.push(mId);
-
                 m += `  ${ifId} -- Нет --> `;
-                lastNode = ifId;
+                lastId = ifId;
                 i++; 
             } else if (low.startsWith('else')) {
-                let elseId = `else_${i}`;
+                let elseId = `else_act_${nodeIdx++}`;
                 m += `${elseId}["${clean(lines[i+1])}"]\n`;
-                let mFinal = mergeNodes[mergeNodes.length-1];
-                m += `  ${elseId} --> ${mFinal}\n`;
-                lastNode = mFinal;
+                m += `  ${elseId} --> ${finalMerge}\n`;
+                lastId = finalMerge;
                 i++;
             } else if (low.startsWith('write') || low.startsWith('read')) {
-                let ioId = `io_${i}`;
-                m += `  ${lastNode} --> ${ioId}[/"${clean(line)}"/]\n`;
-                lastNode = ioId;
+                let ioId = `io_${nodeIdx++}`;
+                m += `  ${lastNode(lastId)} --> ${ioId}[/"${clean(line)}"/]\n`;
+                lastId = ioId;
             } else {
-                let sId = `s_${i}`;
-                m += `  ${lastNode} --> ${sId}["${clean(line)}"]\n`;
-                lastNode = sId;
+                let sId = `step_${nodeIdx++}`;
+                m += `  ${lastNode(lastId)} --> ${sId}["${clean(line)}"]\n`;
+                lastId = sId;
             }
         }
 
-        // Соединяем все точки слияния, если они зависли
-        mergeNodes.forEach(mId => {
-            if (!m.includes(`--> ${mId}`)) return; 
-        });
+        function lastNode(id) { return id; }
 
-        m += `\n  ${lastNode} --> End([Конец])`;
+        m += `\n  ${finalMerge} --> End([Конец])`;
 
         output.removeAttribute('data-processed');
         output.innerHTML = m;
