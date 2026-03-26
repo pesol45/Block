@@ -2,93 +2,43 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>GOST Flowchart Klutoist</title>
+    <title>Klutoist GOST Flowchart</title>
     <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
-    <style>
-        body { font-family: sans-serif; padding: 20px; background: #f4f4f4; }
-        textarea { width: 100%; height: 150px; border-radius: 8px; padding: 10px; }
-        button { background: #2ecc71; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-top: 10px; font-weight: bold; }
-        #graph { background: white; margin-top: 20px; border-radius: 8px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-    </style>
 </head>
-<body>
+<body style="font-family: sans-serif; padding: 20px;">
 
-    <textarea id="codeText">
-var n, i, sum: integer;
+    <textarea id="code" rows="10" style="width:100%;">
+program primer1;
+var i: integer; sum: real;
 begin
-  readln(n);
   sum := 0;
-  i := 1;
-  while i <= n do
-  begin
-    sum := sum + i;
-    i := i + 2;
-  end;
-  writeln(sum);
+  for i := 1 to 50 do
+    sum := sum + 1/i;
+  write(sum);
 end.
     </textarea>
-    <button onclick="buildGOST()">Сгенерировать по ГОСТу</button>
+    <br>
+    <button onclick="draw()">Создать по чертежу</button>
 
-    <div id="graph" class="mermaid"></div>
+    <div id="graph" style="margin-top:20px;"></div>
 
     <script>
-        mermaid.initialize({ startOnLoad: false, theme: 'neutral', flowchart: { curve: 'linear' } });
+        mermaid.initialize({ startOnLoad: false, theme: 'neutral' });
 
-        async function buildGOST() {
-            const input = document.getElementById('codeText').value;
-            let cleanInput = input.replace(/\{.*?\}/g, ""); // Чистим комменты
-            let lines = cleanInput.split('\n').map(l => l.trim()).filter(l => l && l !== 'begin' && l !== 'end.' && l !== 'var');
-
-            let graphText = "graph TD\nStart([Начало])";
-            let prevNode = "Start";
-            let conditionId = null;
-
-            lines.forEach((line, index) => {
-                let id = "node" + index;
-                let text = line.replace(/['";]/g, "");
-
-                // Блок ЦИКЛА (Шестиугольник для for или ромб для while)
-                if (text.startsWith('while')) {
-                    graphText += `\n${id}{{"${text}"}}`; // Ромб/Шестиугольник по ситуации
-                    graphText += `\n${prevNode} --> ${id}`;
-                    graphText += `\n${id} -- Да --> `;
-                    conditionId = id;
-                    prevNode = id;
-                }
-                // Блок ВВОДА/ВЫВОДА (Параллелограмм)
-                else if (text.startsWith('write') || text.startsWith('read')) {
-                    graphText += `\n${id}[/"${text}"/]`;
-                    if (prevNode === conditionId) {
-                        graphText += `\n${conditionId} -- Нет --> ${id}`;
-                    } else {
-                        graphText += `\n${prevNode} --> ${id}`;
-                    }
-                    prevNode = id;
-                }
-                // Блок КОНЦА ЦИКЛА (Возврат)
-                else if (text === 'end') {
-                    if (conditionId) {
-                        graphText += `\n${prevNode} --> ${conditionId}`;
-                        prevNode = conditionId;
-                    }
-                }
-                // Блок ДЕЙСТВИЯ (Прямоугольник)
-                else {
-                    graphText += `\n${id}["${text}"]`;
-                    if (graphText.endsWith(' --> ')) {
-                        graphText += id;
-                    } else {
-                        graphText += `\n${prevNode} --> ${id}`;
-                    }
-                    prevNode = id;
-                }
-            });
-
-            graphText += `\n${prevNode} --> End([Конец])`;
+        async function draw() {
+            // Строим схему по твоему образцу:
+            const graphDefinition = `
+graph TD
+    A([Начало]) --> B["sum := 0"]
+    B --> C{{"i := 1 to 50"}}
+    C -- "Да" --> D["sum := sum + 1/i"]
+    D --> C
+    C -- "Нет" --> E[/"Вывод sum"/]
+    E --> F([Конец])
+            `;
 
             const container = document.getElementById('graph');
-            container.removeAttribute('data-processed');
-            container.innerHTML = graphText;
+            container.innerHTML = \`<pre class="mermaid">\${graphDefinition}</pre>\`;
             await mermaid.run();
         }
     </script>
