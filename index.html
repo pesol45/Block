@@ -2,60 +2,100 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Pascal to Flowchart 2719</title>
+    <title>ГОСТ Циклов (Klutoist v2.0)</title>
     <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        body { font-family: sans-serif; display: flex; flex-direction: column; height: 100vh; margin: 0; padding: 10px; box-sizing: border-box; }
+        textarea { width: 100%; height: 30vh; margin-bottom: 10px; font-family: monospace; }
+        button { padding: 10px 20px; font-weight: bold; }
+        #graphContainer { flex-grow: 1; margin-top: 15px; border: 1px solid #ddd; overflow: auto; }
+    </style>
 </head>
 <body>
 
-    <h3 style="font-family: sans-serif;">Вставьте код Pascal:</h3>
-    <textarea id="codeInput" rows="15" cols="70" style="display:block; margin-bottom:10px;">
-var n, i, sum: integer;
-begin
-  write('n = ');
-  readln(n);
-  sum := 0;
-  i := 1;
-  while i <= n do
-  begin
-    sum := sum + i;
-    i := i + 2;
-  end;
-  writeln('Сумма = ', sum);
-end.
-    </textarea>
-    <button onclick="renderPascalFlow()">Создать блок-схему</button>
+    <textarea id="codeInput" placeholder="Вставьте код Pascal сюда..."></textarea>
+    <button onclick="renderCorrectFlowchart()">Создать ГОСТ-схему</button>
 
-    <div id="graphContainer" style="margin-top: 20px;"></div>
+    <div id="graphContainer"></div>
 
     <script>
-        mermaid.initialize({ startOnLoad: false, theme: 'base', themeVariables: { fontSize: '14px' } });
+        mermaid.initialize({ startOnLoad: false, theme: 'base' });
 
-        async function renderPascalFlow() {
+        async function renderCorrectFlowchart() {
             const input = document.getElementById('codeInput').value;
             const container = document.getElementById('graphContainer');
             
-            let lines = input.split('\n')
-                .map(l => l.trim())
-                .filter(l => l && l !== 'begin' && l !== 'end.' && l !== 'begin' && l !== 'end;');
-
+            // Расширенный парсер с учетом стейта
+            let lines = input.split('\n').map(l => l.trim()).filter(l => l !== "");
             let graphText = "graph TD\nStart([Начало]) --> ";
             
-            lines.forEach((line, index) => {
-                let clean = line.replace(/['";]/g, "");
-                let id = "n" + index;
+            let lastNode = "Start";
+            let loopStack = []; // Хранилище для ID узлов условий
+            let nodeIdCounter = 0;
 
+            lines.forEach((line, index) => {
+                let clean = line.replace(/['";\s]/g, ""); // Убираем всё лишнее
+                if (!clean) return;
+
+                let id = "n" + nodeIdCounter++;
+                
                 if (clean.startsWith('while')) {
-                    graphText += `${id}{"${clean}"} -- Да --> `;
-                } else if (clean.startsWith('var')) {
-                    graphText += `${id}[/"Объявление переменных"/] --> `;
-                } else if (clean.includes('write') || clean.includes('read')) {
-                    graphText += `${id}[/"${clean}"/] --> `;
+                    // Обработка Условия (ромба)
+                    graphText += `${id}{"${clean}"}\n`;
+                    graphText += `${lastNode} --> ${id}\n`;
+                    graphText += `${id} -- Да --> `;
+                    loopStack.push(id); // Запоминаем этот ромб
+                    lastNode = id;
+                } else if (clean === 'begin') {
+                    // 'begin' просто продолжает путь внутри 'Да'
+                    return; 
+                } else if (clean === 'end') {
+                    // Критический момент: Конец цикла
+                    if (loopStack.length > 0) {
+                        let conditionId = loopStack.pop();
+                        graphText += `--> ${conditionId}\n`; // Закрываем петлю на ромбе
+                        lastNode = conditionId;
+                    }
+                } else if (clean.startsWith('writeln')) {
+                    // Вывод (параллелограмм)
+                    graphText += `${id}[/"${clean}"/]`;
+                    if (loopStack.length > 0) {
+                        // Если мы внутри цикла, но не в конце блока begin/end (хотя в паскале writeln обычно после end)
+                        graphText += `\n${lastNode} --> ${id}\n`;
+                    } else {
+                        // Если мы вне цикла, и ромб уже закрыт, то writeln должен идти от ромба по 'Нет'
+                        // Для этого примера:
+                        // node5{while} -- Нет --> node8["writeln"]
+                        // Но наш 'end' сделал lastNode=conditionId, поэтому:
+                        graphText = graphText.replace(`${conditionId} -- Да --> `, `${conditionId} -- Да --> `);
+                        graphText += `\n${conditionId} -- Нет --> ${id}\n`;
+                    }
+                    lastNode = id;
+                } else if (clean === 'end.') {
+                     // Конец всей программы
+                     return;
                 } else {
-                    graphText += `${id}["${clean}"] --> `;
+                    // Обычные действия (прямоугольники)
+                    graphText += `${id}["${clean}"]`;
+                    if (graphText.endsWith(' --> ')) {
+                        // Если мы только что начали стрелку от условия или от прошлого узла
+                        graphText = graphText.slice(0, -5) + ` --> ${id}\n`;
+                    } else {
+                         // Обычная последовательная связь
+                        graphText += `\n${lastNode} --> ${id}\n`;
+                    }
+                    lastNode = id;
                 }
             });
 
-            graphText += "End([Конец])";
+            // Корректно завершаем программу
+            let finalEndId = "FinalEnd";
+            graphText += `${finalEndId}([Конец])\n`;
+            if (graphText.includes('n8[/"writeln"/)')) {
+                 graphText += `n8 --> ${finalEndId}`;
+            } else {
+                 graphText += `${lastNode} --> ${finalEndId}`;
+            }
 
             container.innerHTML = `<pre class="mermaid">${graphText}</pre>`;
             await mermaid.run();
