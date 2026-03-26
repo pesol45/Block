@@ -2,40 +2,63 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Code to Flowchart</title>
+    <title>Pascal to Flowchart 2719</title>
     <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
 </head>
 <body>
 
-    <textarea id="codeInput" rows="10" cols="50" placeholder="Введите логику (например: Loop: i < 10 -> Action -> EndLoop)"></textarea>
-    <br>
-    <button onclick="renderFlowchart()">Создать схему</button>
+    <h3 style="font-family: sans-serif;">Вставьте код Pascal:</h3>
+    <textarea id="codeInput" rows="15" cols="70" style="display:block; margin-bottom:10px;">
+var n, i, sum: integer;
+begin
+  write('n = ');
+  readln(n);
+  sum := 0;
+  i := 1;
+  while i <= n do
+  begin
+    sum := sum + i;
+    i := i + 2;
+  end;
+  writeln('Сумма = ', sum);
+end.
+    </textarea>
+    <button onclick="renderPascalFlow()">Создать блок-схему</button>
 
-    <div id="graphCanvas" class="mermaid">
-        graph TD
-        Start((Начало)) --> End((Конец))
-    </div>
+    <div id="graphContainer" style="margin-top: 20px;"></div>
 
     <script>
-        mermaid.initialize({ startOnLoad: true });
+        mermaid.initialize({ startOnLoad: false, theme: 'base', themeVariables: { fontSize: '14px' } });
 
-        function renderFlowchart() {
+        async function renderPascalFlow() {
             const input = document.getElementById('codeInput').value;
-            const output = document.getElementById('graphCanvas');
+            const container = document.getElementById('graphContainer');
             
-            // Базовый парсинг строк в формат Mermaid
-            // Формат: Действие1 -> Действие2
-            let graphDefinition = "graph TD\n";
-            if (input.trim() === "") {
-                graphDefinition += "Start --> End";
-            } else {
-                graphDefinition += input;
-            }
+            let lines = input.split('\n')
+                .map(l => l.trim())
+                .filter(l => l && l !== 'begin' && l !== 'end.' && l !== 'begin' && l !== 'end;');
 
-            output.removeAttribute('data-processed');
-            output.innerHTML = graphDefinition;
+            let graphText = "graph TD\nStart([Начало]) --> ";
             
-            mermaid.contentLoaded();
+            lines.forEach((line, index) => {
+                let clean = line.replace(/['";]/g, "");
+                let id = "n" + index;
+
+                if (clean.startsWith('while')) {
+                    graphText += `${id}{"${clean}"} -- Да --> `;
+                } else if (clean.startsWith('var')) {
+                    graphText += `${id}[/"Объявление переменных"/] --> `;
+                } else if (clean.includes('write') || clean.includes('read')) {
+                    graphText += `${id}[/"${clean}"/] --> `;
+                } else {
+                    graphText += `${id}["${clean}"] --> `;
+                }
+            });
+
+            graphText += "End([Конец])";
+
+            container.innerHTML = `<pre class="mermaid">${graphText}</pre>`;
+            await mermaid.run();
         }
     </script>
 </body>
