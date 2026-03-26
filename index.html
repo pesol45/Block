@@ -2,120 +2,41 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Pascal Flowchart GOST 12.0</title>
+    <title>Code to Flowchart</title>
     <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
-    <style>
-        body { font-family: sans-serif; margin: 0; background: #f8f9fa; display: flex; flex-direction: column; height: 100vh; }
-        .toolbar { padding: 15px; background: #fff; border-bottom: 2px solid #1a73e8; text-align: center; }
-        .main { display: flex; flex: 1; overflow: hidden; }
-        textarea { width: 30%; padding: 15px; font-family: 'Consolas', monospace; background: #2d2d2d; color: #f8f8f2; border: none; font-size: 13px; resize: none; }
-        #diagram-box { flex: 1; background: white; overflow: auto; padding: 40px; display: flex; justify-content: center; }
-        button { padding: 12px 30px; background: #1a73e8; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        button:hover { background: #1557b0; }
-    </style>
 </head>
 <body>
 
-<div class="toolbar">
-    <button onclick="draw()">ПОСТРОИТЬ КАК НА ФОТО</button>
-</div>
+    <textarea id="codeInput" rows="10" cols="50" placeholder="Введите логику (например: Loop: i < 10 -> Action -> EndLoop)"></textarea>
+    <br>
+    <button onclick="renderFlowchart()">Создать схему</button>
 
-<div class="main">
-    <textarea id="inputCode">
-program Task21_18;
-begin
-  readln(x);
-  if x > 6 then
-    y := sqr(sin(sqrt(x))) + cos(sqrt(x))
-  else if x <= 2 then
-    y := 8 * (x * x * x) + 5 * sqr(x) - sin(2 * x)
-  else
-    writeln('Не определено');
-  writeln('y = ', y);
-end.</textarea>
-    <div id="diagram-box"><div id="target" class="mermaid"></div></div>
-</div>
+    <div id="graphCanvas" class="mermaid">
+        graph TD
+        Start((Начало)) --> End((Конец))
+    </div>
 
-<script>
-    mermaid.initialize({ 
-        startOnLoad: false, 
-        theme: 'neutral',
-        flowchart: { rankSpacing: 40, nodeSpacing: 60, curve: 'stepBefore' } 
-    });
+    <script>
+        mermaid.initialize({ startOnLoad: true });
 
-    function clean(t) {
-        return t.replace(/;/g, '').replace(/'/g, '').replace(/\(/g, '[').replace(/\)/g, ']').trim();
-    }
-
-    async function draw() {
-        const code = document.getElementById('inputCode').value;
-        const out = document.getElementById('target');
-        
-        const lines = code.split('\n').map(l => l.trim()).filter(l => 
-            l !== '' && !l.toLowerCase().includes('program') && !l.toLowerCase().includes('var') && 
-            l.toLowerCase() !== 'begin' && !l.toLowerCase().startsWith('end')
-        );
-
-        let m = "graph TD\n  Start([Начало])\n";
-        let last = "Start";
-        let nodeIdx = 0;
-        let finalJoin = "JoinFinal";
-
-        for (let i = 0; i < lines.length; i++) {
-            let line = lines[i];
-            let low = line.toLowerCase();
-
-            if (low.startsWith('if ')) {
-                let cond = line.replace(/if|then/gi, '').trim();
-                let ifId = `if_${nodeIdx++}`;
-                let thenId = `then_${nodeIdx++}`;
-                
-                m += `  ${last} --> ${ifId}{"${clean(cond)}"}\n`;
-                m += `  ${ifId} -- Да --> ${thenId}["${clean(lines[i+1])}"]\n`;
-                m += `  ${thenId} --> ${finalJoin}(( ))\n`;
-                
-                m += `  ${ifId} -- Нет --> `;
-                last = ifId; // Следующее условие пойдет из ветки "Нет"
-                i++;
-            } 
-            else if (low.startsWith('else if')) {
-                let cond = line.replace(/else if|then/gi, '').trim();
-                let ifId = `if_${nodeIdx++}`;
-                let thenId = `then_${nodeIdx++}`;
-                
-                m += `${ifId}{"${clean(cond)}"}\n`;
-                m += `  ${ifId} -- Да --> ${thenId}["${clean(lines[i+1])}"]\n`;
-                m += `  ${thenId} --> ${finalJoin}\n`;
-                
-                m += `  ${ifId} -- Нет --> `;
-                last = ifId;
-                i++;
+        function renderFlowchart() {
+            const input = document.getElementById('codeInput').value;
+            const output = document.getElementById('graphCanvas');
+            
+            // Базовый парсинг строк в формат Mermaid
+            // Формат: Действие1 -> Действие2
+            let graphDefinition = "graph TD\n";
+            if (input.trim() === "") {
+                graphDefinition += "Start --> End";
+            } else {
+                graphDefinition += input;
             }
-            else if (low.startsWith('else')) {
-                let elseId = `else_${nodeIdx++}`;
-                m += `${elseId}["${clean(lines[i+1])}"]\n`;
-                m += `  ${elseId} --> ${finalJoin}\n`;
-                last = finalJoin;
-                i++;
-            }
-            else if (low.startsWith('read') || low.startsWith('write')) {
-                let ioId = `io_${nodeIdx++}`;
-                m += `  ${last} --> ${ioId}[/"${clean(line)}"/]\n`;
-                last = ioId;
-            }
-            else {
-                let pId = `p_${nodeIdx++}`;
-                m += `  ${last} --> ${pId}["${clean(line)}"]\n`;
-                last = pId;
-            }
+
+            output.removeAttribute('data-processed');
+            output.innerHTML = graphDefinition;
+            
+            mermaid.contentLoaded();
         }
-
-        m += `  ${last} --> End([Конец])`;
-
-        out.removeAttribute('data-processed');
-        out.innerHTML = m;
-        await mermaid.run({ nodes: [out] });
-    }
-</script>
+    </script>
 </body>
 </html>
