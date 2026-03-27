@@ -2,45 +2,446 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Klutoist GOST Flowchart</title>
-    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
-</head>
-<body style="font-family: sans-serif; padding: 20px;">
-
-    <textarea id="code" rows="10" style="width:100%;">
-program primer1;
-var i: integer; sum: real;
-begin
-  sum := 0;
-  for i := 1 to 50 do
-    sum := sum + 1/i;
-  write(sum);
-end.
-    </textarea>
-    <br>
-    <button onclick="draw()">Создать по чертежу</button>
-
-    <div id="graph" style="margin-top:20px;"></div>
-
-    <script>
-        mermaid.initialize({ startOnLoad: false, theme: 'neutral' });
-
-        async function draw() {
-            // Строим схему по твоему образцу:
-            const graphDefinition = `
-graph TD
-    A([Начало]) --> B["sum := 0"]
-    B --> C{{"i := 1 to 50"}}
-    C -- "Да" --> D["sum := sum + 1/i"]
-    D --> C
-    C -- "Нет" --> E[/"Вывод sum"/]
-    E --> F([Конец])
-            `;
-
-            const container = document.getElementById('graph');
-            container.innerHTML = \`<pre class="mermaid">\${graphDefinition}</pre>\`;
-            await mermaid.run();
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>GHOST_SMS // PHANTOM_TERMINAL v3.1.7</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-    </script>
+
+        body {
+            background: radial-gradient(ellipse at 30% 20%, #030707 0%, #010101 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Courier New', 'Fira Code', 'Source Code Pro', monospace;
+            padding: 20px;
+            position: relative;
+        }
+
+        /* CRT FLICKER */
+        body::after {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(0deg, rgba(0,255,65,0.02) 0px, rgba(0,255,65,0.02) 2px, transparent 2px, transparent 6px);
+            pointer-events: none;
+            z-index: 5;
+            animation: scan 8s linear infinite;
+        }
+
+        @keyframes scan {
+            0% { background-position: 0 0; }
+            100% { background-position: 0 20px; }
+        }
+
+        .cyber-container {
+            width: 1100px;
+            max-width: 95%;
+            background: #07100c;
+            border: 2px solid #1f9e4d;
+            border-radius: 20px;
+            box-shadow: 0 0 40px rgba(31, 158, 77, 0.3), inset 0 0 20px rgba(0,0,0,0.6);
+            overflow: hidden;
+            backdrop-filter: blur(2px);
+            z-index: 10;
+            transition: all 0.3s;
+        }
+
+        .header {
+            background: #030c08;
+            padding: 16px 24px;
+            border-bottom: 1px solid #2eff8c;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .logo {
+            font-weight: bold;
+            font-size: 1.2rem;
+            letter-spacing: 2px;
+            color: #2eff8c;
+            text-shadow: 0 0 5px #1f9e4d;
+        }
+
+        .logo span {
+            color: #6fcf97;
+            font-size: 0.7rem;
+            background: #0e1f18;
+            padding: 2px 6px;
+            border-radius: 20px;
+            margin-left: 8px;
+        }
+
+        .status {
+            font-size: 0.7rem;
+            color: #5dab7a;
+            background: #0a130f;
+            padding: 5px 12px;
+            border-radius: 30px;
+            border: 0.5px solid #2c6e47;
+            font-family: monospace;
+        }
+
+        .content {
+            padding: 28px;
+        }
+
+        .input-block {
+            margin-bottom: 24px;
+        }
+
+        .input-block label {
+            display: block;
+            color: #7ad0a0;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        .input-block input, .input-block select, .input-block textarea {
+            width: 100%;
+            background: #030a07;
+            border: 1px solid #1f5e3a;
+            color: #c3ffdb;
+            font-family: 'Courier New', monospace;
+            padding: 12px 14px;
+            font-size: 0.85rem;
+            border-radius: 8px;
+            transition: 0.2s;
+        }
+
+        .input-block input:focus, .input-block select:focus {
+            outline: none;
+            border-color: #3eff96;
+            box-shadow: 0 0 12px rgba(62, 255, 150, 0.3);
+            background: #05100c;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .panel {
+            background: #07100e;
+            border-left: 3px solid #2eff8c;
+            padding: 16px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+
+        .relay-info {
+            font-size: 0.75rem;
+            color: #9bdfb5;
+            font-family: monospace;
+            word-break: break-all;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin: 25px 0 20px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: #0f231c;
+            border: 1px solid #2eff8c;
+            color: #2eff8c;
+            padding: 12px 28px;
+            font-family: monospace;
+            font-weight: bold;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            cursor: pointer;
+            transition: 0.2s;
+            border-radius: 40px;
+        }
+
+        button:hover {
+            background: #1e4a38;
+            box-shadow: 0 0 15px #2eff8c;
+            color: white;
+            border-color: #9affb3;
+            transform: scale(0.98);
+        }
+
+        .log-console {
+            background: #030a08;
+            border: 1px solid #1d4d33;
+            height: 280px;
+            overflow-y: auto;
+            padding: 14px;
+            font-size: 0.72rem;
+            font-family: monospace;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+
+        .log-line {
+            color: #8bcb9e;
+            border-bottom: 0.5px dashed #1b4532;
+            padding: 5px 0;
+            white-space: pre-wrap;
+            word-break: break-all;
+            font-family: monospace;
+        }
+
+        .log-error {
+            color: #ff7b72;
+            text-shadow: 0 0 2px #ff3a2a;
+        }
+
+        .log-success {
+            color: #5effa3;
+            font-weight: bold;
+        }
+
+        .blink-led {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #2eff8c;
+            box-shadow: 0 0 5px #2eff8c;
+            margin-right: 8px;
+            animation: pulseLed 0.9s infinite;
+        }
+
+        @keyframes pulseLed {
+            0% { opacity: 0.3; background: #1f9e4d; }
+            100% { opacity: 1; background: #6effb0; }
+        }
+
+        .footer {
+            background: #030c08;
+            padding: 12px;
+            text-align: center;
+            font-size: 0.55rem;
+            color: #2c6e47;
+            border-top: 1px solid #1b4a33;
+            letter-spacing: 0.5px;
+        }
+    </style>
+</head>
+<body>
+<div class="cyber-container">
+    <div class="header">
+        <div class="logo">◈ GHOST_SMS // PHANTOM_NODE <span>v3.1.7_ERAFOX</span></div>
+        <div class="status"><span class="blink-led"></span> SS7_SPOOF_ACTIVE // LORE_MODE</div>
+    </div>
+    <div class="content">
+        <div class="grid-2">
+            <div>
+                <div class="input-block">
+                    <label>📱 TARGET_MSISDN (номер цели)</label>
+                    <input type="text" id="targetPhone" placeholder="+[CODE][NUMBER]  |  in-game target" value="+79123456789">
+                </div>
+                <div class="input-block">
+                    <label>🕶️ SPOOF_SENDER_ID (отправитель)</label>
+                    <input type="text" id="senderId" placeholder="ALPHA_NUMERIC / номер" value="CIRCUIT_STREET">
+                </div>
+                <div class="input-block">
+                    <label>⚡ ВЕКТОР_АТАКИ (payload type)</label>
+                    <select id="payloadType">
+                        <option value="ss7_flood">SS7_FLOOD (SIM_HOP_OVERFLOW)</option>
+                        <option value="hyperframe">HYPERFRAME_BUFFER (carrier_kill)</option>
+                        <option value="ghost_rotate">GHOST_ID_ROTATE (динамическая подмена)</option>
+                        <option value="sigma_burst">SIGMA_BURST (SS7_SIGTRAN_CRASH)</option>
+                    </select>
+                </div>
+            </div>
+            <div>
+                <div class="panel">
+                    <div class="relay-info">
+                        🔄 PHANTOM_RELAY_NODE: <span id="relayNode">NODE_HELSINKI_DARK</span><br>
+                        🧬 ENCRYPT: AES-256-SS7_SPOOF | GT_CACHE: active<br>
+                        ⏱️ MTU_FRAG: 1440 bytes | TIMESTAMP_OFFSET: 0x7F3A<br>
+                        🌐 SS7_GTT_MAP: [ROAMING_BYPASS]
+                    </div>
+                </div>
+                <div class="input-block">
+                    <label>📡 ИНТЕНСИВНОСТЬ (кол-во пакетов)</label>
+                    <input type="number" id="packetCount" value="28" min="5" max="99">
+                </div>
+            </div>
+        </div>
+
+        <div class="button-group">
+            <button id="execBtn">🔥 ЗАПУСТИТЬ БОМБЕР (LORE_SIM)</button>
+            <button id="clearBtn">🗑️ ОЧИСТИТЬ ЛОГИ</button>
+        </div>
+
+        <div class="log-console" id="logArea">
+            <div class="log-line">[ SYSTEM ] GHOST_SMS_TERMINAL v3.1.7 ready.</div>
+            <div class="log-line">[ SYSTEM ] Режим: NEON_ZERO // LORE_ARCHIVAL // НЕТ РЕАЛЬНЫХ SMS</div>
+            <div class="log-line">[ SYSTEM ] Ожидание команды оператора...</div>
+        </div>
+    </div>
+    <div class="footer">
+        ⚠️ [ LORE_DISCLAIMER ] Инструмент полностью вымышленный. Все протоколы — часть вселенной NEON_ZERO.<br>
+        Нет реальной отправки SMS, нет взаимодействия с операторами связи. Только эстетика киберпанк-RPG.
+    </div>
+</div>
+
+<script>
+    // ============================================================
+    // NEON_ZERO // SMS_BOMBER_LORE_ENGINE v3.1.7
+    // Вымышленная симуляция "бомбера" для игровой атмосферы.
+    // Все действия — фейковые, но технически стилизованы под SS7/C++.
+    // ============================================================
+
+    const relayList = [
+        "NODE_HELSINKI_DARK", "NODE_SINGAPORE_CORE", "NODE_VIENNA_01", 
+        "NODE_SAO_PAULO_LEGACY", "NODE_TOKYO_EDGE", "NODE_CAIRO_SILT",
+        "NODE_LONDON_GHOST", "NODE_ZURICH_BLACK"
+    ];
+
+    function getRandomRelay() {
+        return relayList[Math.floor(Math.random() * relayList.length)];
+    }
+
+    function updateRelayDisplay() {
+        const relaySpan = document.getElementById('relayNode');
+        if (relaySpan) relaySpan.innerText = getRandomRelay();
+    }
+    setInterval(updateRelayDisplay, 4200);
+
+    const logContainer = document.getElementById('logArea');
+
+    function addLog(message, type = 'info') {
+        const logDiv = logContainer;
+        const line = document.createElement('div');
+        line.className = 'log-line';
+        if (type === 'error') line.classList.add('log-error');
+        if (type === 'success') line.classList.add('log-success');
+        
+        const time = new Date().toLocaleTimeString('ru-RU', { hour12: false });
+        line.innerHTML = `[${time}] ${message}`;
+        logDiv.appendChild(line);
+        line.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        
+        while (logDiv.children.length > 60) {
+            logDiv.removeChild(logDiv.firstChild);
+        }
+    }
+
+    function clearLogs() {
+        logContainer.innerHTML = '';
+        addLog('[СИСТЕМА] Логи очищены. Терминал готов.', 'info');
+        addLog('[СИСТЕМА] Режим LORE_ARCHIVAL активен.', 'info');
+    }
+
+    // Имитация "рукопожатия" с фейковым SS7
+    async function fakeHandshake(target, sender) {
+        addLog(`⚡ [HANDSHAKE] Инициализация SS7_SIGTRAN链路 к ${target}`, 'info');
+        await delay(320);
+        addLog(`🔄 [SPOOF] Установка sender_id = "${sender}" (alpha_bypass_active)`, 'info');
+        await delay(280);
+        addLog(`🔐 [CRYPTO] Генерация ephemeral_key (HMAC_SHA3_512)`, 'info');
+        await delay(350);
+        const currentRelay = document.getElementById('relayNode')?.innerText || 'RELAY_UNKNOWN';
+        addLog(`🌐 [GTT] Маршрутизация через ${currentRelay}`, 'info');
+        await delay(400);
+        addLog(`✅ [SYNC] Фантомный канал установлен.`, 'success');
+    }
+
+    // эмуляция флуда вымышленными пакетами
+    async function floodSimulation(payloadType, packetCount) {
+        return new Promise((resolve) => {
+            let sent = 0;
+            const interval = setInterval(() => {
+                if (sent >= packetCount) {
+                    clearInterval(interval);
+                    resolve();
+                    return;
+                }
+                const fakeRef = Math.random().toString(36).substring(2, 10).toUpperCase();
+                const fakeLen = 140 + Math.floor(Math.random() * 80);
+                
+                if (payloadType === 'ss7_flood') {
+                    addLog(`📨 [SS7_FLOOD] DELIVER_SM.req | ref:${fakeRef} | TPDU:0x23 | длина:${fakeLen} байт`, 'success');
+                } 
+                else if (payloadType === 'hyperframe') {
+                    addLog(`🧨 [HYPERFRAME] buffer_overflow | seq:${sent+1} | длина_фрагмента:${fakeLen+300} octets | переполнение буфера`, 'success');
+                }
+                else if (payloadType === 'ghost_rotate') {
+                    addLog(`👻 [GHOST_ID] ротация IMSI_hash -> ${fakeRef} | spoof_cycle #${sent+1}`, 'success');
+                }
+                else if (payloadType === 'sigma_burst') {
+                    addLog(`🌀 [SIGMA_BURST] SIGTRAN_CRASH_VECTOR | ${fakeRef} | метка_времени:0x${Math.floor(Math.random()*0xFFFF).toString(16)}`, 'success');
+                }
+                sent++;
+            }, 110);
+        });
+    }
+
+    function delay(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    async function executeBomber() {
+        const target = document.getElementById('targetPhone').value.trim();
+        const sender = document.getElementById('senderId').value.trim();
+        const payload = document.getElementById('payloadType').value;
+        let packetCount = parseInt(document.getElementById('packetCount').value);
+        
+        if (isNaN(packetCount) || packetCount < 1) packetCount = 20;
+        if (packetCount > 99) packetCount = 99;
+        
+        if (!target) {
+            addLog(`❌ [ОШИБКА] TARGET_MSISDN не может быть пустым (условие LORE)`, 'error');
+            return;
+        }
+        if (!sender) {
+            addLog(`❌ [ОШИБКА] SPOOF_SENDER_ID обязателен для фантомной инъекции`, 'error');
+            return;
+        }
+        
+        addLog(`══════════════════════════════════════════════`, 'info');
+        addLog(`💀 [ERAFOX] ЗАПУСК SMS_BOMBER — NEON_ZERO LORE РЕЖИМ`, 'info');
+        addLog(`🎯 ЦЕЛЬ: ${target} | 📡 ОТ: ${sender}`, 'info');
+        addLog(`⚙️ ВЕКТОР: ${payload.toUpperCase()} | 📊 ПАКЕТОВ: ${packetCount}`, 'info');
+        
+        await fakeHandshake(target, sender);
+        
+        addLog(`⚠️ [WARNING] Обход файервола оператора (CARRIER_FW_V9_BYPASS)`, 'error');
+        addLog(`🚀 [INJECT] Начинаю инъекцию вымышленных пакетов...`, 'info');
+        
+        await floodSimulation(payload, packetCount);
+        
+        addLog(`✅ [ЗАВЕРШЕНО] Фантомная атака выполнена. Отправлено пакетов: ${packetCount}`, 'success');
+        addLog(`🧹 [LOG_CLEANER] Локальные метаданные стерты (LORE).`, 'info');
+        addLog(`🔮 [СТАТУС] НИ ОДНО РЕАЛЬНОЕ SMS НЕ БЫЛО ОТПРАВЛЕНО.`, 'info');
+        addLog(`══════════════════════════════════════════════`, 'info');
+    }
+
+    // Attach event listeners after DOM is fully loaded
+    document.addEventListener('DOMContentLoaded', () => {
+        const execBtn = document.getElementById('execBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        if (execBtn) execBtn.addEventListener('click', executeBomber);
+        if (clearBtn) clearBtn.addEventListener('click', clearLogs);
+        
+        // инициализация первого реле
+        const relaySpan = document.getElementById('relayNode');
+        if (relaySpan) relaySpan.innerText = getRandomRelay();
+        addLog(`[INIT] PHANTOM_NODE готов. Режим: lore_simulation.`, 'info');
+    });
+</script>
 </body>
 </html>
