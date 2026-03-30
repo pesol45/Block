@@ -2,446 +2,706 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>GHOST_SMS // PHANTOM_TERMINAL v3.1.7</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Админ-форум | Firebase Без регистрации</title>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <!-- Font Awesome 6 (free) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
         }
 
         body {
-            background: radial-gradient(ellipse at 30% 20%, #030707 0%, #010101 100%);
-            min-height: 100vh;
+            background: #f1f5f9;
+            padding: 30px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Header & admin панель */
+        .forum-header {
+            background: white;
+            border-radius: 28px;
+            padding: 20px 28px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.03);
+            margin-bottom: 30px;
             display: flex;
-            justify-content: center;
-            align-items: center;
-            font-family: 'Courier New', 'Fira Code', 'Source Code Pro', monospace;
-            padding: 20px;
-            position: relative;
-        }
-
-        /* CRT FLICKER */
-        body::after {
-            content: "";
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: repeating-linear-gradient(0deg, rgba(0,255,65,0.02) 0px, rgba(0,255,65,0.02) 2px, transparent 2px, transparent 6px);
-            pointer-events: none;
-            z-index: 5;
-            animation: scan 8s linear infinite;
-        }
-
-        @keyframes scan {
-            0% { background-position: 0 0; }
-            100% { background-position: 0 20px; }
-        }
-
-        .cyber-container {
-            width: 1100px;
-            max-width: 95%;
-            background: #07100c;
-            border: 2px solid #1f9e4d;
-            border-radius: 20px;
-            box-shadow: 0 0 40px rgba(31, 158, 77, 0.3), inset 0 0 20px rgba(0,0,0,0.6);
-            overflow: hidden;
-            backdrop-filter: blur(2px);
-            z-index: 10;
-            transition: all 0.3s;
-        }
-
-        .header {
-            background: #030c08;
-            padding: 16px 24px;
-            border-bottom: 1px solid #2eff8c;
-            display: flex;
+            flex-wrap: wrap;
             justify-content: space-between;
             align-items: center;
-            flex-wrap: wrap;
-            gap: 12px;
+            border: 1px solid #e2e8f0;
         }
 
-        .logo {
-            font-weight: bold;
-            font-size: 1.2rem;
-            letter-spacing: 2px;
-            color: #2eff8c;
-            text-shadow: 0 0 5px #1f9e4d;
+        .logo h1 {
+            font-size: 1.7rem;
+            background: linear-gradient(135deg, #1e293b, #2c3e66);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: -0.3px;
         }
-
-        .logo span {
-            color: #6fcf97;
-            font-size: 0.7rem;
-            background: #0e1f18;
-            padding: 2px 6px;
-            border-radius: 20px;
-            margin-left: 8px;
-        }
-
-        .status {
-            font-size: 0.7rem;
-            color: #5dab7a;
-            background: #0a130f;
-            padding: 5px 12px;
-            border-radius: 30px;
-            border: 0.5px solid #2c6e47;
-            font-family: monospace;
-        }
-
-        .content {
-            padding: 28px;
-        }
-
-        .input-block {
-            margin-bottom: 24px;
-        }
-
-        .input-block label {
-            display: block;
-            color: #7ad0a0;
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-bottom: 8px;
-            font-weight: bold;
-        }
-
-        .input-block input, .input-block select, .input-block textarea {
-            width: 100%;
-            background: #030a07;
-            border: 1px solid #1f5e3a;
-            color: #c3ffdb;
-            font-family: 'Courier New', monospace;
-            padding: 12px 14px;
-            font-size: 0.85rem;
-            border-radius: 8px;
-            transition: 0.2s;
-        }
-
-        .input-block input:focus, .input-block select:focus {
-            outline: none;
-            border-color: #3eff96;
-            box-shadow: 0 0 12px rgba(62, 255, 150, 0.3);
-            background: #05100c;
-        }
-
-        .grid-2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-
-        .panel {
-            background: #07100e;
-            border-left: 3px solid #2eff8c;
-            padding: 16px;
-            margin: 20px 0;
-            border-radius: 8px;
-        }
-
-        .relay-info {
-            font-size: 0.75rem;
-            color: #9bdfb5;
-            font-family: monospace;
-            word-break: break-all;
-        }
-
-        .button-group {
-            display: flex;
-            gap: 15px;
-            margin: 25px 0 20px;
-            flex-wrap: wrap;
-        }
-
-        button {
-            background: #0f231c;
-            border: 1px solid #2eff8c;
-            color: #2eff8c;
-            padding: 12px 28px;
-            font-family: monospace;
-            font-weight: bold;
+        .logo p {
             font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
+            color: #475569;
+        }
+
+        .admin-badge {
+            background: #0f172a;
+            padding: 8px 18px;
+            border-radius: 40px;
+            color: #facc15;
+            font-weight: 600;
+            font-size: 0.9rem;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        }
+        .admin-badge i {
+            margin-right: 6px;
+            color: #facc15;
+        }
+
+        /* кнопки админки */
+        .admin-panel {
+            background: white;
+            border-radius: 28px;
+            padding: 20px 28px;
+            margin-bottom: 30px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+        }
+        .admin-title {
+            font-weight: 700;
+            font-size: 1.25rem;
+            margin-bottom: 16px;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .topic-form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: flex-end;
+        }
+        .topic-form .input-group {
+            flex: 2;
+            min-width: 200px;
+        }
+        .topic-form input, .topic-form textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #cbd5e1;
+            border-radius: 20px;
+            font-size: 0.95rem;
+            transition: 0.2s;
+            background: #fefefe;
+        }
+        .topic-form input:focus, .topic-form textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
+        }
+        .topic-form textarea {
+            resize: vertical;
+        }
+        .btn {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 40px;
+            font-weight: 600;
             cursor: pointer;
             transition: 0.2s;
-            border-radius: 40px;
+            background: #eef2ff;
+            color: #1e40af;
         }
-
-        button:hover {
-            background: #1e4a38;
-            box-shadow: 0 0 15px #2eff8c;
+        .btn-primary {
+            background: #1e293b;
             color: white;
-            border-color: #9affb3;
-            transform: scale(0.98);
+        }
+        .btn-primary:hover {
+            background: #0f172a;
+            transform: scale(0.97);
+        }
+        .btn-danger {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+        .btn-danger:hover {
+            background: #fecaca;
         }
 
-        .log-console {
-            background: #030a08;
-            border: 1px solid #1d4d33;
-            height: 280px;
-            overflow-y: auto;
-            padding: 14px;
-            font-size: 0.72rem;
-            font-family: monospace;
-            border-radius: 10px;
-            margin-top: 15px;
+        /* темы форума */
+        .topics-list {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+        .topic-card {
+            background: white;
+            border-radius: 28px;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+        }
+        .topic-header {
+            padding: 20px 24px 12px 24px;
+            background: #fafcff;
+            border-bottom: 1px solid #edf2f7;
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            flex-wrap: wrap;
+        }
+        .topic-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #0f172a;
+        }
+        .topic-meta {
+            font-size: 0.75rem;
+            color: #5b6e8c;
+            display: flex;
+            gap: 12px;
+            margin-top: 8px;
+        }
+        .admin-tag {
+            background: #fef9c3;
+            color: #854d0e;
+            padding: 2px 10px;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        .delete-topic-btn {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .delete-topic-btn:hover {
+            color: #dc2626;
         }
 
-        .log-line {
-            color: #8bcb9e;
-            border-bottom: 0.5px dashed #1b4532;
-            padding: 5px 0;
-            white-space: pre-wrap;
-            word-break: break-all;
-            font-family: monospace;
+        /* ответы (комментарии) */
+        .answers-section {
+            padding: 8px 24px 24px 24px;
+            background: white;
+        }
+        .answers-list {
+            margin: 16px 0 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .answer-item {
+            background: #f8fafc;
+            padding: 14px 18px;
+            border-radius: 20px;
+            border-left: 4px solid #cbd5e1;
+        }
+        .answer-text {
+            font-size: 0.95rem;
+            line-height: 1.4;
+            color: #1e293b;
+        }
+        .answer-meta {
+            font-size: 0.7rem;
+            color: #5b6e8c;
+            margin-top: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .delete-answer {
+            background: transparent;
+            border: none;
+            color: #cbd5e1;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        .delete-answer:hover {
+            color: #e11d48;
         }
 
-        .log-error {
-            color: #ff7b72;
-            text-shadow: 0 0 2px #ff3a2a;
+        .add-answer-form {
+            display: flex;
+            gap: 12px;
+            margin-top: 8px;
+            align-items: flex-start;
+        }
+        .add-answer-form input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid #cbd5e1;
+            border-radius: 40px;
+            font-size: 0.9rem;
+        }
+        .add-answer-form button {
+            background: #eef2ff;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
         }
 
-        .log-success {
-            color: #5effa3;
-            font-weight: bold;
-        }
-
-        .blink-led {
-            display: inline-block;
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: #2eff8c;
-            box-shadow: 0 0 5px #2eff8c;
-            margin-right: 8px;
-            animation: pulseLed 0.9s infinite;
-        }
-
-        @keyframes pulseLed {
-            0% { opacity: 0.3; background: #1f9e4d; }
-            100% { opacity: 1; background: #6effb0; }
-        }
-
-        .footer {
-            background: #030c08;
-            padding: 12px;
+        .empty-message {
             text-align: center;
-            font-size: 0.55rem;
-            color: #2c6e47;
-            border-top: 1px solid #1b4a33;
-            letter-spacing: 0.5px;
+            padding: 30px;
+            color: #5b6e8c;
+            font-style: italic;
+        }
+
+        footer {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 0.75rem;
+            color: #5b6e8c;
+        }
+        hr {
+            margin: 12px 0;
+        }
+        @media (max-width: 680px) {
+            body { padding: 16px; }
+            .topic-title { font-size: 1.2rem; }
         }
     </style>
 </head>
 <body>
-<div class="cyber-container">
-    <div class="header">
-        <div class="logo">◈ GHOST_SMS // PHANTOM_NODE <span>v3.1.7_ERAFOX</span></div>
-        <div class="status"><span class="blink-led"></span> SS7_SPOOF_ACTIVE // LORE_MODE</div>
-    </div>
-    <div class="content">
-        <div class="grid-2">
-            <div>
-                <div class="input-block">
-                    <label>📱 TARGET_MSISDN (номер цели)</label>
-                    <input type="text" id="targetPhone" placeholder="+[CODE][NUMBER]  |  in-game target" value="+79123456789">
-                </div>
-                <div class="input-block">
-                    <label>🕶️ SPOOF_SENDER_ID (отправитель)</label>
-                    <input type="text" id="senderId" placeholder="ALPHA_NUMERIC / номер" value="CIRCUIT_STREET">
-                </div>
-                <div class="input-block">
-                    <label>⚡ ВЕКТОР_АТАКИ (payload type)</label>
-                    <select id="payloadType">
-                        <option value="ss7_flood">SS7_FLOOD (SIM_HOP_OVERFLOW)</option>
-                        <option value="hyperframe">HYPERFRAME_BUFFER (carrier_kill)</option>
-                        <option value="ghost_rotate">GHOST_ID_ROTATE (динамическая подмена)</option>
-                        <option value="sigma_burst">SIGMA_BURST (SS7_SIGTRAN_CRASH)</option>
-                    </select>
-                </div>
-            </div>
-            <div>
-                <div class="panel">
-                    <div class="relay-info">
-                        🔄 PHANTOM_RELAY_NODE: <span id="relayNode">NODE_HELSINKI_DARK</span><br>
-                        🧬 ENCRYPT: AES-256-SS7_SPOOF | GT_CACHE: active<br>
-                        ⏱️ MTU_FRAG: 1440 bytes | TIMESTAMP_OFFSET: 0x7F3A<br>
-                        🌐 SS7_GTT_MAP: [ROAMING_BYPASS]
-                    </div>
-                </div>
-                <div class="input-block">
-                    <label>📡 ИНТЕНСИВНОСТЬ (кол-во пакетов)</label>
-                    <input type="number" id="packetCount" value="28" min="5" max="99">
-                </div>
-            </div>
+<div class="container">
+    <div class="forum-header">
+        <div class="logo">
+            <h1><i class="fas fa-comments"></i> АдминФорум</h1>
+            <p>Темы создаёт администратор — отвечают все без регистрации</p>
         </div>
+        <div class="admin-badge">
+            <i class="fas fa-user-shield"></i> Режим админа
+        </div>
+    </div>
 
-        <div class="button-group">
-            <button id="execBtn">🔥 ЗАПУСТИТЬ БОМБЕР (LORE_SIM)</button>
-            <button id="clearBtn">🗑️ ОЧИСТИТЬ ЛОГИ</button>
+    <!-- Админ-панель: создание новой темы -->
+    <div class="admin-panel" id="adminPanel">
+        <div class="admin-title">
+            <i class="fas fa-hammer" style="color:#facc15;"></i> Администратор: создать тему
         </div>
+        <div class="topic-form">
+            <div class="input-group" style="flex:1.5;">
+                <input type="text" id="topicTitleInput" placeholder="Заголовок темы (обязательно)" maxlength="120">
+            </div>
+            <div class="input-group" style="flex:2.5;">
+                <textarea id="topicDescInput" rows="1" placeholder="Описание / первый пост (необязательно)"></textarea>
+            </div>
+            <button id="createTopicBtn" class="btn btn-primary"><i class="fas fa-plus-circle"></i> Создать тему</button>
+        </div>
+        <div style="font-size:12px; margin-top: 8px; color:#475569;"><i class="fas fa-info-circle"></i> Только админ может создавать и удалять темы. Пользователи оставляют ответы.</div>
+    </div>
 
-        <div class="log-console" id="logArea">
-            <div class="log-line">[ SYSTEM ] GHOST_SMS_TERMINAL v3.1.7 ready.</div>
-            <div class="log-line">[ SYSTEM ] Режим: NEON_ZERO // LORE_ARCHIVAL // НЕТ РЕАЛЬНЫХ SMS</div>
-            <div class="log-line">[ SYSTEM ] Ожидание команды оператора...</div>
-        </div>
+    <!-- Список тем -->
+    <div id="topicsContainer" class="topics-list">
+        <div class="empty-message"><i class="fas fa-spinner fa-pulse"></i> Загрузка тем...</div>
     </div>
-    <div class="footer">
-        ⚠️ [ LORE_DISCLAIMER ] Инструмент полностью вымышленный. Все протоколы — часть вселенной NEON_ZERO.<br>
-        Нет реальной отправки SMS, нет взаимодействия с операторами связи. Только эстетика киберпанк-RPG.
-    </div>
+    <footer>
+        <i class="fas fa-globe"></i> Firebase интеграция | Анонимные ответы | Админ управляет темами
+    </footer>
 </div>
 
 <script>
-    // ============================================================
-    // NEON_ZERO // SMS_BOMBER_LORE_ENGINE v3.1.7
-    // Вымышленная симуляция "бомбера" для игровой атмосферы.
-    // Все действия — фейковые, но технически стилизованы под SS7/C++.
-    // ============================================================
-
-    const relayList = [
-        "NODE_HELSINKI_DARK", "NODE_SINGAPORE_CORE", "NODE_VIENNA_01", 
-        "NODE_SAO_PAULO_LEGACY", "NODE_TOKYO_EDGE", "NODE_CAIRO_SILT",
-        "NODE_LONDON_GHOST", "NODE_ZURICH_BLACK"
-    ];
-
-    function getRandomRelay() {
-        return relayList[Math.floor(Math.random() * relayList.length)];
-    }
-
-    function updateRelayDisplay() {
-        const relaySpan = document.getElementById('relayNode');
-        if (relaySpan) relaySpan.innerText = getRandomRelay();
-    }
-    setInterval(updateRelayDisplay, 4200);
-
-    const logContainer = document.getElementById('logArea');
-
-    function addLog(message, type = 'info') {
-        const logDiv = logContainer;
-        const line = document.createElement('div');
-        line.className = 'log-line';
-        if (type === 'error') line.classList.add('log-error');
-        if (type === 'success') line.classList.add('log-success');
-        
-        const time = new Date().toLocaleTimeString('ru-RU', { hour12: false });
-        line.innerHTML = `[${time}] ${message}`;
-        logDiv.appendChild(line);
-        line.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        
-        while (logDiv.children.length > 60) {
-            logDiv.removeChild(logDiv.firstChild);
+    // ------------------- КОНФИГУРАЦИЯ FIREBASE -------------------
+    // ВНИМАНИЕ: замените на свои данные из консоли Firebase!
+    // Для работы форума нужно создать проект Firebase, добавить веб-приложение,
+    // включить Firestore (тестовый режим или настроить правила).
+    // Рекомендуемые правила безопасности для быстрого старта:
+    // rules_version = '2';
+    // service cloud.firestore {
+    //   match /databases/{database}/documents {
+    //     match /topics/{document} {
+    //       allow read: true;
+    //       allow write: if request.auth != null;   // но для демо можно разрешить всем, но мы управляем через код
+    //     }
+    //     match /answers/{document} {
+    //       allow read: true;
+    //       allow write: true;
+    //     }
+    //   }
+    // }
+    // Для работы админки без входа по паролю (просто логика "кто угодно может нажать создать/удалить").
+    // По заданию "админка" реализована через явную панель без доп. аутентификации. Если требуется защитить,
+    // можно добавить секретный пароль, но в рамках ТЗ: админка есть и другие пользователи отвечают.
+    // В текущей реализации любой, кто зайдет на страницу, видит админ-панель. Но для соответствия заданию,
+    // мы предполагаем, что доступ к админке имеют только доверенные лица (либо можно скрыть панель, но в задании
+    // четко: "у меня будет админка а другие пользователи будут отвечать" – значит админ видит панель, пользователи видят форум.
+    // Реализовано: интерфейс один, но любой может создать тему (админское действие). 
+    // Чтобы усилить: можно добавить простой пароль, но для простоты – панель всегда видна.
+    // Но я добавлю скрытый чекбокс или alert? Не требуется, просто пользователи могут "злоупотребить", но это демо.
+    // По желанию можно установить флаг isAdmin через localStorage, но в целях честности – пусть будет открытая админка.
+    // Но чтобы соблюсти "админка у меня" – я добавлю концепцию: кнопка активации админ-режима по паролю? 
+    // Однако по ТЗ регистрация не нужна, но админка должна быть у меня. Проще: я добавлю опциональный "Секретный ключ"
+    // в localStorage, чтобы обычные пользователи не создавали темы. Но условие: "админка у меня, другие отвечают"
+    // => логично, что панель создания тем видят только если знают секрет. Сделаем простую защиту:
+    // При загрузке страницы спросим пароль для админ-доступа? Но это не регистрация, просто проверка.
+    // Чтобы было удобно, но безопасно: Я реализую "режим администратора" через кнопку-переключатель с паролем по умолчанию "admin123".
+    // Поскольку ТЗ не требует сложной аутентификации, такой способ сохранит идею: обычные пользователи не увидят панель,
+    // но будут отвечать. А я (админ) введу пароль и получу админку. Это элегантно и не требует регистрации.
+    // Таким образом:
+    // 1. По умолчанию панель админа скрыта.
+    // 2. Кнопка "Войти как админ" запрашивает пароль.
+    // 3. После успеха отображаются админ-инструменты (создание темы, удаление тем и удаление ответов).
+    // 4. Пользователи без админ-режима видят только темы и могут оставлять ответы.
+    // Это идеально соответствует: "у меня будет админка а другие пользователи будут отвечать".
+    
+    // Переменная состояния админа
+    let isAdmin = false;
+    const ADMIN_PASSWORD = "admin123";  // пароль для админки (можно сменить)
+    
+    // DOM элементы
+    const adminPanelDiv = document.getElementById('adminPanel');
+    const topicsContainer = document.getElementById('topicsContainer');
+    
+    // Конфигурация Firebase (замените на свои!!!)
+    // Ниже указаны демо-данные, которые НЕ РАБОТАЮТ. Пожалуйста, вставьте свои параметры из проекта Firebase.
+    // Для корректной работы создайте проект, добавьте веб-приложение и скопируйте конфиг.
+    const firebaseConfig = {
+        apiKey: "AIzaSyDummyFirebaseKeyReplaceWithYourOwn",
+        authDomain: "your-forum.firebaseapp.com",
+        projectId: "your-forum",
+        storageBucket: "your-forum.appspot.com",
+        messagingSenderId: "123456789012",
+        appId: "1:123456789012:web:abcdef123456"
+    };
+    
+    // Инициализация Firebase (с проверкой)
+    let db;
+    let appInitialized = false;
+    try {
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
         }
+        db = firebase.firestore();
+        appInitialized = true;
+        console.log("Firebase инициализирован (проверьте config)");
+    } catch (e) {
+        console.error("Ошибка инициализации Firebase: ", e);
+        alert("Ошибка подключения к Firebase. Проверьте конфигурацию в коде (apiKey и projectId). Демо-режим не сохранит данные.");
+        // Создаем заглушку, чтобы страница не падала
+        db = {
+            collection: () => ({
+                orderBy: () => ({
+                    onSnapshot: (callback) => callback({ docs: [] }),
+                    get: async () => ({ docs: [] })
+                }),
+                add: async () => { alert("Firebase не настроен!"); throw new Error("no firebase"); },
+                doc: () => ({ delete: async () => {} })
+            })
+        };
     }
-
-    function clearLogs() {
-        logContainer.innerHTML = '';
-        addLog('[СИСТЕМА] Логи очищены. Терминал готов.', 'info');
-        addLog('[СИСТЕМА] Режим LORE_ARCHIVAL активен.', 'info');
-    }
-
-    // Имитация "рукопожатия" с фейковым SS7
-    async function fakeHandshake(target, sender) {
-        addLog(`⚡ [HANDSHAKE] Инициализация SS7_SIGTRAN链路 к ${target}`, 'info');
-        await delay(320);
-        addLog(`🔄 [SPOOF] Установка sender_id = "${sender}" (alpha_bypass_active)`, 'info');
-        await delay(280);
-        addLog(`🔐 [CRYPTO] Генерация ephemeral_key (HMAC_SHA3_512)`, 'info');
-        await delay(350);
-        const currentRelay = document.getElementById('relayNode')?.innerText || 'RELAY_UNKNOWN';
-        addLog(`🌐 [GTT] Маршрутизация через ${currentRelay}`, 'info');
-        await delay(400);
-        addLog(`✅ [SYNC] Фантомный канал установлен.`, 'success');
-    }
-
-    // эмуляция флуда вымышленными пакетами
-    async function floodSimulation(payloadType, packetCount) {
-        return new Promise((resolve) => {
-            let sent = 0;
-            const interval = setInterval(() => {
-                if (sent >= packetCount) {
-                    clearInterval(interval);
-                    resolve();
-                    return;
-                }
-                const fakeRef = Math.random().toString(36).substring(2, 10).toUpperCase();
-                const fakeLen = 140 + Math.floor(Math.random() * 80);
-                
-                if (payloadType === 'ss7_flood') {
-                    addLog(`📨 [SS7_FLOOD] DELIVER_SM.req | ref:${fakeRef} | TPDU:0x23 | длина:${fakeLen} байт`, 'success');
-                } 
-                else if (payloadType === 'hyperframe') {
-                    addLog(`🧨 [HYPERFRAME] buffer_overflow | seq:${sent+1} | длина_фрагмента:${fakeLen+300} octets | переполнение буфера`, 'success');
-                }
-                else if (payloadType === 'ghost_rotate') {
-                    addLog(`👻 [GHOST_ID] ротация IMSI_hash -> ${fakeRef} | spoof_cycle #${sent+1}`, 'success');
-                }
-                else if (payloadType === 'sigma_burst') {
-                    addLog(`🌀 [SIGMA_BURST] SIGTRAN_CRASH_VECTOR | ${fakeRef} | метка_времени:0x${Math.floor(Math.random()*0xFFFF).toString(16)}`, 'success');
-                }
-                sent++;
-            }, 110);
+    
+    // Коллекции Firestore
+    const topicsRef = () => db.collection("topics");
+    const answersRef = () => db.collection("answers");
+    
+    // ------------------ Функции админ-панели ------------------
+    function showAdminUI(show) {
+        if (show) {
+            adminPanelDiv.style.display = "block";
+        } else {
+            adminPanelDiv.style.display = "none";
+        }
+        // Дополнительно: добавим классы для кнопок удаления тем/ответов
+        document.querySelectorAll('.delete-topic-btn, .delete-answer').forEach(btn => {
+            if (show) btn.style.display = 'inline-block';
+            else btn.style.display = 'none';
         });
     }
-
-    function delay(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
+    
+    // Запрос админ-доступа (вызывается при загрузке, также можно добавить кнопку)
+    function promptAdminAccess() {
+        const pwd = prompt("🔐 Админ-доступ. Введите пароль:", "");
+        if (pwd === ADMIN_PASSWORD) {
+            isAdmin = true;
+            showAdminUI(true);
+            alert("Добро пожаловать, Администратор! Вы можете создавать/удалять темы и удалять любые ответы.");
+            // перерисовываем темы, чтобы обновить видимость кнопок удаления
+            renderTopics(); 
+        } else if (pwd !== null) {
+            alert("Неверный пароль. Доступ только для чтения (можно отвечать).");
+            isAdmin = false;
+            showAdminUI(false);
+            renderTopics();
+        } else {
+            isAdmin = false;
+            showAdminUI(false);
+            renderTopics();
+        }
     }
-
-    async function executeBomber() {
-        const target = document.getElementById('targetPhone').value.trim();
-        const sender = document.getElementById('senderId').value.trim();
-        const payload = document.getElementById('payloadType').value;
-        let packetCount = parseInt(document.getElementById('packetCount').value);
-        
-        if (isNaN(packetCount) || packetCount < 1) packetCount = 20;
-        if (packetCount > 99) packetCount = 99;
-        
-        if (!target) {
-            addLog(`❌ [ОШИБКА] TARGET_MSISDN не может быть пустым (условие LORE)`, 'error');
+    
+    // Создание темы (админ)
+    async function createTopic() {
+        if (!isAdmin) {
+            alert("Только администратор может создавать темы. Войдите как админ.");
             return;
         }
-        if (!sender) {
-            addLog(`❌ [ОШИБКА] SPOOF_SENDER_ID обязателен для фантомной инъекции`, 'error');
+        const title = document.getElementById('topicTitleInput').value.trim();
+        const description = document.getElementById('topicDescInput').value.trim();
+        if (!title) {
+            alert("Введите заголовок темы");
             return;
         }
-        
-        addLog(`══════════════════════════════════════════════`, 'info');
-        addLog(`💀 [ERAFOX] ЗАПУСК SMS_BOMBER — NEON_ZERO LORE РЕЖИМ`, 'info');
-        addLog(`🎯 ЦЕЛЬ: ${target} | 📡 ОТ: ${sender}`, 'info');
-        addLog(`⚙️ ВЕКТОР: ${payload.toUpperCase()} | 📊 ПАКЕТОВ: ${packetCount}`, 'info');
-        
-        await fakeHandshake(target, sender);
-        
-        addLog(`⚠️ [WARNING] Обход файервола оператора (CARRIER_FW_V9_BYPASS)`, 'error');
-        addLog(`🚀 [INJECT] Начинаю инъекцию вымышленных пакетов...`, 'info');
-        
-        await floodSimulation(payload, packetCount);
-        
-        addLog(`✅ [ЗАВЕРШЕНО] Фантомная атака выполнена. Отправлено пакетов: ${packetCount}`, 'success');
-        addLog(`🧹 [LOG_CLEANER] Локальные метаданные стерты (LORE).`, 'info');
-        addLog(`🔮 [СТАТУС] НИ ОДНО РЕАЛЬНОЕ SMS НЕ БЫЛО ОТПРАВЛЕНО.`, 'info');
-        addLog(`══════════════════════════════════════════════`, 'info');
+        try {
+            await topicsRef().add({
+                title: title,
+                description: description,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                createdBy: "admin"
+            });
+            document.getElementById('topicTitleInput').value = '';
+            document.getElementById('topicDescInput').value = '';
+        } catch (err) {
+            console.error(err);
+            alert("Ошибка создания темы. Проверьте правила Firestore.");
+        }
     }
-
-    // Attach event listeners after DOM is fully loaded
-    document.addEventListener('DOMContentLoaded', () => {
-        const execBtn = document.getElementById('execBtn');
-        const clearBtn = document.getElementById('clearBtn');
-        if (execBtn) execBtn.addEventListener('click', executeBomber);
-        if (clearBtn) clearBtn.addEventListener('click', clearLogs);
+    
+    // Удаление темы (только админ, каскадно удаляем все ответы к ней)
+    async function deleteTopic(topicId) {
+        if (!isAdmin) {
+            alert("Недостаточно прав.");
+            return;
+        }
+        if (!confirm("Удалить тему и все ответы? Действие необратимо.")) return;
+        try {
+            // удаляем все ответы, связанные с этой темой
+            const answersSnapshot = await answersRef().where("topicId", "==", topicId).get();
+            const batch = db.batch();
+            answersSnapshot.forEach(doc => {
+                batch.delete(doc.ref);
+            });
+            // удаляем тему
+            const topicRef = topicsRef().doc(topicId);
+            batch.delete(topicRef);
+            await batch.commit();
+        } catch (err) {
+            console.error(err);
+            alert("Ошибка удаления. Возможно, нет прав.");
+        }
+    }
+    
+    // Добавление ответа (любой пользователь)
+    async function addAnswer(topicId, authorName, answerText) {
+        if (!answerText || answerText.trim() === "") {
+            alert("Напишите ответ");
+            return;
+        }
+        const name = authorName.trim() === "" ? "Аноним" : authorName.trim().substring(0, 30);
+        try {
+            await answersRef().add({
+                topicId: topicId,
+                text: answerText.trim(),
+                author: name,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        } catch (err) {
+            console.error(err);
+            alert("Ошибка отправки ответа");
+        }
+    }
+    
+    // Удаление ответа (только админ)
+    async function deleteAnswer(answerId) {
+        if (!isAdmin) {
+            alert("Только администратор может удалять ответы.");
+            return;
+        }
+        if (!confirm("Удалить ответ?")) return;
+        try {
+            await answersRef().doc(answerId).delete();
+        } catch (err) {
+            alert("Ошибка удаления");
+        }
+    }
+    
+    // Рендер всех тем и ответов в реальном времени (onSnapshot)
+    function renderTopics() {
+        if (!appInitialized && !db) return;
+        // слушаем темы, сортировка по дате (новые сверху)
+        topicsRef().orderBy("createdAt", "desc").onSnapshot(async (topicsSnapshot) => {
+            if (topicsSnapshot.empty && topicsSnapshot.docs.length === 0) {
+                topicsContainer.innerHTML = `<div class="empty-message"><i class="fas fa-comment-slash"></i> Пока ни одной темы. Админ, создайте первую!</div>`;
+                return;
+            }
+            // собираем все темы
+            let topicsHtml = '';
+            for (const topicDoc of topicsSnapshot.docs) {
+                const topic = topicDoc.data();
+                const topicId = topicDoc.id;
+                const title = topic.title || "Без заголовка";
+                const description = topic.description || "";
+                const createdAt = topic.createdAt ? topic.createdAt.toDate().toLocaleString() : "только что";
+                
+                // Получаем ответы для этой темы (live)
+                // используем отдельный слушатель внутри цикла? Это может создать много слушателей.
+                // Лучше использовать один глобальный слушатель ответов и кэшировать, но для простоты и надёжности
+                // сделаем отдельный подзапрос внутри промиса. Но чтобы не создавать утечки, мы будем использовать
+                // асинхронную вставку. Однако onSnapshot внутри цикла создаст много подписок.
+                // Решение: Сделаем отдельную функцию renderWithAnswers и используем единый слушатель на answers
+                // Но проще и нагляднее: при каждом изменении ответов перерендерим всё заново через глобальный слушатель.
+                // Оптимизируем: будем хранить массив answers глобально, и перерисовывать всё при изменении тем или ответов.
+                // Для простоты кода создадим общую функцию полного рендера, которая подписывается на оба источника.
+            }
+            // вместо этого, чтобы не было множественных сабскрайбов, вызовем полный рендер с отдельной подпиской.
+        });
         
-        // инициализация первого реле
-        const relaySpan = document.getElementById('relayNode');
-        if (relaySpan) relaySpan.innerText = getRandomRelay();
-        addLog(`[INIT] PHANTOM_NODE готов. Режим: lore_simulation.`, 'info');
-    });
+        // правильный подход: подписка на ответы + темы, комбинируем.
+        // Сделаем функцию fullRender:
+        function fullRender() {
+            if (!db) return;
+            topicsRef().orderBy("createdAt", "desc").onSnapshot((topicsSnap) => {
+                answersRef().orderBy("createdAt", "asc").onSnapshot((answersSnap) => {
+                    const answersByTopic = {};
+                    answersSnap.forEach(doc => {
+                        const ans = doc.data();
+                        const tid = ans.topicId;
+                        if (!answersByTopic[tid]) answersByTopic[tid] = [];
+                        answersByTopic[tid].push({ id: doc.id, ...ans });
+                    });
+                    if (topicsSnap.empty) {
+                        topicsContainer.innerHTML = `<div class="empty-message"><i class="fas fa-comment-slash"></i> Нет тем. Админ, создайте первую!</div>`;
+                        return;
+                    }
+                    let html = '';
+                    topicsSnap.forEach(topicDoc => {
+                        const topic = topicDoc.data();
+                        const topicId = topicDoc.id;
+                        const title = topic.title || "Тема";
+                        const desc = topic.description || "";
+                        const createdDate = topic.createdAt ? topic.createdAt.toDate().toLocaleString() : "недавно";
+                        const answersList = answersByTopic[topicId] || [];
+                        html += `
+                            <div class="topic-card" data-topic-id="${topicId}">
+                                <div class="topic-header">
+                                    <div>
+                                        <div class="topic-title">${escapeHtml(title)}</div>
+                                        ${desc ? `<div style="color:#334155; margin-top: 6px; font-size:0.85rem;">${escapeHtml(desc)}</div>` : ''}
+                                        <div class="topic-meta">
+                                            <span><i class="far fa-calendar-alt"></i> ${createdDate}</span>
+                                            <span><i class="fas fa-reply"></i> ${answersList.length} ответов</span>
+                                            ${isAdmin ? '<span class="admin-tag"><i class="fas fa-crown"></i> Админ-тема</span>' : ''}
+                                        </div>
+                                    </div>
+                                    ${isAdmin ? `<button class="delete-topic-btn" data-id="${topicId}" title="Удалить тему"><i class="fas fa-trash-alt"></i></button>` : ''}
+                                </div>
+                                <div class="answers-section">
+                                    <div class="answers-list" id="answers-${topicId}">
+                        `;
+                        if (answersList.length === 0) {
+                            html += `<div class="empty-message" style="padding: 10px; font-size:0.8rem;">Нет ответов. Будьте первым!</div>`;
+                        } else {
+                            answersList.forEach(ans => {
+                                const ansDate = ans.createdAt ? ans.createdAt.toDate().toLocaleString() : "только что";
+                                html += `
+                                    <div class="answer-item">
+                                        <div class="answer-text">${escapeHtml(ans.text)}</div>
+                                        <div class="answer-meta">
+                                            <span><i class="fas fa-user"></i> ${escapeHtml(ans.author || "Аноним")} • ${ansDate}</span>
+                                            ${isAdmin ? `<button class="delete-answer" data-answer-id="${ans.id}" data-topic-id="${topicId}"><i class="fas fa-times-circle"></i> Удалить</button>` : ''}
+                                        </div>
+                                    </div>
+                                `;
+                            });
+                        }
+                        html += `
+                                    </div>
+                                    <div class="add-answer-form">
+                                        <input type="text" placeholder="Ваше имя (опционально)" id="author-${topicId}" style="flex:0.7;">
+                                        <input type="text" placeholder="Ваш ответ..." id="answer-${topicId}" style="flex:2;">
+                                        <button class="btn-submit-answer" data-topic-id="${topicId}"><i class="fas fa-paper-plane"></i> Ответить</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    topicsContainer.innerHTML = html;
+                    // навесить обработчики на кнопки ответов и удаления
+                    document.querySelectorAll('.btn-submit-answer').forEach(btn => {
+                        btn.addEventListener('click', (e) => {
+                            const tid = btn.getAttribute('data-topic-id');
+                            const authorInput = document.getElementById(`author-${tid}`);
+                            const answerInput = document.getElementById(`answer-${tid}`);
+                            const author = authorInput ? authorInput.value : "";
+                            const answerText = answerInput ? answerInput.value : "";
+                            addAnswer(tid, author, answerText).then(() => {
+                                if(answerInput) answerInput.value = "";
+                            });
+                        });
+                    });
+                    if (isAdmin) {
+                        document.querySelectorAll('.delete-topic-btn').forEach(btn => {
+                            btn.addEventListener('click', (e) => {
+                                const id = btn.getAttribute('data-id');
+                                deleteTopic(id);
+                            });
+                        });
+                        document.querySelectorAll('.delete-answer').forEach(btn => {
+                            btn.addEventListener('click', (e) => {
+                                const answerId = btn.getAttribute('data-answer-id');
+                                deleteAnswer(answerId);
+                            });
+                        });
+                    }
+                });
+            });
+        }
+        fullRender();
+    }
+    
+    // вспомогательная функция
+    function escapeHtml(str) {
+        if (!str) return "";
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
+            return c;
+        });
+    }
+    
+    // инициализация UI
+    window.onload = () => {
+        // запрос админ-пароля при загрузке (для удобства, чтобы активировать админку)
+        // Также добавим кнопку в header для повторного входа
+        const headerDiv = document.querySelector('.forum-header');
+        const adminBtn = document.createElement('button');
+        adminBtn.innerHTML = '<i class="fas fa-key"></i> Войти как админ';
+        adminBtn.style.background = '#f1f5f9';
+        adminBtn.style.border = '1px solid #cbd5e1';
+        adminBtn.style.padding = '8px 16px';
+        adminBtn.style.borderRadius = '40px';
+        adminBtn.style.cursor = 'pointer';
+        adminBtn.style.fontWeight = '500';
+        adminBtn.onclick = () => promptAdminAccess();
+        headerDiv.appendChild(adminBtn);
+        
+        // сначала скрываем админ-панель
+        adminPanelDiv.style.display = "none";
+        // запускаем рендер
+        renderTopics();
+        // кнопка создания темы
+        document.getElementById('createTopicBtn').addEventListener('click', createTopic);
+        // если уже админ - проверим через пару секунд? но пока нет, ждем входа
+    };
 </script>
 </body>
 </html>
