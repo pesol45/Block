@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>СуперФорум | Все функции</title>
+    <title>СуперФорум | Мгновенное обновление</title>
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -305,22 +305,18 @@
         appId: "1:604060443375:web:f6fc69f385a4c59ee3311a"
     };
     
-    // Инициализация
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
     const storage = firebase.storage();
     
-    // Глобальные переменные
     let isAdmin = false;
     const ADMIN_PASSWORD = "admin123";
     const userId = localStorage.getItem('forum_user') || 'user_' + Math.random().toString(36).substr(2, 8);
     localStorage.setItem('forum_user', userId);
     
-    // DOM элементы
     const adminPanel = document.getElementById('adminPanel');
     const topicsContainer = document.getElementById('topicsContainer');
     
-    // Вспомогательные функции
     function escapeHtml(str) {
         if (!str) return '';
         return str.replace(/[&<>]/g, function(m) {
@@ -331,68 +327,50 @@
         });
     }
     
-    // Загрузка изображения
     async function uploadImage(file) {
-        const ext = file.name.split('.').pop();
-        const filename = `${Date.now()}_${Math.random().toString(36)}.${ext}`;
+        const filename = `${Date.now()}_${Math.random().toString(36)}.${file.name.split('.').pop()}`;
         const ref = storage.ref(`images/${filename}`);
         await ref.put(file);
         return await ref.getDownloadURL();
     }
     
-    // Лайк
-    async function toggleLike(answerId, currentLikes) {
+    async function toggleLike(answerId) {
         const answerRef = db.collection('answers').doc(answerId);
         const doc = await answerRef.get();
-        const data = doc.data();
-        let likes = data.likes || [];
+        const likes = doc.data()?.likes || [];
         if (likes.includes(userId)) {
-            likes = likes.filter(id => id !== userId);
+            await answerRef.update({ likes: likes.filter(id => id !== userId) });
         } else {
-            likes.push(userId);
+            await answerRef.update({ likes: [...likes, userId] });
         }
-        await answerRef.update({ likes: likes });
-        return likes.length;
     }
     
-    // Реакция
     async function addReaction(answerId, emoji) {
         const answerRef = db.collection('answers').doc(answerId);
         const doc = await answerRef.get();
-        const data = doc.data();
-        let reactions = data.reactions || {};
+        const reactions = doc.data()?.reactions || {};
         if (!reactions[emoji]) reactions[emoji] = [];
         if (!reactions[emoji].includes(userId)) {
             reactions[emoji].push(userId);
+            await answerRef.update({ reactions });
         }
-        await answerRef.update({ reactions: reactions });
     }
     
-    // Создание темы
     async function createTopic() {
-        if (!isAdmin) {
-            alert("Только администратор может создавать темы!");
-            return;
-        }
+        if (!isAdmin) return alert("Только администратор!");
         const title = document.getElementById('topicTitleInput').value.trim();
-        const description = document.getElementById('topicDescInput').value.trim();
-        if (!title) {
-            alert("Введите заголовок темы");
-            return;
-        }
+        if (!title) return alert("Введите заголовок");
         await db.collection('topics').add({
             title: title,
-            description: description,
+            description: document.getElementById('topicDescInput').value.trim(),
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
         document.getElementById('topicTitleInput').value = '';
         document.getElementById('topicDescInput').value = '';
     }
     
-    // Удаление темы
     async function deleteTopic(topicId) {
-        if (!isAdmin) return;
-        if (!confirm("Удалить тему и все ответы?")) return;
+        if (!isAdmin || !confirm("Удалить тему?")) return;
         const answers = await db.collection('answers').where('topicId', '==', topicId).get();
         const batch = db.batch();
         answers.forEach(doc => batch.delete(doc.ref));
@@ -400,223 +378,214 @@
         await batch.commit();
     }
     
-    // Добавление ответа
     async function addAnswer(topicId, text, author, parentId = null, imageUrl = null) {
-        if (!text.trim() && !imageUrl) {
-            alert("Напишите текст или добавьте изображение");
-            return false;
-        }
-        const finalAuthor = author.trim() || "Гость";
+        if (!text.trim() && !imageUrl) return alert("Напишите текст или добавьте фото");
         await db.collection('answers').add({
-            topicId: topicId,
-            text: text.trim(),
-            author: finalAuthor,
-            parentId: parentId,
-            imageUrl: imageUrl,
+            topicId, text: text.trim(), author: author.trim() || "Гость", parentId, imageUrl,
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-            likes: [],
-            reactions: {},
-            userId: userId
+            likes: [], reactions: {}
         });
-        return true;
     }
     
-    // Основной рендер форума
-    function renderForum() {
-        // Подписка на темы
-        db.collection('topics').orderBy('createdAt', 'desc').onSnapshot(async (topicsSnapshot) => {
-            if (topicsSnapshot.empty) {
-                topicsContainer.innerHTML = '<div class="empty-message"><i class="fas fa-comment-slash"></i> Нет тем. Администратор, создайте первую тему!</div>';
-                return;
-            }
-            
-            // Получаем все ответы
-            const answersSnapshot = await db.collection('answers').get();
-            const answersMap = new Map();
-            answersSnapshot.forEach(doc => {
-                answersMap.set(doc.id, { id: doc.id, ...doc.data() });
-            });
-            
-            let html = '';
-            
-            for (const topicDoc of topicsSnapshot.docs) {
-                const topic = topicDoc.data();
-                const topicId = topicDoc.id;
-                const topicAnswers = Array.from(answersMap.values()).filter(a => a.topicId === topicId);
+    // ГЛАВНЫЙ РЕНДЕР - ИСПРАВЛЕН: ОДИН СЛУШАТЕЛЬ ДЛЯ ВСЕГО
+    function startRealtimeUpdates() {
+        // Слушаем изменения тем
+        db.collection('topics').orderBy('createdAt', 'desc').onSnapshot((topicsSnapshot) => {
+            // Слушаем изменения ответов (внутри, чтобы всегда свежие данные)
+            db.collection('answers').orderBy('createdAt', 'asc').onSnapshot((answersSnapshot) => {
+                // Собираем все ответы в Map
+                const answersMap = new Map();
+                answersSnapshot.forEach(doc => {
+                    answersMap.set(doc.id, { id: doc.id, ...doc.data() });
+                });
                 
-                // Функция построения дерева ответов
-                function renderAnswers(parentId = null, level = 0) {
-                    const children = topicAnswers.filter(a => a.parentId === parentId);
-                    if (children.length === 0) return '';
-                    
-                    let result = '<div class="nested-answers">';
-                    for (const ans of children) {
-                        const likesCount = ans.likes ? ans.likes.length : 0;
-                        const isLiked = ans.likes ? ans.likes.includes(userId) : false;
-                        const reactions = ans.reactions || {};
-                        
-                        // Формируем HTML реакций
-                        let reactionsHtml = '';
-                        for (const [emoji, users] of Object.entries(reactions)) {
-                            reactionsHtml += `<span style="background:#e2e8f0; padding:2px 8px; border-radius:20px; font-size:0.7rem; margin-left:4px;">${emoji} ${users.length}</span>`;
-                        }
-                        
-                        result += `
-                            <div class="answer-item" data-answer-id="${ans.id}">
-                                <div class="answer-header">
-                                    <span class="answer-author"><i class="fas fa-user-circle"></i> ${escapeHtml(ans.author)}</span>
-                                    <small>${ans.createdAt?.toDate().toLocaleString() || 'только что'}</small>
-                                </div>
-                                <div class="answer-text">${escapeHtml(ans.text)}</div>
-                                ${ans.imageUrl ? `<img src="${ans.imageUrl}" class="answer-image" onclick="window.open('${ans.imageUrl}')" />` : ''}
-                                <div class="answer-actions">
-                                    <button class="like-btn" data-id="${ans.id}" data-liked="${isLiked}">
-                                        <i class="fas fa-heart" style="color: ${isLiked ? '#ef4444' : '#6c7a91'}"></i> ${likesCount}
-                                    </button>
-                                    <button class="reply-btn" data-id="${ans.id}" data-author="${escapeHtml(ans.author)}">
-                                        <i class="fas fa-reply"></i> Ответить
-                                    </button>
-                                    <button class="mention-btn" data-author="${escapeHtml(ans.author)}">
-                                        <i class="fas fa-at"></i> Упомянуть
-                                    </button>
-                                    <div class="reaction-buttons">
-                                        <span class="reaction-emoji" data-id="${ans.id}" data-emoji="👍">👍</span>
-                                        <span class="reaction-emoji" data-id="${ans.id}" data-emoji="❤️">❤️</span>
-                                        <span class="reaction-emoji" data-id="${ans.id}" data-emoji="😂">😂</span>
-                                        <span class="reaction-emoji" data-id="${ans.id}" data-emoji="😮">😮</span>
-                                    </div>
-                                    ${reactionsHtml}
-                                </div>
-                                ${renderAnswers(ans.id, level + 1)}
-                            </div>
-                        `;
-                    }
-                    result += '</div>';
-                    return result;
+                if (topicsSnapshot.empty) {
+                    topicsContainer.innerHTML = '<div class="empty-message"><i class="fas fa-comment-slash"></i> Нет тем. Администратор, создайте первую тему!</div>';
+                    return;
                 }
                 
-                html += `
-                    <div class="topic-card">
-                        <div class="topic-header">
-                            <div style="flex:1">
-                                <div class="topic-title">${escapeHtml(topic.title)}</div>
-                                ${topic.description ? `<div class="topic-desc">${escapeHtml(topic.description)}</div>` : ''}
-                                <div class="topic-meta">
-                                    <span><i class="far fa-calendar-alt"></i> ${topic.createdAt?.toDate().toLocaleString() || 'недавно'}</span>
-                                    <span><i class="fas fa-reply-all"></i> ${topicAnswers.length} ответов</span>
+                let html = '';
+                
+                for (const topicDoc of topicsSnapshot.docs) {
+                    const topic = topicDoc.data();
+                    const topicId = topicDoc.id;
+                    const topicAnswers = Array.from(answersMap.values()).filter(a => a.topicId === topicId);
+                    
+                    // Функция построения дерева ответов
+                    function renderAnswersTree(parentId = null) {
+                        const children = topicAnswers.filter(a => a.parentId === parentId);
+                        if (children.length === 0) return '';
+                        
+                        let result = '<div class="nested-answers">';
+                        for (const ans of children) {
+                            const likesCount = ans.likes ? ans.likes.length : 0;
+                            const isLiked = ans.likes ? ans.likes.includes(userId) : false;
+                            const reactions = ans.reactions || {};
+                            
+                            let reactionsHtml = '';
+                            for (const [emoji, users] of Object.entries(reactions)) {
+                                reactionsHtml += `<span style="background:#e2e8f0; padding:2px 8px; border-radius:20px; font-size:0.7rem; margin-left:4px;">${emoji} ${users.length}</span>`;
+                            }
+                            
+                            result += `
+                                <div class="answer-item" data-answer-id="${ans.id}">
+                                    <div class="answer-header">
+                                        <span class="answer-author"><i class="fas fa-user-circle"></i> ${escapeHtml(ans.author)}</span>
+                                        <small>${ans.createdAt?.toDate().toLocaleString() || 'только что'}</small>
+                                    </div>
+                                    <div class="answer-text">${escapeHtml(ans.text)}</div>
+                                    ${ans.imageUrl ? `<img src="${ans.imageUrl}" class="answer-image" onclick="window.open('${ans.imageUrl}')" />` : ''}
+                                    <div class="answer-actions">
+                                        <button class="like-btn" data-id="${ans.id}" data-liked="${isLiked}">
+                                            <i class="fas fa-heart" style="color: ${isLiked ? '#ef4444' : '#6c7a91'}"></i> ${likesCount}
+                                        </button>
+                                        <button class="reply-btn" data-id="${ans.id}" data-author="${escapeHtml(ans.author)}">
+                                            <i class="fas fa-reply"></i> Ответить
+                                        </button>
+                                        <button class="mention-btn" data-author="${escapeHtml(ans.author)}">
+                                            <i class="fas fa-at"></i> Упомянуть
+                                        </button>
+                                        <div class="reaction-buttons">
+                                            <span class="reaction-emoji" data-id="${ans.id}" data-emoji="👍">👍</span>
+                                            <span class="reaction-emoji" data-id="${ans.id}" data-emoji="❤️">❤️</span>
+                                            <span class="reaction-emoji" data-id="${ans.id}" data-emoji="😂">😂</span>
+                                            <span class="reaction-emoji" data-id="${ans.id}" data-emoji="😮">😮</span>
+                                        </div>
+                                        ${reactionsHtml}
+                                    </div>
+                                    ${renderAnswersTree(ans.id)}
+                                </div>
+                            `;
+                        }
+                        result += '</div>';
+                        return result;
+                    }
+                    
+                    html += `
+                        <div class="topic-card">
+                            <div class="topic-header">
+                                <div style="flex:1">
+                                    <div class="topic-title">${escapeHtml(topic.title)}</div>
+                                    ${topic.description ? `<div class="topic-desc">${escapeHtml(topic.description)}</div>` : ''}
+                                    <div class="topic-meta">
+                                        <span><i class="far fa-calendar-alt"></i> ${topic.createdAt?.toDate().toLocaleString() || 'недавно'}</span>
+                                        <span><i class="fas fa-reply-all"></i> ${topicAnswers.length} ответов</span>
+                                    </div>
+                                </div>
+                                ${isAdmin ? `<button class="delete-topic-btn" data-id="${topicId}"><i class="fas fa-trash-alt"></i></button>` : ''}
+                            </div>
+                            <div class="answers-section">
+                                <div class="answers-list">
+                                    ${renderAnswersTree(null)}
+                                </div>
+                                <div class="add-answer-form" data-topic="${topicId}">
+                                    <div class="reply-toolbar">
+                                        <input type="text" placeholder="Ваше имя" class="answer-name" id="name-${topicId}" style="flex:0.7">
+                                        <textarea rows="2" placeholder="Написать ответ..." class="answer-textarea" id="text-${topicId}" style="flex:2"></textarea>
+                                        <input type="file" accept="image/*" class="image-upload" id="image-${topicId}" style="display:none">
+                                        <button class="attach-btn" data-topic="${topicId}"><i class="fas fa-image"></i></button>
+                                        <button class="btn-reply submit-answer" data-topic="${topicId}"><i class="fas fa-paper-plane"></i> Ответить</button>
+                                    </div>
                                 </div>
                             </div>
-                            ${isAdmin ? `<button class="delete-topic-btn" data-id="${topicId}"><i class="fas fa-trash-alt"></i></button>` : ''}
                         </div>
-                        <div class="answers-section">
-                            <div class="answers-list">
-                                ${renderAnswers(null)}
-                            </div>
-                            <div class="add-answer-form" data-topic="${topicId}">
-                                <div class="reply-toolbar">
-                                    <input type="text" placeholder="Ваше имя" class="answer-name" id="name-${topicId}" style="flex:0.7">
-                                    <textarea rows="2" placeholder="Написать ответ..." class="answer-textarea" id="text-${topicId}" style="flex:2"></textarea>
-                                    <input type="file" accept="image/*" class="image-upload" id="image-${topicId}" style="display:none">
-                                    <button class="attach-btn" data-topic="${topicId}"><i class="fas fa-image"></i></button>
-                                    <button class="btn-reply submit-answer" data-topic="${topicId}"><i class="fas fa-paper-plane"></i> Ответить</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
-            
-            topicsContainer.innerHTML = html;
-            
-            // Привязываем обработчики
-            document.querySelectorAll('.like-btn').forEach(btn => {
-                btn.onclick = async (e) => {
-                    e.stopPropagation();
-                    const id = btn.dataset.id;
-                    const newCount = await toggleLike(id);
-                    const isLiked = btn.dataset.liked === 'true';
-                    btn.dataset.liked = (!isLiked).toString();
-                    btn.innerHTML = `<i class="fas fa-heart" style="color: ${!isLiked ? '#ef4444' : '#6c7a91'}"></i> ${newCount}`;
-                };
+                    `;
+                }
+                
+                topicsContainer.innerHTML = html;
+                attachEventHandlers();
             });
-            
-            document.querySelectorAll('.reaction-emoji').forEach(el => {
-                el.onclick = async (e) => {
-                    e.stopPropagation();
-                    const id = el.dataset.id;
-                    const emoji = el.dataset.emoji;
-                    await addReaction(id, emoji);
-                };
-            });
-            
-            document.querySelectorAll('.reply-btn').forEach(btn => {
-                btn.onclick = () => {
-                    const parentId = btn.dataset.id;
-                    const author = btn.dataset.author;
-                    const topicId = btn.closest('.topic-card').querySelector('.add-answer-form').dataset.topic;
-                    const textarea = document.getElementById(`text-${topicId}`);
-                    textarea.value = `@${author} `;
-                    textarea.focus();
-                    textarea.dataset.parentId = parentId;
-                };
-            });
-            
-            document.querySelectorAll('.mention-btn').forEach(btn => {
-                btn.onclick = () => {
-                    const author = btn.dataset.author;
-                    const topicId = btn.closest('.topic-card').querySelector('.add-answer-form').dataset.topic;
-                    const textarea = document.getElementById(`text-${topicId}`);
-                    textarea.value = `@${author} `;
-                    textarea.focus();
-                };
-            });
-            
-            document.querySelectorAll('.attach-btn').forEach(btn => {
-                btn.onclick = () => {
-                    const topicId = btn.dataset.topic;
-                    document.getElementById(`image-${topicId}`).click();
-                };
-            });
-            
-            document.querySelectorAll('.image-upload').forEach(input => {
-                input.onchange = async (e) => {
-                    const file = e.target.files[0];
-                    if (!file) return;
-                    const topicId = input.id.split('-')[1];
-                    const nameInput = document.getElementById(`name-${topicId}`);
-                    const textarea = document.getElementById(`text-${topicId}`);
-                    const parentId = textarea.dataset.parentId || null;
-                    
-                    const url = await uploadImage(file);
-                    await addAnswer(topicId, textarea.value, nameInput.value, parentId, url);
-                    textarea.value = '';
-                    delete textarea.dataset.parentId;
-                    input.value = '';
-                };
-            });
-            
-            document.querySelectorAll('.submit-answer').forEach(btn => {
-                btn.onclick = async () => {
-                    const topicId = btn.dataset.topic;
-                    const nameInput = document.getElementById(`name-${topicId}`);
-                    const textarea = document.getElementById(`text-${topicId}`);
-                    const parentId = textarea.dataset.parentId || null;
-                    
-                    await addAnswer(topicId, textarea.value, nameInput.value, parentId, null);
-                    textarea.value = '';
-                    delete textarea.dataset.parentId;
-                };
-            });
-            
-            if (isAdmin) {
-                document.querySelectorAll('.delete-topic-btn').forEach(btn => {
-                    btn.onclick = () => deleteTopic(btn.dataset.id);
-                });
-            }
-        }, (error) => {
-            console.error("Ошибка загрузки:", error);
-            topicsContainer.innerHTML = '<div class="empty-message"><i class="fas fa-exclamation-triangle"></i> Ошибка загрузки. Проверьте правила Firestore (allow read: if true)</div>';
         });
+    }
+    
+    function attachEventHandlers() {
+        // Лайки
+        document.querySelectorAll('.like-btn').forEach(btn => {
+            btn.onclick = async (e) => {
+                e.stopPropagation();
+                const id = btn.dataset.id;
+                await toggleLike(id);
+            };
+        });
+        
+        // Реакции
+        document.querySelectorAll('.reaction-emoji').forEach(el => {
+            el.onclick = async (e) => {
+                e.stopPropagation();
+                await addReaction(el.dataset.id, el.dataset.emoji);
+            };
+        });
+        
+        // Ответить (вложенный)
+        document.querySelectorAll('.reply-btn').forEach(btn => {
+            btn.onclick = () => {
+                const parentId = btn.dataset.id;
+                const author = btn.dataset.author;
+                const topicId = btn.closest('.topic-card').querySelector('.add-answer-form').dataset.topic;
+                const textarea = document.getElementById(`text-${topicId}`);
+                textarea.value = `@${author} `;
+                textarea.focus();
+                textarea.dataset.parentId = parentId;
+            };
+        });
+        
+        // Упомянуть
+        document.querySelectorAll('.mention-btn').forEach(btn => {
+            btn.onclick = () => {
+                const author = btn.dataset.author;
+                const topicId = btn.closest('.topic-card').querySelector('.add-answer-form').dataset.topic;
+                const textarea = document.getElementById(`text-${topicId}`);
+                textarea.value = `@${author} `;
+                textarea.focus();
+            };
+        });
+        
+        // Прикрепить изображение
+        document.querySelectorAll('.attach-btn').forEach(btn => {
+            btn.onclick = () => {
+                const topicId = btn.dataset.topic;
+                document.getElementById(`image-${topicId}`).click();
+            };
+        });
+        
+        // Загрузка изображения
+        document.querySelectorAll('.image-upload').forEach(input => {
+            input.onchange = async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const topicId = input.id.split('-')[1];
+                const nameInput = document.getElementById(`name-${topicId}`);
+                const textarea = document.getElementById(`text-${topicId}`);
+                const parentId = textarea.dataset.parentId || null;
+                
+                const url = await uploadImage(file);
+                await addAnswer(topicId, textarea.value, nameInput.value, parentId, url);
+                textarea.value = '';
+                delete textarea.dataset.parentId;
+                input.value = '';
+            };
+        });
+        
+        // Отправить ответ
+        document.querySelectorAll('.submit-answer').forEach(btn => {
+            btn.onclick = async () => {
+                const topicId = btn.dataset.topic;
+                const nameInput = document.getElementById(`name-${topicId}`);
+                const textarea = document.getElementById(`text-${topicId}`);
+                const parentId = textarea.dataset.parentId || null;
+                
+                await addAnswer(topicId, textarea.value, nameInput.value, parentId, null);
+                textarea.value = '';
+                delete textarea.dataset.parentId;
+            };
+        });
+        
+        // Удаление темы (админ)
+        if (isAdmin) {
+            document.querySelectorAll('.delete-topic-btn').forEach(btn => {
+                btn.onclick = () => deleteTopic(btn.dataset.id);
+            });
+        }
     }
     
     // Чат
@@ -676,14 +645,14 @@
         };
     }
     
-    // Админ-вход
+    // Админ вход
     document.getElementById('adminLoginBtn').onclick = () => {
         const pwd = prompt("Введите пароль администратора:");
         if (pwd === ADMIN_PASSWORD) {
             isAdmin = true;
             adminPanel.style.display = "block";
             alert("Админ-режим активирован!");
-            renderForum();
+            startRealtimeUpdates(); // перезапускаем для отображения кнопок удаления
         } else if (pwd) {
             alert("Неверный пароль");
         }
@@ -694,7 +663,7 @@
     // Запуск
     initTheme();
     initChat();
-    renderForum();
+    startRealtimeUpdates();
 </script>
 </body>
 </html>
