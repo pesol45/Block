@@ -2,85 +2,106 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Админ-форум | Firebase Без регистрации</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Форум | Обсуждения без регистрации</title>
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-    <!-- Font Awesome 6 (free) -->
+    <!-- Font Awesome 6 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
         }
 
         body {
-            background: #f1f5f9;
-            padding: 30px 20px;
+            background: #f5f7fb;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            padding: 20px 16px;
+            color: #1e293b;
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 900px;
             margin: 0 auto;
         }
 
-        /* Header & admin панель */
+        /* Шапка форума */
         .forum-header {
             background: white;
-            border-radius: 28px;
-            padding: 20px 28px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.03);
-            margin-bottom: 30px;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            align-items: center;
-            border: 1px solid #e2e8f0;
+            border-radius: 32px;
+            padding: 20px 24px;
+            margin-bottom: 28px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.02), 0 1px 2px rgba(0,0,0,0.05);
+            border: 1px solid #e9eef3;
+            transition: all 0.2s;
         }
 
         .logo h1 {
-            font-size: 1.7rem;
-            background: linear-gradient(135deg, #1e293b, #2c3e66);
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #1e2b3c, #2c4c6e);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
             letter-spacing: -0.3px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .logo h1 i {
+            background: none;
+            -webkit-background-clip: unset;
+            background-clip: unset;
+            color: #2c6e9e;
         }
         .logo p {
-            font-size: 0.8rem;
-            color: #475569;
+            font-size: 0.85rem;
+            color: #5b6e8c;
+            margin-top: 6px;
         }
 
-        .admin-badge {
-            background: #0f172a;
+        .header-actions {
+            margin-top: 14px;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .admin-login-btn {
+            background: #f1f4f9;
+            border: 1px solid #dce3ec;
             padding: 8px 18px;
             border-radius: 40px;
-            color: #facc15;
-            font-weight: 600;
-            font-size: 0.9rem;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #2c3e66;
+            cursor: pointer;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
-        .admin-badge i {
-            margin-right: 6px;
-            color: #facc15;
+        .admin-login-btn:hover {
+            background: #e6edf6;
+            border-color: #b9c4d4;
         }
 
-        /* кнопки админки */
+        /* Админ-панель (скрыта по умолчанию) */
         .admin-panel {
             background: white;
             border-radius: 28px;
-            padding: 20px 28px;
-            margin-bottom: 30px;
+            padding: 20px 24px;
+            margin-bottom: 28px;
             border: 1px solid #e2e8f0;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+            box-shadow: 0 6px 14px rgba(0,0,0,0.03);
+            display: none;
         }
         .admin-title {
             font-weight: 700;
-            font-size: 1.25rem;
+            font-size: 1.2rem;
             margin-bottom: 16px;
             color: #0f172a;
             display: flex;
@@ -89,58 +110,43 @@
         }
         .topic-form {
             display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            align-items: flex-end;
-        }
-        .topic-form .input-group {
-            flex: 2;
-            min-width: 200px;
+            flex-direction: column;
+            gap: 14px;
         }
         .topic-form input, .topic-form textarea {
             width: 100%;
-            padding: 12px 16px;
-            border: 1px solid #cbd5e1;
-            border-radius: 20px;
+            padding: 14px 18px;
+            border: 1px solid #cfdee9;
+            border-radius: 28px;
             font-size: 0.95rem;
+            background: #ffffff;
             transition: 0.2s;
-            background: #fefefe;
+            font-family: inherit;
         }
         .topic-form input:focus, .topic-form textarea:focus {
             outline: none;
             border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
-        }
-        .topic-form textarea {
-            resize: vertical;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
         }
         .btn {
-            padding: 10px 24px;
             border: none;
             border-radius: 40px;
             font-weight: 600;
+            padding: 12px 20px;
             cursor: pointer;
             transition: 0.2s;
-            background: #eef2ff;
-            color: #1e40af;
+            font-size: 0.9rem;
         }
         .btn-primary {
-            background: #1e293b;
+            background: #1e2f41;
             color: white;
         }
         .btn-primary:hover {
-            background: #0f172a;
-            transform: scale(0.97);
-        }
-        .btn-danger {
-            background: #fee2e2;
-            color: #b91c1c;
-        }
-        .btn-danger:hover {
-            background: #fecaca;
+            background: #0f2a3b;
+            transform: translateY(-1px);
         }
 
-        /* темы форума */
+        /* Список тем (карточки) */
         .topics-list {
             display: flex;
             flex-direction: column;
@@ -148,36 +154,43 @@
         }
         .topic-card {
             background: white;
-            border-radius: 28px;
+            border-radius: 32px;
             overflow: hidden;
-            border: 1px solid #e2e8f0;
-            transition: all 0.2s;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+            border: 1px solid #eef2f8;
+            box-shadow: 0 6px 12px -6px rgba(0,0,0,0.05);
+            transition: 0.2s;
         }
         .topic-header {
             padding: 20px 24px 12px 24px;
-            background: #fafcff;
-            border-bottom: 1px solid #edf2f7;
-            display: flex;
-            justify-content: space-between;
-            align-items: baseline;
-            flex-wrap: wrap;
+            background: #ffffff;
+            border-bottom: 1px solid #f0f4fa;
         }
         .topic-title {
-            font-size: 1.5rem;
+            font-size: 1.45rem;
             font-weight: 700;
-            color: #0f172a;
+            color: #0c4a6e;
+            line-height: 1.3;
+            word-break: break-word;
+        }
+        .topic-desc {
+            color: #334155;
+            margin-top: 8px;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            word-break: break-word;
         }
         .topic-meta {
-            font-size: 0.75rem;
-            color: #5b6e8c;
+            font-size: 0.7rem;
+            color: #6c7a91;
             display: flex;
-            gap: 12px;
-            margin-top: 8px;
+            flex-wrap: wrap;
+            gap: 14px;
+            margin-top: 12px;
+            align-items: center;
         }
         .admin-tag {
-            background: #fef9c3;
-            color: #854d0e;
+            background: #fef3c7;
+            color: #b45309;
             padding: 2px 10px;
             border-radius: 30px;
             font-size: 0.7rem;
@@ -186,16 +199,19 @@
         .delete-topic-btn {
             background: none;
             border: none;
-            color: #94a3b8;
+            color: #b9c4d4;
             font-size: 1.1rem;
             cursor: pointer;
             transition: 0.2s;
+            padding: 4px 8px;
+            border-radius: 30px;
         }
         .delete-topic-btn:hover {
             color: #dc2626;
+            background: #fef2f2;
         }
 
-        /* ответы (комментарии) */
+        /* Блок ответов */
         .answers-section {
             padding: 8px 24px 24px 24px;
             background: white;
@@ -204,78 +220,144 @@
             margin: 16px 0 20px;
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 14px;
         }
         .answer-item {
-            background: #f8fafc;
+            background: #fafcff;
             padding: 14px 18px;
-            border-radius: 20px;
-            border-left: 4px solid #cbd5e1;
+            border-radius: 24px;
+            border-left: 4px solid #cfdfed;
+            transition: 0.1s;
         }
         .answer-text {
-            font-size: 0.95rem;
-            line-height: 1.4;
-            color: #1e293b;
+            font-size: 0.92rem;
+            line-height: 1.45;
+            color: #1e2a3e;
+            word-break: break-word;
         }
         .answer-meta {
             font-size: 0.7rem;
-            color: #5b6e8c;
+            color: #6a7c9a;
             margin-top: 8px;
             display: flex;
             justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px;
         }
         .delete-answer {
             background: transparent;
             border: none;
-            color: #cbd5e1;
+            color: #b9c9dc;
             cursor: pointer;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
+            padding: 4px 8px;
+            border-radius: 30px;
         }
         .delete-answer:hover {
             color: #e11d48;
+            background: #fff0f2;
         }
-
         .add-answer-form {
             display: flex;
+            flex-direction: column;
             gap: 12px;
-            margin-top: 8px;
-            align-items: flex-start;
+            margin-top: 18px;
+        }
+        .answer-input-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
         }
         .add-answer-form input {
             flex: 1;
             padding: 12px 16px;
-            border: 1px solid #cbd5e1;
+            border: 1px solid #dce5ef;
             border-radius: 40px;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
+            background: white;
+            font-family: inherit;
         }
-        .add-answer-form button {
-            background: #eef2ff;
+        .add-answer-form input:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+        .btn-reply {
+            background: #eef3fc;
             border: none;
-            padding: 10px 18px;
+            padding: 10px 20px;
             border-radius: 40px;
-            font-weight: 600;
+            font-weight: 500;
             cursor: pointer;
+            color: #1e4a76;
+            transition: 0.2s;
         }
-
+        .btn-reply:hover {
+            background: #e2ebf5;
+        }
         .empty-message {
             text-align: center;
-            padding: 30px;
-            color: #5b6e8c;
-            font-style: italic;
+            padding: 40px 20px;
+            color: #6c7e9e;
+            background: white;
+            border-radius: 32px;
+            font-size: 0.9rem;
         }
-
         footer {
             margin-top: 40px;
             text-align: center;
-            font-size: 0.75rem;
-            color: #5b6e8c;
+            font-size: 0.7rem;
+            color: #7e8aa2;
+            padding: 16px;
         }
-        hr {
-            margin: 12px 0;
+        /* Адаптивность */
+        @media (min-width: 768px) {
+            body {
+                padding: 28px 24px;
+            }
+            .topic-form {
+                flex-direction: row;
+                align-items: flex-end;
+            }
+            .topic-form .input-group {
+                flex: 1;
+            }
+            .add-answer-form {
+                flex-direction: row;
+                align-items: center;
+            }
+            .answer-input-row {
+                flex: 1;
+            }
+            .btn-reply {
+                flex-shrink: 0;
+            }
         }
-        @media (max-width: 680px) {
-            body { padding: 16px; }
-            .topic-title { font-size: 1.2rem; }
+        @media (max-width: 600px) {
+            .topic-title {
+                font-size: 1.25rem;
+            }
+            .topic-header {
+                padding: 16px 18px;
+            }
+            .answers-section {
+                padding: 6px 18px 20px 18px;
+            }
+            .forum-header {
+                padding: 16px 18px;
+            }
+        }
+        button:active {
+            transform: scale(0.97);
+        }
+        .hidden-admin {
+            display: none;
+        }
+        .flex-between {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
     </style>
 </head>
@@ -283,177 +365,126 @@
 <div class="container">
     <div class="forum-header">
         <div class="logo">
-            <h1><i class="fas fa-comments"></i> АдминФорум</h1>
-            <p>Темы создаёт администратор отвечают все без регистрации</p>
+            <h1><i class="fas fa-message"></i> Городской форум</h1>
+            <p>Общайтесь без регистрации — отвечайте в любых темах</p>
         </div>
-        <div class="admin-badge">
-            <i class="fas fa-user-shield"></i> Режим админа
+        <div class="header-actions">
+            <button id="showAdminLoginBtn" class="admin-login-btn"><i class="fas fa-lock"></i> Вход для администратора</button>
         </div>
     </div>
 
-    <!-- Админ-панель: создание новой темы -->
-    <div class="admin-panel" id="adminPanel">
+    <!-- СКРЫТАЯ АДМИН-ПАНЕЛЬ (появится после пароля) -->
+    <div id="adminPanel" class="admin-panel">
         <div class="admin-title">
-            <i class="fas fa-hammer" style="color:#facc15;"></i> Администратор: создать тему
+            <i class="fas fa-user-cog" style="color:#f59e0b;"></i> Управление форумом
         </div>
         <div class="topic-form">
-            <div class="input-group" style="flex:1.5;">
-                <input type="text" id="topicTitleInput" placeholder="Заголовок темы (обязательно)" maxlength="120">
+            <div class="input-group" style="width:100%">
+                <input type="text" id="topicTitleInput" placeholder="Заголовок новой темы" maxlength="120">
             </div>
-            <div class="input-group" style="flex:2.5;">
-                <textarea id="topicDescInput" rows="1" placeholder="Описание / первый пост (необязательно)"></textarea>
+            <div class="input-group" style="width:100%">
+                <textarea id="topicDescInput" rows="1" placeholder="Краткое описание (необязательно)"></textarea>
             </div>
-            <button id="createTopicBtn" class="btn btn-primary"><i class="fas fa-plus-circle"></i> Создать тему</button>
+            <button id="createTopicBtn" class="btn btn-primary"><i class="fas fa-plus-circle"></i> Опубликовать тему</button>
         </div>
-        <div style="font-size:12px; margin-top: 8px; color:#475569;"><i class="fas fa-info-circle"></i> Только админ может создавать и удалять темы. Пользователи оставляют ответы.</div>
+        <div style="font-size:12px; margin-top: 12px; color:#5b6e8c;"><i class="fas fa-shield-alt"></i> Администратор: создание и удаление тем / ответов</div>
     </div>
 
-    <!-- Список тем -->
+    <!-- Список тем форума -->
     <div id="topicsContainer" class="topics-list">
         <div class="empty-message"><i class="fas fa-spinner fa-pulse"></i> Загрузка тем...</div>
     </div>
     <footer>
-        <i class="fas fa-globe"></i> Firebase интеграция | Анонимные ответы | Админ управляет темами
+        <i class="fas fa-comment-dots"></i> Анонимные ответы приветствуются | Все данные в Firebase
     </footer>
 </div>
 
 <script>
-    // ------------------- КОНФИГУРАЦИЯ FIREBASE -------------------
-    // ВНИМАНИЕ: замените на свои данные из консоли Firebase!
-    // Для работы форума нужно создать проект Firebase, добавить веб-приложение,
-    // включить Firestore (тестовый режим или настроить правила).
-    // Рекомендуемые правила безопасности для быстрого старта:
-    // rules_version = '2';
-    // service cloud.firestore {
-    //   match /databases/{database}/documents {
-    //     match /topics/{document} {
-    //       allow read: true;
-    //       allow write: if request.auth != null;   // но для демо можно разрешить всем, но мы управляем через код
-    //     }
-    //     match /answers/{document} {
-    //       allow read: true;
-    //       allow write: true;
-    //     }
-    //   }
-    // }
-    // Для работы админки без входа по паролю (просто логика "кто угодно может нажать создать/удалить").
-    // По заданию "админка" реализована через явную панель без доп. аутентификации. Если требуется защитить,
-    // можно добавить секретный пароль, но в рамках ТЗ: админка есть и другие пользователи отвечают.
-    // В текущей реализации любой, кто зайдет на страницу, видит админ-панель. Но для соответствия заданию,
-    // мы предполагаем, что доступ к админке имеют только доверенные лица (либо можно скрыть панель, но в задании
-    // четко: "у меня будет админка а другие пользователи будут отвечать" – значит админ видит панель, пользователи видят форум.
-    // Реализовано: интерфейс один, но любой может создать тему (админское действие). 
-    // Чтобы усилить: можно добавить простой пароль, но для простоты – панель всегда видна.
-    // Но я добавлю скрытый чекбокс или alert? Не требуется, просто пользователи могут "злоупотребить", но это демо.
-    // По желанию можно установить флаг isAdmin через localStorage, но в целях честности – пусть будет открытая админка.
-    // Но чтобы соблюсти "админка у меня" – я добавлю концепцию: кнопка активации админ-режима по паролю? 
-    // Однако по ТЗ регистрация не нужна, но админка должна быть у меня. Проще: я добавлю опциональный "Секретный ключ"
-    // в localStorage, чтобы обычные пользователи не создавали темы. Но условие: "админка у меня, другие отвечают"
-    // => логично, что панель создания тем видят только если знают секрет. Сделаем простую защиту:
-    // При загрузке страницы спросим пароль для админ-доступа? Но это не регистрация, просто проверка.
-    // Чтобы было удобно, но безопасно: Я реализую "режим администратора" через кнопку-переключатель с паролем по умолчанию "admin123".
-    // Поскольку ТЗ не требует сложной аутентификации, такой способ сохранит идею: обычные пользователи не увидят панель,
-    // но будут отвечать. А я (админ) введу пароль и получу админку. Это элегантно и не требует регистрации.
-    // Таким образом:
-    // 1. По умолчанию панель админа скрыта.
-    // 2. Кнопка "Войти как админ" запрашивает пароль.
-    // 3. После успеха отображаются админ-инструменты (создание темы, удаление тем и удаление ответов).
-    // 4. Пользователи без админ-режима видят только темы и могут оставлять ответы.
-    // Это идеально соответствует: "у меня будет админка а другие пользователи будут отвечать".
-    
-    // Переменная состояния админа
-    let isAdmin = false;
-    const ADMIN_PASSWORD = "admin123";  // пароль для админки (можно сменить)
-    
-    // DOM элементы
-    const adminPanelDiv = document.getElementById('adminPanel');
-    const topicsContainer = document.getElementById('topicsContainer');
-    
-    // Конфигурация Firebase (замените на свои!!!)
-    // Ниже указаны демо-данные, которые НЕ РАБОТАЮТ. Пожалуйста, вставьте свои параметры из проекта Firebase.
-    // Для корректной работы создайте проект, добавьте веб-приложение и скопируйте конфиг.
-    const firebaseConfig = { 
+    // ------------------ КОНФИГУРАЦИЯ FIREBASE (ваши данные уже вставлены) ------------------
+    const firebaseConfig = {
         apiKey: "AIzaSyCMi3eKNZ4OgD2YCdhEFDOsmuclKZkjflo",
-                            authDomain: "from-b14b1.firebaseapp.com", 
-                            projectId: "from-b14b1", 
-                            storageBucket: "from-b14b1.firebasestorage.app",
-                            messagingSenderId: "604060443375", 
-                            appId: "1:604060443375:web:f6fc69f385a4c59ee3311a"
-                           };
-    
-    // Инициализация Firebase (с проверкой)
+        authDomain: "from-b14b1.firebaseapp.com",
+        projectId: "from-b14b1",
+        storageBucket: "from-b14b1.firebasestorage.app",
+        messagingSenderId: "604060443375",
+        appId: "1:604060443375:web:f6fc69f385a4c59ee3311a"
+    };
+
+    // Инициализация
     let db;
     let appInitialized = false;
+
     try {
         if (!firebase.apps.length) {
             firebase.initializeApp(firebaseConfig);
         }
         db = firebase.firestore();
         appInitialized = true;
-        console.log("Firebase инициализирован (проверьте config)");
+        console.log("Firebase готов");
     } catch (e) {
-        console.error("Ошибка инициализации Firebase: ", e);
-        alert("Ошибка подключения к Firebase. Проверьте конфигурацию в коде (apiKey и projectId). Демо-режим не сохранит данные.");
-        // Создаем заглушку, чтобы страница не падала
+        console.error("Firebase error:", e);
+        alert("Ошибка подключения к Firebase. Проверьте интернет или настройки.");
         db = {
             collection: () => ({
                 orderBy: () => ({
                     onSnapshot: (callback) => callback({ docs: [] }),
                     get: async () => ({ docs: [] })
                 }),
-                add: async () => { alert("Firebase не настроен!"); throw new Error("no firebase"); },
+                add: async () => { alert("Firebase не доступен"); throw new Error(); },
                 doc: () => ({ delete: async () => {} })
             })
         };
     }
-    
-    // Коллекции Firestore
+
+    // Ссылки на коллекции
     const topicsRef = () => db.collection("topics");
     const answersRef = () => db.collection("answers");
-    
-    // ------------------ Функции админ-панели ------------------
+
+    // Состояние админа
+    let isAdmin = false;
+    const ADMIN_PASSWORD = "admin123";
+
+    // DOM элементы
+    const adminPanelDiv = document.getElementById('adminPanel');
+    const topicsContainer = document.getElementById('topicsContainer');
+
+    // Функции админ-интерфейса
     function showAdminUI(show) {
         if (show) {
             adminPanelDiv.style.display = "block";
         } else {
             adminPanelDiv.style.display = "none";
         }
-        // Дополнительно: добавим классы для кнопок удаления тем/ответов
-        document.querySelectorAll('.delete-topic-btn, .delete-answer').forEach(btn => {
-            if (show) btn.style.display = 'inline-block';
-            else btn.style.display = 'none';
-        });
+        // динамически обновляем кнопки удаления при перерисовке (рендер сам подхватит isAdmin)
+        if (typeof reRenderTopics === 'function') reRenderTopics();
+        else if (window.fullRenderListener) window.fullRenderListener();
     }
-    
-    // Запрос админ-доступа (вызывается при загрузке, также можно добавить кнопку)
+
+    // Запрос пароля (чистый, без регистрации)
     function promptAdminAccess() {
-        const pwd = prompt("🔐 Админ-доступ. Введите пароль:", "");
+        const pwd = prompt("🔐 Введите пароль администратора:", "");
         if (pwd === ADMIN_PASSWORD) {
             isAdmin = true;
             showAdminUI(true);
-            alert("Добро пожаловать, Администратор! Вы можете создавать/удалять темы и удалять любые ответы.");
-            // перерисовываем темы, чтобы обновить видимость кнопок удаления
-            renderTopics(); 
+            alert("Режим администратора активирован. Теперь доступно создание тем и удаление.");
+            // перерисовываем, чтобы показать кнопки удаления
+            if (window.refreshForum) window.refreshForum();
         } else if (pwd !== null) {
-            alert("Неверный пароль. Доступ только для чтения (можно отвечать).");
+            alert("Неверный пароль. Вы остаетесь в режиме читателя/участника.");
             isAdmin = false;
             showAdminUI(false);
-            renderTopics();
-        } else {
-            isAdmin = false;
-            showAdminUI(false);
-            renderTopics();
+            if (window.refreshForum) window.refreshForum();
         }
     }
-    
-    // Создание темы (админ)
+
+    // --- СОЗДАНИЕ ТЕМЫ (только админ)---
     async function createTopic() {
         if (!isAdmin) {
-            alert("Только администратор может создавать темы. Войдите как админ.");
+            alert("Только администратор может создавать темы. Войдите через кнопку входа.");
             return;
         }
         const title = document.getElementById('topicTitleInput').value.trim();
-        const description = document.getElementById('topicDescInput').value.trim();
+        const desc = document.getElementById('topicDescInput').value.trim();
         if (!title) {
             alert("Введите заголовок темы");
             return;
@@ -461,7 +492,7 @@
         try {
             await topicsRef().add({
                 title: title,
-                description: description,
+                description: desc,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                 createdBy: "admin"
             });
@@ -469,46 +500,42 @@
             document.getElementById('topicDescInput').value = '';
         } catch (err) {
             console.error(err);
-            alert("Ошибка создания темы. Проверьте правила Firestore.");
+            alert("Ошибка создания темы. Проверьте правила Firestore (требуется allow write)");
         }
     }
-    
-    // Удаление темы (только админ, каскадно удаляем все ответы к ней)
+
+    // --- Удаление темы + всех её ответов (админ)---
     async function deleteTopic(topicId) {
         if (!isAdmin) {
             alert("Недостаточно прав.");
             return;
         }
-        if (!confirm("Удалить тему и все ответы? Действие необратимо.")) return;
+        if (!confirm("Удалить тему и все ответы? Восстановить нельзя.")) return;
         try {
-            // удаляем все ответы, связанные с этой темой
-            const answersSnapshot = await answersRef().where("topicId", "==", topicId).get();
+            const answersSnap = await answersRef().where("topicId", "==", topicId).get();
             const batch = db.batch();
-            answersSnapshot.forEach(doc => {
-                batch.delete(doc.ref);
-            });
-            // удаляем тему
-            const topicRef = topicsRef().doc(topicId);
-            batch.delete(topicRef);
+            answersSnap.forEach(doc => batch.delete(doc.ref));
+            batch.delete(topicsRef().doc(topicId));
             await batch.commit();
         } catch (err) {
             console.error(err);
-            alert("Ошибка удаления. Возможно, нет прав.");
+            alert("Ошибка удаления. Возможно, недостаточно прав в БД.");
         }
     }
-    
-    // Добавление ответа (любой пользователь)
+
+    // --- Добавление ответа (ЛЮБОЙ ПОЛЬЗОВАТЕЛЬ)---
     async function addAnswer(topicId, authorName, answerText) {
         if (!answerText || answerText.trim() === "") {
-            alert("Напишите ответ");
+            alert("Напишите текст ответа");
             return;
         }
-        const name = authorName.trim() === "" ? "Аноним" : authorName.trim().substring(0, 30);
+        const name = authorName ? authorName.trim() : "";
+        const finalAuthor = name === "" ? "Гость" : name.substring(0, 28);
         try {
             await answersRef().add({
                 topicId: topicId,
                 text: answerText.trim(),
-                author: name,
+                author: finalAuthor,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             });
         } catch (err) {
@@ -516,156 +543,156 @@
             alert("Ошибка отправки ответа");
         }
     }
-    
-    // Удаление ответа (только админ)
+
+    // --- Удаление ответа (админ)---
     async function deleteAnswer(answerId) {
         if (!isAdmin) {
-            alert("Только администратор может удалять ответы.");
+            alert("Только администратор может удалять чужие ответы.");
             return;
         }
-        if (!confirm("Удалить ответ?")) return;
+        if (!confirm("Удалить этот ответ?")) return;
         try {
             await answersRef().doc(answerId).delete();
         } catch (err) {
             alert("Ошибка удаления");
         }
     }
-    
-    // Рендер всех тем и ответов в реальном времени (onSnapshot)
-    function renderTopics() {
-        if (!appInitialized && !db) return;
-        // слушаем темы, сортировка по дате (новые сверху)
-        topicsRef().orderBy("createdAt", "desc").onSnapshot(async (topicsSnapshot) => {
-            if (topicsSnapshot.empty && topicsSnapshot.docs.length === 0) {
-                topicsContainer.innerHTML = `<div class="empty-message"><i class="fas fa-comment-slash"></i> Пока ни одной темы. Админ, создайте первую!</div>`;
-                return;
-            }
-            // собираем все темы
-            let topicsHtml = '';
-            for (const topicDoc of topicsSnapshot.docs) {
-                const topic = topicDoc.data();
-                const topicId = topicDoc.id;
-                const title = topic.title || "Без заголовка";
-                const description = topic.description || "";
-                const createdAt = topic.createdAt ? topic.createdAt.toDate().toLocaleString() : "только что";
-                
-                // Получаем ответы для этой темы (live)
-                // используем отдельный слушатель внутри цикла? Это может создать много слушателей.
-                // Лучше использовать один глобальный слушатель ответов и кэшировать, но для простоты и надёжности
-                // сделаем отдельный подзапрос внутри промиса. Но чтобы не создавать утечки, мы будем использовать
-                // асинхронную вставку. Однако onSnapshot внутри цикла создаст много подписок.
-                // Решение: Сделаем отдельную функцию renderWithAnswers и используем единый слушатель на answers
-                // Но проще и нагляднее: при каждом изменении ответов перерендерим всё заново через глобальный слушатель.
-                // Оптимизируем: будем хранить массив answers глобально, и перерисовывать всё при изменении тем или ответов.
-                // Для простоты кода создадим общую функцию полного рендера, которая подписывается на оба источника.
-            }
-            // вместо этого, чтобы не было множественных сабскрайбов, вызовем полный рендер с отдельной подпиской.
-        });
-        
-        // правильный подход: подписка на ответы + темы, комбинируем.
-        // Сделаем функцию fullRender:
-        function fullRender() {
-            if (!db) return;
-            topicsRef().orderBy("createdAt", "desc").onSnapshot((topicsSnap) => {
-                answersRef().orderBy("createdAt", "asc").onSnapshot((answersSnap) => {
-                    const answersByTopic = {};
-                    answersSnap.forEach(doc => {
-                        const ans = doc.data();
-                        const tid = ans.topicId;
-                        if (!answersByTopic[tid]) answersByTopic[tid] = [];
-                        answersByTopic[tid].push({ id: doc.id, ...ans });
-                    });
-                    if (topicsSnap.empty) {
-                        topicsContainer.innerHTML = `<div class="empty-message"><i class="fas fa-comment-slash"></i> Нет тем. Админ, создайте первую!</div>`;
-                        return;
-                    }
-                    let html = '';
-                    topicsSnap.forEach(topicDoc => {
-                        const topic = topicDoc.data();
-                        const topicId = topicDoc.id;
-                        const title = topic.title || "Тема";
-                        const desc = topic.description || "";
-                        const createdDate = topic.createdAt ? topic.createdAt.toDate().toLocaleString() : "недавно";
-                        const answersList = answersByTopic[topicId] || [];
-                        html += `
-                            <div class="topic-card" data-topic-id="${topicId}">
-                                <div class="topic-header">
-                                    <div>
-                                        <div class="topic-title">${escapeHtml(title)}</div>
-                                        ${desc ? `<div style="color:#334155; margin-top: 6px; font-size:0.85rem;">${escapeHtml(desc)}</div>` : ''}
-                                        <div class="topic-meta">
-                                            <span><i class="far fa-calendar-alt"></i> ${createdDate}</span>
-                                            <span><i class="fas fa-reply"></i> ${answersList.length} ответов</span>
-                                            ${isAdmin ? '<span class="admin-tag"><i class="fas fa-crown"></i> Админ-тема</span>' : ''}
-                                        </div>
+
+    // Глобальная функция рендеринга (живая подписка)
+    let unsubscribeTopics = null;
+    let unsubscribeAnswers = null;
+
+    function startRealtimeRender() {
+        if (unsubscribeTopics) unsubscribeTopics();
+        if (unsubscribeAnswers) unsubscribeAnswers();
+
+        // Подписка на темы
+        unsubscribeTopics = topicsRef().orderBy("createdAt", "desc").onSnapshot((topicsSnap) => {
+            // подписка на ответы (единая)
+            if (unsubscribeAnswers) unsubscribeAnswers();
+            unsubscribeAnswers = answersRef().orderBy("createdAt", "asc").onSnapshot((answersSnap) => {
+                // Группируем ответы по topicId
+                const answersMap = new Map();
+                answersSnap.forEach(doc => {
+                    const data = doc.data();
+                    const tid = data.topicId;
+                    if (!answersMap.has(tid)) answersMap.set(tid, []);
+                    answersMap.get(tid).push({ id: doc.id, ...data });
+                });
+
+                if (topicsSnap.empty) {
+                    topicsContainer.innerHTML = `<div class="empty-message"><i class="fas fa-comment-slash"></i> Пока ни одной темы. Администратор может создать первую через вход.</div>`;
+                    return;
+                }
+
+                let html = '';
+                topicsSnap.forEach(topicDoc => {
+                    const topic = topicDoc.data();
+                    const topicId = topicDoc.id;
+                    const title = topic.title || "Без названия";
+                    const description = topic.description || "";
+                    const createdDate = topic.createdAt ? topic.createdAt.toDate().toLocaleString() : "недавно";
+                    const answersList = answersMap.get(topicId) || [];
+
+                    // Заголовок с кнопкой удаления (только админ)
+                    html += `
+                        <div class="topic-card" data-topic-id="${topicId}">
+                            <div class="topic-header">
+                                <div style="flex:1">
+                                    <div class="topic-title">${escapeHtml(title)}</div>
+                                    ${description ? `<div class="topic-desc">${escapeHtml(description)}</div>` : ''}
+                                    <div class="topic-meta">
+                                        <span><i class="far fa-calendar-alt"></i> ${createdDate}</span>
+                                        <span><i class="fas fa-reply-all"></i> ${answersList.length} ответов</span>
+                                        <span class="admin-tag"><i class="fas fa-microphone"></i> Открытая тема</span>
                                     </div>
-                                    ${isAdmin ? `<button class="delete-topic-btn" data-id="${topicId}" title="Удалить тему"><i class="fas fa-trash-alt"></i></button>` : ''}
                                 </div>
-                                <div class="answers-section">
-                                    <div class="answers-list" id="answers-${topicId}">
-                        `;
-                        if (answersList.length === 0) {
-                            html += `<div class="empty-message" style="padding: 10px; font-size:0.8rem;">Нет ответов. Будьте первым!</div>`;
-                        } else {
-                            answersList.forEach(ans => {
-                                const ansDate = ans.createdAt ? ans.createdAt.toDate().toLocaleString() : "только что";
-                                html += `
-                                    <div class="answer-item">
-                                        <div class="answer-text">${escapeHtml(ans.text)}</div>
-                                        <div class="answer-meta">
-                                            <span><i class="fas fa-user"></i> ${escapeHtml(ans.author || "Аноним")} • ${ansDate}</span>
-                                            ${isAdmin ? `<button class="delete-answer" data-answer-id="${ans.id}" data-topic-id="${topicId}"><i class="fas fa-times-circle"></i> Удалить</button>` : ''}
-                                        </div>
+                                ${isAdmin ? `<button class="delete-topic-btn" data-id="${topicId}" title="Удалить тему"><i class="fas fa-trash-alt"></i></button>` : ''}
+                            </div>
+                            <div class="answers-section">
+                                <div class="answers-list" id="answers-${topicId}">
+                    `;
+                    if (answersList.length === 0) {
+                        html += `<div class="empty-message" style="padding: 12px; font-size:0.8rem; background:#fbfdfe;">Пока нет ответов. Станьте первым!</div>`;
+                    } else {
+                        answersList.forEach(ans => {
+                            const ansDate = ans.createdAt ? ans.createdAt.toDate().toLocaleString() : "только что";
+                            html += `
+                                <div class="answer-item">
+                                    <div class="answer-text">${escapeHtml(ans.text)}</div>
+                                    <div class="answer-meta">
+                                        <span><i class="fas fa-user-astronaut"></i> ${escapeHtml(ans.author || "Гость")} • ${ansDate}</span>
+                                        ${isAdmin ? `<button class="delete-answer" data-answer-id="${ans.id}" data-topic-id="${topicId}"><i class="fas fa-trash-can"></i> Удалить</button>` : ''}
                                     </div>
-                                `;
-                            });
-                        }
-                        html += `
+                                </div>
+                            `;
+                        });
+                    }
+                    // Форма добавления ответа (доступна всем, даже без админки)
+                    html += `
+                                </div>
+                                <div class="add-answer-form">
+                                    <div class="answer-input-row">
+                                        <input type="text" placeholder="Ваше имя (опционально)" id="author-${topicId}" class="answer-name-input">
+                                        <input type="text" placeholder="Написать ответ..." id="answer-${topicId}" class="answer-text-input">
                                     </div>
-                                    <div class="add-answer-form">
-                                        <input type="text" placeholder="Ваше имя (опционально)" id="author-${topicId}" style="flex:0.7;">
-                                        <input type="text" placeholder="Ваш ответ..." id="answer-${topicId}" style="flex:2;">
-                                        <button class="btn-submit-answer" data-topic-id="${topicId}"><i class="fas fa-paper-plane"></i> Ответить</button>
-                                    </div>
+                                    <button class="btn-reply submit-answer-btn" data-topic-id="${topicId}"><i class="fas fa-paper-plane"></i> Ответить</button>
                                 </div>
                             </div>
-                        `;
-                    });
-                    topicsContainer.innerHTML = html;
-                    // навесить обработчики на кнопки ответов и удаления
-                    document.querySelectorAll('.btn-submit-answer').forEach(btn => {
-                        btn.addEventListener('click', (e) => {
-                            const tid = btn.getAttribute('data-topic-id');
-                            const authorInput = document.getElementById(`author-${tid}`);
-                            const answerInput = document.getElementById(`answer-${tid}`);
-                            const author = authorInput ? authorInput.value : "";
-                            const answerText = answerInput ? answerInput.value : "";
-                            addAnswer(tid, author, answerText).then(() => {
-                                if(answerInput) answerInput.value = "";
-                            });
-                        });
-                    });
-                    if (isAdmin) {
-                        document.querySelectorAll('.delete-topic-btn').forEach(btn => {
-                            btn.addEventListener('click', (e) => {
-                                const id = btn.getAttribute('data-id');
-                                deleteTopic(id);
-                            });
-                        });
-                        document.querySelectorAll('.delete-answer').forEach(btn => {
-                            btn.addEventListener('click', (e) => {
-                                const answerId = btn.getAttribute('data-answer-id');
-                                deleteAnswer(answerId);
-                            });
-                        });
-                    }
+                        </div>
+                    `;
                 });
+                topicsContainer.innerHTML = html;
+
+                // Привязываем обработчики для ответов (всегда)
+                document.querySelectorAll('.submit-answer-btn').forEach(btn => {
+                    btn.removeEventListener('click', handleReplyClick);
+                    btn.addEventListener('click', handleReplyClick);
+                });
+
+                // Привязываем удаление тем (только если админ)
+                if (isAdmin) {
+                    document.querySelectorAll('.delete-topic-btn').forEach(btn => {
+                        btn.removeEventListener('click', handleDeleteTopic);
+                        btn.addEventListener('click', handleDeleteTopic);
+                    });
+                    document.querySelectorAll('.delete-answer').forEach(btn => {
+                        btn.removeEventListener('click', handleDeleteAnswer);
+                        btn.addEventListener('click', handleDeleteAnswer);
+                    });
+                }
             });
-        }
-        fullRender();
+        }, (error) => {
+            console.error("Ошибка слушателя:", error);
+            topicsContainer.innerHTML = `<div class="empty-message"><i class="fas fa-database"></i> Ошибка загрузки данных. Проверьте интернет и правила Firestore (allow read: if true).</div>`;
+        });
     }
-    
-    // вспомогательная функция
+
+    // Обработчики для динамических кнопок
+    function handleReplyClick(e) {
+        const btn = e.currentTarget;
+        const topicId = btn.getAttribute('data-topic-id');
+        const authorInput = document.getElementById(`author-${topicId}`);
+        const answerInput = document.getElementById(`answer-${topicId}`);
+        const author = authorInput ? authorInput.value : "";
+        const answerText = answerInput ? answerInput.value : "";
+        addAnswer(topicId, author, answerText).then(() => {
+            if (answerInput) answerInput.value = "";
+        }).catch(console.warn);
+    }
+
+    function handleDeleteTopic(e) {
+        const btn = e.currentTarget;
+        const topicId = btn.getAttribute('data-id');
+        deleteTopic(topicId);
+    }
+
+    function handleDeleteAnswer(e) {
+        const btn = e.currentTarget;
+        const answerId = btn.getAttribute('data-answer-id');
+        deleteAnswer(answerId);
+    }
+
     function escapeHtml(str) {
         if (!str) return "";
         return str.replace(/[&<>]/g, function(m) {
@@ -673,34 +700,34 @@
             if (m === '<') return '&lt;';
             if (m === '>') return '&gt;';
             return m;
-        }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
-            return c;
         });
     }
-    
-    // инициализация UI
+
+    // Функция принудительного обновления (перезапуск подписки)
+    window.refreshForum = function() {
+        if (unsubscribeTopics) unsubscribeTopics();
+        if (unsubscribeAnswers) unsubscribeAnswers();
+        startRealtimeRender();
+    };
+
+    // Инициализация форума: админка спрятана, нет лишних кнопок
     window.onload = () => {
-        // запрос админ-пароля при загрузке (для удобства, чтобы активировать админку)
-        // Также добавим кнопку в header для повторного входа
-        const headerDiv = document.querySelector('.forum-header');
-        const adminBtn = document.createElement('button');
-        adminBtn.innerHTML = '<i class="fas fa-key"></i> Войти как админ';
-        adminBtn.style.background = '#f1f5f9';
-        adminBtn.style.border = '1px solid #cbd5e1';
-        adminBtn.style.padding = '8px 16px';
-        adminBtn.style.borderRadius = '40px';
-        adminBtn.style.cursor = 'pointer';
-        adminBtn.style.fontWeight = '500';
-        adminBtn.onclick = () => promptAdminAccess();
-        headerDiv.appendChild(adminBtn);
-        
-        // сначала скрываем админ-панель
+        // Скрываем панель админа изначально
         adminPanelDiv.style.display = "none";
-        // запускаем рендер
-        renderTopics();
-        // кнопка создания темы
-        document.getElementById('createTopicBtn').addEventListener('click', createTopic);
-        // если уже админ - проверим через пару секунд? но пока нет, ждем входа
+        isAdmin = false;
+        
+        // Кнопка вызова админ-логина
+        const adminLoginBtn = document.getElementById('showAdminLoginBtn');
+        if (adminLoginBtn) {
+            adminLoginBtn.onclick = () => promptAdminAccess();
+        }
+        
+        // Кнопка создания темы (в скрытой панели)
+        const createBtn = document.getElementById('createTopicBtn');
+        if (createBtn) createBtn.addEventListener('click', createTopic);
+        
+        // Запускаем реактивный рендер
+        startRealtimeRender();
     };
 </script>
 </body>
