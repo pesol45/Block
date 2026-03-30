@@ -3,20 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>СуперФорум | Лайки, чат, вложения, эмодзи</title>
+    <title>СуперФорум | Все функции</title>
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-    <!-- Font Awesome 6 -->
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <!-- Emoji Picker (простая библиотека) -->
-    <script src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1.18.0/index.js" type="module"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
-        /* ТЕМНАЯ ТЕМА (переключается классом) */
         body {
             font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
             background: #f5f7fb;
@@ -31,28 +27,21 @@
         body.dark .forum-header,
         body.dark .admin-panel,
         body.dark .topic-card,
-        body.dark .chat-widget,
-        body.dark .empty-message {
+        body.dark .chat-widget {
             background: #1e293b;
             border-color: #334155;
-            color: #cbd5e1;
         }
         body.dark .answer-item {
             background: #0f172a;
             border-left-color: #3b82f6;
         }
-        body.dark input, body.dark textarea, body.dark .chat-message-input {
+        body.dark input, body.dark textarea {
             background: #334155;
             border-color: #475569;
             color: white;
         }
-        body.dark .btn-reply, body.dark .admin-login-btn {
-            background: #2d3a4e;
-            color: #e2e8f0;
-        }
         .container { max-width: 1200px; margin: 0 auto; }
         
-        /* шапка */
         .forum-header {
             background: white;
             border-radius: 32px;
@@ -64,6 +53,7 @@
             flex-wrap: wrap;
             justify-content: space-between;
             align-items: center;
+            gap: 15px;
         }
         .logo h1 { font-size: 1.6rem; display: flex; align-items: center; gap: 10px; }
         .header-buttons { display: flex; gap: 12px; flex-wrap: wrap; }
@@ -99,7 +89,6 @@
             cursor: pointer;
         }
         
-        /* карточки тем */
         .topic-card {
             background: white;
             border-radius: 32px;
@@ -110,12 +99,15 @@
         .topic-header {
             padding: 18px 24px;
             border-bottom: 1px solid #f0f4fa;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
         }
-        .topic-title { font-size: 1.4rem; font-weight: 700; margin-bottom: 6px; }
-        .topic-meta { font-size: 0.7rem; color: #6c7a91; display: flex; gap: 16px; flex-wrap: wrap; }
-        .delete-topic-btn { background: none; border: none; color: #b9c4d4; cursor: pointer; }
+        .topic-title { font-size: 1.4rem; font-weight: 700; margin-bottom: 6px; word-break: break-word; }
+        .topic-desc { color: #5b6e8c; margin-top: 6px; font-size: 0.9rem; }
+        .topic-meta { font-size: 0.7rem; color: #6c7a91; display: flex; gap: 16px; flex-wrap: wrap; margin-top: 10px; }
+        .delete-topic-btn { background: none; border: none; color: #b9c4d4; cursor: pointer; font-size: 1.1rem; }
         
-        /* ответы с вложенностью */
         .answers-section { padding: 8px 24px 24px; }
         .answers-list { margin: 16px 0; display: flex; flex-direction: column; gap: 16px; }
         .answer-item {
@@ -123,7 +115,6 @@
             border-radius: 24px;
             padding: 14px 18px;
             border-left: 4px solid #cfdfed;
-            position: relative;
         }
         .nested-answers {
             margin-left: 32px;
@@ -144,52 +135,69 @@
             color: #2563eb;
             font-size: 0.85rem;
         }
-        .answer-text { word-break: break-word; margin: 8px 0; }
+        .answer-text { word-break: break-word; margin: 8px 0; line-height: 1.4; }
         .answer-actions {
             display: flex;
-            gap: 12px;
-            margin-top: 8px;
+            gap: 15px;
+            margin-top: 10px;
             font-size: 0.75rem;
+            flex-wrap: wrap;
+            align-items: center;
         }
-        .like-btn, .react-btn, .reply-btn, .mention-btn {
+        .like-btn, .reply-btn, .mention-btn {
             background: none;
             border: none;
             cursor: pointer;
             color: #6c7a91;
             transition: 0.2s;
             font-size: 0.8rem;
+            padding: 4px 8px;
+            border-radius: 20px;
         }
+        .like-btn:hover, .reply-btn:hover, .mention-btn:hover { background: #e2e8f0; }
         .like-btn.liked { color: #ef4444; }
-        .reactions-panel { display: inline-flex; gap: 6px; margin-left: 8px; }
-        .reaction-emoji { cursor: pointer; font-size: 1rem; padding: 2px 4px; border-radius: 20px; transition: 0.1s; }
+        .reaction-buttons { display: inline-flex; gap: 6px; }
+        .reaction-emoji {
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 2px 6px;
+            border-radius: 20px;
+            transition: 0.1s;
+        }
         .reaction-emoji:hover { background: #e2e8f0; }
         .answer-image { max-width: 200px; max-height: 150px; border-radius: 12px; margin-top: 8px; cursor: pointer; }
-        .image-preview { display: inline-block; position: relative; }
         
-        /* форма ответа */
-        .add-answer-form {
-            margin-top: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
+        .add-answer-form { margin-top: 20px; }
         .reply-toolbar {
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
-            align-items: center;
+            align-items: flex-start;
         }
         .reply-toolbar input, .reply-toolbar textarea {
             flex: 1;
             padding: 10px 14px;
             border-radius: 40px;
             border: 1px solid #dce5ef;
+            font-family: inherit;
         }
-        .btn-reply { background: #eef3fc; padding: 8px 20px; border-radius: 40px; border: none; cursor: pointer; }
-        .emoji-picker-container { position: relative; display: inline-block; }
-        emoji-picker { position: absolute; bottom: 100%; right: 0; z-index: 1000; --emoji-size: 1.2rem; }
+        .reply-toolbar textarea { min-width: 200px; resize: vertical; }
+        .btn-reply {
+            background: #eef3fc;
+            padding: 8px 20px;
+            border-radius: 40px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .attach-btn, .emoji-btn {
+            background: #f1f4f9;
+            border: 1px solid #dce3ec;
+            padding: 8px 14px;
+            border-radius: 40px;
+            cursor: pointer;
+        }
         
-        /* ЧАТ виджет */
         .chat-widget {
             position: fixed;
             bottom: 20px;
@@ -227,6 +235,7 @@
             border-radius: 18px;
             font-size: 0.8rem;
         }
+        body.dark .chat-message { background: #2d3748; }
         .chat-input-area {
             display: flex;
             padding: 12px;
@@ -243,9 +252,11 @@
         @media (max-width: 640px) {
             .chat-widget { width: 280px; right: 10px; bottom: 10px; }
             .topic-title { font-size: 1.2rem; }
+            .reply-toolbar { flex-direction: column; }
         }
-        .empty-message { text-align: center; padding: 40px; color: #6c7e9e; }
-        footer { text-align: center; margin-top: 40px; font-size: 0.7rem; }
+        .empty-message { text-align: center; padding: 40px; color: #6c7e9e; background: white; border-radius: 32px; }
+        footer { text-align: center; margin-top: 40px; font-size: 0.7rem; padding: 16px; }
+        .loading-spinner { text-align: center; padding: 40px; }
     </style>
 </head>
 <body>
@@ -259,35 +270,32 @@
         </div>
     </div>
 
-    <!-- админ панель скрыта -->
     <div id="adminPanel" class="admin-panel">
-        <div class="admin-title"><i class="fas fa-hammer"></i> Создать тему</div>
+        <div class="admin-title"><i class="fas fa-hammer"></i> Создать тему (только админ)</div>
         <div class="topic-form">
-            <input type="text" id="topicTitleInput" placeholder="Заголовок">
-            <textarea id="topicDescInput" rows="2" placeholder="Описание"></textarea>
-            <button id="createTopicBtn" class="btn-primary"><i class="fas fa-plus"></i> Создать</button>
+            <input type="text" id="topicTitleInput" placeholder="Заголовок темы">
+            <textarea id="topicDescInput" rows="2" placeholder="Описание темы"></textarea>
+            <button id="createTopicBtn" class="btn-primary"><i class="fas fa-plus"></i> Создать тему</button>
         </div>
     </div>
 
-    <div id="topicsContainer" class="topics-list"><div class="empty-message">Загрузка...</div></div>
-    <footer>🔥 Лайки | 🧵 Вложенные ответы | 📸 Изображения | 😍 Эмодзи-реакции | 🌙 Тёмная тема | 💬 Чат</footer>
+    <div id="topicsContainer" class="topics-list">
+        <div class="loading-spinner"><i class="fas fa-spinner fa-pulse"></i> Загрузка форума...</div>
+    </div>
+    <footer>🔥 Лайки | 🧵 Вложенные ответы | @упоминания | 📸 Изображения | 😍 Эмодзи-реакции | 🌙 Тёмная тема | 💬 Чат</footer>
 </div>
 
-<!-- ЧАТ виджет -->
 <div id="chatWidget" class="chat-widget">
-    <div class="chat-header"><span><i class="fas fa-comments"></i> Общий чат</span><span id="closeChat">✕</span></div>
+    <div class="chat-header"><span><i class="fas fa-comments"></i> Общий чат</span><span id="closeChat" style="cursor:pointer">✕</span></div>
     <div id="chatMessagesList" class="chat-messages"></div>
     <div class="chat-input-area">
-        <input type="text" id="chatInput" placeholder="Ваше имя: сообщение (напр. Анна: привет)">
+        <input type="text" id="chatInput" placeholder="Имя: сообщение (например, Анна: привет)">
         <button id="sendChatBtn"><i class="fas fa-paper-plane"></i></button>
     </div>
 </div>
 
-<script type="module">
-    // Импорт эмодзи-пикера
-    import 'https://cdn.jsdelivr.net/npm/emoji-picker-element@1.18.0/index.js';
-    
-    // Firebase конфиг (ваш)
+<script>
+    // ==================== FIREBASE КОНФИГ ====================
     const firebaseConfig = {
         apiKey: "AIzaSyCMi3eKNZ4OgD2YCdhEFDOsmuclKZkjflo",
         authDomain: "from-b14b1.firebaseapp.com",
@@ -296,269 +304,331 @@
         messagingSenderId: "604060443375",
         appId: "1:604060443375:web:f6fc69f385a4c59ee3311a"
     };
+    
+    // Инициализация
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
     const storage = firebase.storage();
     
-    // Состояние
+    // Глобальные переменные
     let isAdmin = false;
     const ADMIN_PASSWORD = "admin123";
-    let currentUserId = localStorage.getItem('forum_user_id') || 'user_' + Math.random().toString(36).substr(2, 8);
-    localStorage.setItem('forum_user_id', currentUserId);
+    const userId = localStorage.getItem('forum_user') || 'user_' + Math.random().toString(36).substr(2, 8);
+    localStorage.setItem('forum_user', userId);
     
     // DOM элементы
-    const adminPanelDiv = document.getElementById('adminPanel');
+    const adminPanel = document.getElementById('adminPanel');
     const topicsContainer = document.getElementById('topicsContainer');
     
-    // Функции
-    function showAdminUI(show) { adminPanelDiv.style.display = show ? "block" : "none"; if(window.refreshForum) window.refreshForum(); }
-    window.promptAdminAccess = () => {
-        let pwd = prompt("Пароль администратора:");
-        if(pwd === ADMIN_PASSWORD) { isAdmin = true; showAdminUI(true); alert("Админ-режим активен"); window.refreshForum(); }
-        else if(pwd) alert("Неверный пароль");
-    };
+    // Вспомогательные функции
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
     
-    // загрузка изображений
+    // Загрузка изображения
     async function uploadImage(file) {
         const ext = file.name.split('.').pop();
         const filename = `${Date.now()}_${Math.random().toString(36)}.${ext}`;
-        const ref = storage.ref(`forum_images/${filename}`);
+        const ref = storage.ref(`images/${filename}`);
         await ref.put(file);
         return await ref.getDownloadURL();
     }
     
-    // лайки
+    // Лайк
     async function toggleLike(answerId, currentLikes) {
-        const likesRef = db.collection('likes').doc(answerId);
-        const doc = await likesRef.get();
-        let likes = currentLikes || 0;
-        if(doc.exists && doc.data().users && doc.data().users.includes(currentUserId)) {
-            // убрать лайк
-            let users = doc.data().users.filter(u => u !== currentUserId);
-            likes = users.length;
-            await likesRef.set({ users, count: likes });
+        const answerRef = db.collection('answers').doc(answerId);
+        const doc = await answerRef.get();
+        const data = doc.data();
+        let likes = data.likes || [];
+        if (likes.includes(userId)) {
+            likes = likes.filter(id => id !== userId);
         } else {
-            let users = doc.exists ? [...(doc.data().users||[]), currentUserId] : [currentUserId];
-            likes = users.length;
-            await likesRef.set({ users, count: likes });
+            likes.push(userId);
         }
-        await db.collection('answers').doc(answerId).update({ likesCount: likes });
-        return likes;
+        await answerRef.update({ likes: likes });
+        return likes.length;
     }
     
-    // эмодзи-реакции
+    // Реакция
     async function addReaction(answerId, emoji) {
-        const reactRef = db.collection('reactions').doc(answerId);
-        const doc = await reactRef.get();
-        let reactions = doc.exists ? doc.data().reactions || {} : {};
-        if(!reactions[emoji]) reactions[emoji] = [];
-        if(!reactions[emoji].includes(currentUserId)) reactions[emoji].push(currentUserId);
-        await reactRef.set({ reactions });
+        const answerRef = db.collection('answers').doc(answerId);
+        const doc = await answerRef.get();
+        const data = doc.data();
+        let reactions = data.reactions || {};
+        if (!reactions[emoji]) reactions[emoji] = [];
+        if (!reactions[emoji].includes(userId)) {
+            reactions[emoji].push(userId);
+        }
+        await answerRef.update({ reactions: reactions });
     }
     
-    // создание темы (админ)
-    window.createTopic = async () => {
-        if(!isAdmin) return alert("Только админ");
+    // Создание темы
+    async function createTopic() {
+        if (!isAdmin) {
+            alert("Только администратор может создавать темы!");
+            return;
+        }
         const title = document.getElementById('topicTitleInput').value.trim();
-        const desc = document.getElementById('topicDescInput').value.trim();
-        if(!title) return;
-        await db.collection('topics').add({ title, description: desc, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+        const description = document.getElementById('topicDescInput').value.trim();
+        if (!title) {
+            alert("Введите заголовок темы");
+            return;
+        }
+        await db.collection('topics').add({
+            title: title,
+            description: description,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
         document.getElementById('topicTitleInput').value = '';
         document.getElementById('topicDescInput').value = '';
-    };
+    }
     
-    // удаление темы
+    // Удаление темы
     async function deleteTopic(topicId) {
-        if(!isAdmin || !confirm("Удалить тему и все ответы?")) return;
-        const answersSnap = await db.collection('answers').where("topicId", "==", topicId).get();
+        if (!isAdmin) return;
+        if (!confirm("Удалить тему и все ответы?")) return;
+        const answers = await db.collection('answers').where('topicId', '==', topicId).get();
         const batch = db.batch();
-        answersSnap.forEach(d => batch.delete(d.ref));
+        answers.forEach(doc => batch.delete(doc.ref));
         batch.delete(db.collection('topics').doc(topicId));
         await batch.commit();
     }
     
-    // добавить ответ (с поддержкой вложенности parentId, изображения)
+    // Добавление ответа
     async function addAnswer(topicId, text, author, parentId = null, imageUrl = null) {
-        if(!text.trim() && !imageUrl) return alert("Напишите текст или добавьте фото");
+        if (!text.trim() && !imageUrl) {
+            alert("Напишите текст или добавьте изображение");
+            return false;
+        }
         const finalAuthor = author.trim() || "Гость";
         await db.collection('answers').add({
-            topicId, text: text.trim(), author: finalAuthor, parentId, imageUrl,
+            topicId: topicId,
+            text: text.trim(),
+            author: finalAuthor,
+            parentId: parentId,
+            imageUrl: imageUrl,
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-            likesCount: 0, userId: currentUserId
+            likes: [],
+            reactions: {},
+            userId: userId
         });
+        return true;
     }
     
-    // рендер с живыми подписками (лайки, реакции, вложенность)
+    // Основной рендер форума
     function renderForum() {
-        db.collection('topics').orderBy('createdAt', 'desc').onSnapshot(async (topicsSnap) => {
-            const answersSnap = await db.collection('answers').get();
-            const allAnswers = [];
-            answersSnap.forEach(d => allAnswers.push({ id: d.id, ...d.data() }));
+        // Подписка на темы
+        db.collection('topics').orderBy('createdAt', 'desc').onSnapshot(async (topicsSnapshot) => {
+            if (topicsSnapshot.empty) {
+                topicsContainer.innerHTML = '<div class="empty-message"><i class="fas fa-comment-slash"></i> Нет тем. Администратор, создайте первую тему!</div>';
+                return;
+            }
             
-            // получить лайки и реакции
-            const likesMap = new Map();
-            const likesSnap = await db.collection('likes').get();
-            likesSnap.forEach(d => { likesMap.set(d.id, d.data().count || 0); });
-            const reactionsMap = new Map();
-            const reactSnap = await db.collection('reactions').get();
-            reactSnap.forEach(d => { reactionsMap.set(d.id, d.data().reactions || {}); });
+            // Получаем все ответы
+            const answersSnapshot = await db.collection('answers').get();
+            const answersMap = new Map();
+            answersSnapshot.forEach(doc => {
+                answersMap.set(doc.id, { id: doc.id, ...doc.data() });
+            });
             
             let html = '';
-            for(const topicDoc of topicsSnap.docs) {
+            
+            for (const topicDoc of topicsSnapshot.docs) {
                 const topic = topicDoc.data();
                 const topicId = topicDoc.id;
-                const topicAnswers = allAnswers.filter(a => a.topicId === topicId);
-                // строим дерево ответов
-                const buildTree = (parentId = null) => {
+                const topicAnswers = Array.from(answersMap.values()).filter(a => a.topicId === topicId);
+                
+                // Функция построения дерева ответов
+                function renderAnswers(parentId = null, level = 0) {
                     const children = topicAnswers.filter(a => a.parentId === parentId);
-                    if(!children.length) return '';
-                    return `<div class="nested-answers">` + children.map(ans => {
-                        const likes = likesMap.get(ans.id) || 0;
-                        const reactions = reactionsMap.get(ans.id) || {};
-                        const reactionHtml = Object.entries(reactions).map(([emoji, users]) => `<span style="background:#e2e8f0; padding:2px 6px; border-radius:20px; font-size:0.7rem;">${emoji} ${users.length}</span>`).join('');
-                        return `
+                    if (children.length === 0) return '';
+                    
+                    let result = '<div class="nested-answers">';
+                    for (const ans of children) {
+                        const likesCount = ans.likes ? ans.likes.length : 0;
+                        const isLiked = ans.likes ? ans.likes.includes(userId) : false;
+                        const reactions = ans.reactions || {};
+                        
+                        // Формируем HTML реакций
+                        let reactionsHtml = '';
+                        for (const [emoji, users] of Object.entries(reactions)) {
+                            reactionsHtml += `<span style="background:#e2e8f0; padding:2px 8px; border-radius:20px; font-size:0.7rem; margin-left:4px;">${emoji} ${users.length}</span>`;
+                        }
+                        
+                        result += `
                             <div class="answer-item" data-answer-id="${ans.id}">
                                 <div class="answer-header">
                                     <span class="answer-author"><i class="fas fa-user-circle"></i> ${escapeHtml(ans.author)}</span>
                                     <small>${ans.createdAt?.toDate().toLocaleString() || 'только что'}</small>
                                 </div>
                                 <div class="answer-text">${escapeHtml(ans.text)}</div>
-                                ${ans.imageUrl ? `<div class="image-preview"><img src="${ans.imageUrl}" class="answer-image" onclick="window.open('${ans.imageUrl}')" /></div>` : ''}
+                                ${ans.imageUrl ? `<img src="${ans.imageUrl}" class="answer-image" onclick="window.open('${ans.imageUrl}')" />` : ''}
                                 <div class="answer-actions">
-                                    <button class="like-btn" data-id="${ans.id}" data-likes="${likes}"><i class="fas fa-heart"></i> ${likes}</button>
-                                    <button class="reply-btn" data-id="${ans.id}" data-author="${ans.author}"><i class="fas fa-reply"></i> Ответить</button>
-                                    <button class="mention-btn" data-author="${ans.author}"><i class="fas fa-at"></i> Упомянуть</button>
-                                    <div class="reactions-panel">
+                                    <button class="like-btn" data-id="${ans.id}" data-liked="${isLiked}">
+                                        <i class="fas fa-heart" style="color: ${isLiked ? '#ef4444' : '#6c7a91'}"></i> ${likesCount}
+                                    </button>
+                                    <button class="reply-btn" data-id="${ans.id}" data-author="${escapeHtml(ans.author)}">
+                                        <i class="fas fa-reply"></i> Ответить
+                                    </button>
+                                    <button class="mention-btn" data-author="${escapeHtml(ans.author)}">
+                                        <i class="fas fa-at"></i> Упомянуть
+                                    </button>
+                                    <div class="reaction-buttons">
                                         <span class="reaction-emoji" data-id="${ans.id}" data-emoji="👍">👍</span>
                                         <span class="reaction-emoji" data-id="${ans.id}" data-emoji="❤️">❤️</span>
                                         <span class="reaction-emoji" data-id="${ans.id}" data-emoji="😂">😂</span>
                                         <span class="reaction-emoji" data-id="${ans.id}" data-emoji="😮">😮</span>
                                     </div>
-                                    ${reactionHtml}
+                                    ${reactionsHtml}
                                 </div>
-                                ${buildTree(ans.id)}
+                                ${renderAnswers(ans.id, level + 1)}
                             </div>
                         `;
-                    }).join('') + `</div>`;
-                };
+                    }
+                    result += '</div>';
+                    return result;
+                }
                 
                 html += `
                     <div class="topic-card">
                         <div class="topic-header">
-                            <div><div class="topic-title">${escapeHtml(topic.title)}</div>
-                            <div class="topic-desc">${escapeHtml(topic.description || '')}</div>
-                            <div class="topic-meta"><span>📅 ${topic.createdAt?.toDate().toLocaleString() || 'недавно'}</span><span>💬 ${topicAnswers.length} ответов</span></div></div>
-                            ${isAdmin ? `<button class="delete-topic-btn" data-id="${topicId}"><i class="fas fa-trash"></i></button>` : ''}
+                            <div style="flex:1">
+                                <div class="topic-title">${escapeHtml(topic.title)}</div>
+                                ${topic.description ? `<div class="topic-desc">${escapeHtml(topic.description)}</div>` : ''}
+                                <div class="topic-meta">
+                                    <span><i class="far fa-calendar-alt"></i> ${topic.createdAt?.toDate().toLocaleString() || 'недавно'}</span>
+                                    <span><i class="fas fa-reply-all"></i> ${topicAnswers.length} ответов</span>
+                                </div>
+                            </div>
+                            ${isAdmin ? `<button class="delete-topic-btn" data-id="${topicId}"><i class="fas fa-trash-alt"></i></button>` : ''}
                         </div>
                         <div class="answers-section">
                             <div class="answers-list">
-                                ${buildTree(null)}
+                                ${renderAnswers(null)}
                             </div>
                             <div class="add-answer-form" data-topic="${topicId}">
                                 <div class="reply-toolbar">
-                                    <input type="text" placeholder="Ваше имя" class="answer-name" id="name-${topicId}">
-                                    <textarea rows="1" placeholder="Написать ответ..." class="answer-textarea" id="text-${topicId}"></textarea>
+                                    <input type="text" placeholder="Ваше имя" class="answer-name" id="name-${topicId}" style="flex:0.7">
+                                    <textarea rows="2" placeholder="Написать ответ..." class="answer-textarea" id="text-${topicId}" style="flex:2"></textarea>
                                     <input type="file" accept="image/*" class="image-upload" id="image-${topicId}" style="display:none">
                                     <button class="attach-btn" data-topic="${topicId}"><i class="fas fa-image"></i></button>
-                                    <button class="emoji-btn" data-topic="${topicId}"><i class="far fa-smile"></i></button>
-                                    <button class="btn-reply submit-main" data-topic="${topicId}">Ответить</button>
+                                    <button class="btn-reply submit-answer" data-topic="${topicId}"><i class="fas fa-paper-plane"></i> Ответить</button>
                                 </div>
-                                <div id="emoji-picker-${topicId}" style="position:relative"></div>
                             </div>
                         </div>
                     </div>
                 `;
             }
-            topicsContainer.innerHTML = html || '<div class="empty-message">Нет тем. Админ, создайте первую.</div>';
             
-            // обработчики
+            topicsContainer.innerHTML = html;
+            
+            // Привязываем обработчики
             document.querySelectorAll('.like-btn').forEach(btn => {
-                btn.onclick = async () => { const id = btn.dataset.id; await toggleLike(id, parseInt(btn.dataset.likes)); };
+                btn.onclick = async (e) => {
+                    e.stopPropagation();
+                    const id = btn.dataset.id;
+                    const newCount = await toggleLike(id);
+                    const isLiked = btn.dataset.liked === 'true';
+                    btn.dataset.liked = (!isLiked).toString();
+                    btn.innerHTML = `<i class="fas fa-heart" style="color: ${!isLiked ? '#ef4444' : '#6c7a91'}"></i> ${newCount}`;
+                };
             });
+            
             document.querySelectorAll('.reaction-emoji').forEach(el => {
-                el.onclick = async () => { await addReaction(el.dataset.id, el.dataset.emoji); };
+                el.onclick = async (e) => {
+                    e.stopPropagation();
+                    const id = el.dataset.id;
+                    const emoji = el.dataset.emoji;
+                    await addReaction(id, emoji);
+                };
             });
+            
             document.querySelectorAll('.reply-btn').forEach(btn => {
                 btn.onclick = () => {
                     const parentId = btn.dataset.id;
                     const author = btn.dataset.author;
                     const topicId = btn.closest('.topic-card').querySelector('.add-answer-form').dataset.topic;
-                    const textarea = document.querySelector(`#text-${topicId}`);
+                    const textarea = document.getElementById(`text-${topicId}`);
                     textarea.value = `@${author} `;
                     textarea.focus();
                     textarea.dataset.parentId = parentId;
                 };
             });
+            
             document.querySelectorAll('.mention-btn').forEach(btn => {
                 btn.onclick = () => {
                     const author = btn.dataset.author;
                     const topicId = btn.closest('.topic-card').querySelector('.add-answer-form').dataset.topic;
-                    const textarea = document.querySelector(`#text-${topicId}`);
+                    const textarea = document.getElementById(`text-${topicId}`);
                     textarea.value = `@${author} `;
                     textarea.focus();
                 };
             });
+            
             document.querySelectorAll('.attach-btn').forEach(btn => {
-                btn.onclick = () => { document.getElementById(`image-${btn.dataset.topic}`).click(); };
+                btn.onclick = () => {
+                    const topicId = btn.dataset.topic;
+                    document.getElementById(`image-${topicId}`).click();
+                };
             });
+            
             document.querySelectorAll('.image-upload').forEach(input => {
                 input.onchange = async (e) => {
                     const file = e.target.files[0];
-                    if(file) {
-                        const url = await uploadImage(file);
-                        const topicId = input.id.split('-')[1];
-                        const nameInp = document.getElementById(`name-${topicId}`).value;
-                        const textarea = document.getElementById(`text-${topicId}`);
-                        const parentId = textarea.dataset.parentId || null;
-                        await addAnswer(topicId, textarea.value, nameInp, parentId, url);
-                        textarea.value = ''; delete textarea.dataset.parentId;
-                        input.value = '';
-                    }
+                    if (!file) return;
+                    const topicId = input.id.split('-')[1];
+                    const nameInput = document.getElementById(`name-${topicId}`);
+                    const textarea = document.getElementById(`text-${topicId}`);
+                    const parentId = textarea.dataset.parentId || null;
+                    
+                    const url = await uploadImage(file);
+                    await addAnswer(topicId, textarea.value, nameInput.value, parentId, url);
+                    textarea.value = '';
+                    delete textarea.dataset.parentId;
+                    input.value = '';
                 };
             });
-            document.querySelectorAll('.submit-main').forEach(btn => {
+            
+            document.querySelectorAll('.submit-answer').forEach(btn => {
                 btn.onclick = async () => {
                     const topicId = btn.dataset.topic;
-                    const name = document.getElementById(`name-${topicId}`).value;
+                    const nameInput = document.getElementById(`name-${topicId}`);
                     const textarea = document.getElementById(`text-${topicId}`);
-                    const text = textarea.value;
                     const parentId = textarea.dataset.parentId || null;
-                    if(text.trim()) await addAnswer(topicId, text, name, parentId, null);
-                    textarea.value = ''; delete textarea.dataset.parentId;
+                    
+                    await addAnswer(topicId, textarea.value, nameInput.value, parentId, null);
+                    textarea.value = '';
+                    delete textarea.dataset.parentId;
                 };
             });
-            // эмодзи-пикер
-            document.querySelectorAll('.emoji-btn').forEach(btn => {
-                btn.onclick = (e) => {
-                    e.stopPropagation();
-                    const topicId = btn.dataset.topic;
-                    const container = document.getElementById(`emoji-picker-${topicId}`);
-                    if(container.querySelector('emoji-picker')) { container.innerHTML = ''; return; }
-                    const picker = document.createElement('emoji-picker');
-                    picker.addEventListener('emoji-click', ev => {
-                        const textarea = document.getElementById(`text-${topicId}`);
-                        textarea.value += ev.detail.unicode;
-                        container.innerHTML = '';
-                    });
-                    container.appendChild(picker);
-                };
-            });
-            if(isAdmin) {
+            
+            if (isAdmin) {
                 document.querySelectorAll('.delete-topic-btn').forEach(btn => {
                     btn.onclick = () => deleteTopic(btn.dataset.id);
                 });
             }
+        }, (error) => {
+            console.error("Ошибка загрузки:", error);
+            topicsContainer.innerHTML = '<div class="empty-message"><i class="fas fa-exclamation-triangle"></i> Ошибка загрузки. Проверьте правила Firestore (allow read: if true)</div>';
         });
     }
     
-    // Чат в реальном времени
+    // Чат
     function initChat() {
         const chatWidget = document.getElementById('chatWidget');
         const chatMessages = document.getElementById('chatMessagesList');
         const chatInput = document.getElementById('chatInput');
         const sendBtn = document.getElementById('sendChatBtn');
         const closeChat = document.getElementById('closeChat');
-        document.getElementById('chatToggleBtn').onclick = () => chatWidget.classList.toggle('open');
+        const chatToggle = document.getElementById('chatToggleBtn');
+        
+        chatToggle.onclick = () => chatWidget.classList.toggle('open');
         closeChat.onclick = () => chatWidget.classList.remove('open');
         
         db.collection('chat').orderBy('timestamp', 'asc').limit(50).onSnapshot(snap => {
@@ -567,42 +637,61 @@
                 const msg = doc.data();
                 const div = document.createElement('div');
                 div.className = 'chat-message';
-                div.innerHTML = `<b>${escapeHtml(msg.author)}</b>: ${escapeHtml(msg.text)} <small>${msg.timestamp?.toDate().toLocaleTimeString()}</small>`;
+                div.innerHTML = `<b>${escapeHtml(msg.author)}</b>: ${escapeHtml(msg.text)} <small>${msg.timestamp?.toDate().toLocaleTimeString() || ''}</small>`;
                 chatMessages.appendChild(div);
             });
             chatMessages.scrollTop = chatMessages.scrollHeight;
         });
+        
         sendBtn.onclick = async () => {
             let val = chatInput.value.trim();
-            if(!val) return;
+            if (!val) return;
             let author = "Гость", text = val;
-            if(val.includes(':')) {
-                let parts = val.split(':');
+            if (val.includes(':')) {
+                const parts = val.split(':');
                 author = parts[0].trim();
                 text = parts.slice(1).join(':').trim();
             }
-            if(!text) text = val;
-            await db.collection('chat').add({ author: author.substring(0,20), text: text.substring(0,200), timestamp: firebase.firestore.FieldValue.serverTimestamp() });
+            if (!text) text = val;
+            await db.collection('chat').add({
+                author: author.substring(0, 20),
+                text: text.substring(0, 200),
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
             chatInput.value = '';
+        };
+        
+        chatInput.onkeypress = (e) => {
+            if (e.key === 'Enter') sendBtn.onclick();
         };
     }
     
     // Темная тема
     function initTheme() {
         const saved = localStorage.getItem('darkTheme');
-        if(saved === 'true') document.body.classList.add('dark');
+        if (saved === 'true') document.body.classList.add('dark');
         document.getElementById('themeToggleBtn').onclick = () => {
             document.body.classList.toggle('dark');
             localStorage.setItem('darkTheme', document.body.classList.contains('dark'));
         };
     }
     
-    function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, function(m){ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
+    // Админ-вход
+    document.getElementById('adminLoginBtn').onclick = () => {
+        const pwd = prompt("Введите пароль администратора:");
+        if (pwd === ADMIN_PASSWORD) {
+            isAdmin = true;
+            adminPanel.style.display = "block";
+            alert("Админ-режим активирован!");
+            renderForum();
+        } else if (pwd) {
+            alert("Неверный пароль");
+        }
+    };
     
-    window.refreshForum = () => renderForum();
-    document.getElementById('adminLoginBtn').onclick = () => window.promptAdminAccess();
-    document.getElementById('createTopicBtn')?.addEventListener('click', window.createTopic);
+    document.getElementById('createTopicBtn').onclick = createTopic;
     
+    // Запуск
     initTheme();
     initChat();
     renderForum();
