@@ -7,8 +7,6 @@
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
-    <!-- Simple Markdown для красоты (опционально) -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -24,7 +22,6 @@
             max-width: 1200px;
             margin: 0 auto;
         }
-        /* Header & админ панель */
         .header {
             background: white;
             border-radius: 28px;
@@ -78,13 +75,14 @@
             gap: 15px;
             margin-bottom: 15px;
         }
-        input, textarea, .guest-name-input {
+        input, textarea {
             padding: 12px 16px;
             border-radius: 24px;
             border: 1px solid #cbd5e1;
             font-size: 1rem;
             transition: 0.2s;
             background: white;
+            width: 100%;
         }
         input:focus, textarea:focus {
             outline: none;
@@ -121,7 +119,6 @@
         .btn-danger:hover {
             background: #991b1b;
         }
-        /* темы */
         .topic-card {
             background: white;
             border-radius: 28px;
@@ -160,9 +157,6 @@
             color: #b91c1c;
             padding: 6px 12px;
             font-size: 0.75rem;
-        }
-        .delete-topic-btn:hover {
-            background: #fee2e2;
         }
         .answers-section {
             padding: 20px 24px;
@@ -206,6 +200,7 @@
             padding: 2px 8px;
             border-radius: 20px;
             margin-left: 12px;
+            border: 1px solid #fee2e2;
         }
         .delete-answer:hover {
             background: #fee2e2;
@@ -219,11 +214,15 @@
         .guest-input {
             width: 100%;
             max-width: 300px;
+            padding: 10px 16px;
+            border-radius: 24px;
+            border: 1px solid #cbd5e1;
         }
         .answer-textarea {
             width: 100%;
             min-height: 80px;
             resize: vertical;
+            padding: 12px;
         }
         .send-btn {
             align-self: flex-start;
@@ -232,18 +231,6 @@
             text-align: center;
             padding: 40px;
             color: #64748b;
-        }
-        .topic-footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 8px;
-        }
-        .badge {
-            background: #e2e8f0;
-            border-radius: 40px;
-            padding: 4px 12px;
-            font-size: 0.75rem;
         }
         .toast-msg {
             position: fixed;
@@ -262,8 +249,18 @@
         .show-toast {
             opacity: 1;
         }
-        hr {
-            margin: 15px 0;
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #64748b;
+        }
+        .error-banner {
+            background: #fee2e2;
+            border-left: 4px solid #b91c1c;
+            padding: 15px 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            color: #991b1b;
         }
         @media (max-width: 680px) {
             .topic-header {
@@ -283,20 +280,20 @@
         </div>
     </div>
 
-    <!-- Админ-панель (создание тем) -->
+    <div id="errorMessage" style="display: none;" class="error-banner"></div>
+
     <div id="adminPanel" class="admin-panel">
         <h3>✍️ Создать новую тему (только админ)</h3>
         <div class="form-row">
-            <input type="text" id="topicTitle" placeholder="Заголовок темы" style="flex:2">
+            <input type="text" id="topicTitle" placeholder="Заголовок темы">
         </div>
         <div class="form-row">
-            <textarea id="topicDesc" rows="2" placeholder="Описание или первый пост (необязательно)" style="flex:2"></textarea>
+            <textarea id="topicDesc" rows="2" placeholder="Описание или первый пост (необязательно)"></textarea>
         </div>
         <button id="createTopicBtn">➕ Опубликовать тему</button>
         <p style="font-size:12px; margin-top:10px; color:#475569;">ℹ️ Пользователи смогут отвечать без регистрации. Админ удаляет любые темы/ответы.</p>
     </div>
 
-    <!-- Список тем -->
     <div id="topicsList"></div>
 </div>
 <div id="toastMsg" class="toast-msg"></div>
@@ -311,18 +308,46 @@
         messagingSenderId: "604060443375",
         appId: "1:604060443375:web:f6fc69f385a4c59ee3311a"
     };
-    const app = firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-
-    // Коллекции
-    const topicsRef = db.collection("topics");
-    const answersRef = db.collection("answers");
-
-    // ----- Глобальные переменные -----
-    let isAdminMode = false;          // Режим админа (удаление, показ панели)
-    let currentTopicIdForAnswer = null; // для удобства, но формы динамические
-
-    // Вспомогательные функции
+    
+    let db;
+    let topicsRef;
+    let answersRef;
+    let firebaseInitialized = false;
+    
+    try {
+        const app = firebase.initializeApp(firebaseConfig);
+        db = firebase.firestore();
+        
+        // Настройка Firestore для игнорирования ошибок индексации в режиме разработки
+        const settings = {
+            cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED
+        };
+        db.settings(settings);
+        
+        topicsRef = db.collection("topics");
+        answersRef = db.collection("answers");
+        firebaseInitialized = true;
+        console.log("✅ Firebase инициализирован успешно");
+    } catch (error) {
+        console.error("❌ Ошибка инициализации Firebase:", error);
+        showError("Ошибка подключения к базе данных. Проверьте интернет-соединение и настройки Firebase.");
+        firebaseInitialized = false;
+    }
+    
+    // Глобальные переменные
+    let isAdminMode = false;
+    let adminAuthenticated = false;
+    const ADMIN_SECRET = "admin123";
+    
+    function showError(message) {
+        const errorDiv = document.getElementById("errorMessage");
+        errorDiv.textContent = message;
+        errorDiv.style.display = "block";
+        setTimeout(() => {
+            errorDiv.style.display = "none";
+        }, 5000);
+    }
+    
     function showToast(message, duration = 3000) {
         const toast = document.getElementById("toastMsg");
         toast.textContent = message;
@@ -331,21 +356,60 @@
             toast.classList.remove("show-toast");
         }, duration);
     }
-
-    // Форматирование даты
+    
     function formatDate(timestamp) {
         if (!timestamp) return "только что";
-        const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-        return date.toLocaleString("ru-RU", {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'});
+        try {
+            const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+            return date.toLocaleString("ru-RU", {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'});
+        } catch(e) {
+            return "неизвестно";
+        }
     }
-
-    // Рендеринг всех тем + ответов (динамически)
+    
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+    
+    // Создание тестовой темы если нет ни одной
+    async function createTestTopicIfEmpty() {
+        if (!firebaseInitialized) return;
+        
+        try {
+            const snapshot = await topicsRef.limit(1).get();
+            if (snapshot.empty) {
+                console.log("Создаю тестовую тему...");
+                await topicsRef.add({
+                    title: "Добро пожаловать на форум!",
+                    description: "Это тестовая тема. Вы можете отвечать на неё без регистрации. Админ может создавать новые темы и удалять любые сообщения.",
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                showToast("✨ Создана тестовая тема", 2000);
+            }
+        } catch (error) {
+            console.error("Ошибка при создании тестовой темы:", error);
+        }
+    }
+    
+    // Рендеринг всех тем
     async function renderAllTopics() {
+        if (!firebaseInitialized) {
+            document.getElementById("topicsList").innerHTML = '<div class="empty">⚠️ Нет подключения к базе данных. Проверьте интернет и настройки Firebase.</div>';
+            return;
+        }
+        
         const container = document.getElementById("topicsList");
-        container.innerHTML = '<div style="text-align:center; padding:40px;">⏳ Загрузка тем...</div>';
+        container.innerHTML = '<div class="loading">⏳ Загрузка тем...</div>';
         
         try {
             const topicsSnapshot = await topicsRef.orderBy("createdAt", "desc").get();
+            
             if (topicsSnapshot.empty) {
                 container.innerHTML = '<div class="empty">📭 Пока нет тем. Админ может создать первую тему через панель.</div>';
                 return;
@@ -360,36 +424,38 @@
                 const createdAt = topic.createdAt;
                 const dateStr = formatDate(createdAt);
                 
-                // Получаем ответы для этой темы
-                const answersSnap = await answersRef.where("topicId", "==", topicId).orderBy("createdAt", "asc").get();
+                // Получаем ответы
                 let answersHtml = '';
-                answersSnap.forEach(ansDoc => {
-                    const ans = ansDoc.data();
-                    const ansId = ansDoc.id;
-                    const authorName = ans.authorName?.trim() || "Гость";
-                    const answerText = ans.text || "";
-                    const ansDate = formatDate(ans.createdAt);
-                    // Кнопка удаления ответа (только для админа)
-                    const deleteAnswerBtn = isAdminMode ? `<button class="delete-answer" data-answer-id="${ansId}" data-topic-id="${topicId}">🗑️ удалить</button>` : '';
-                    answersHtml += `
-                        <div class="answer-item" data-answer-id="${ansId}">
-                            <div class="answer-author">
-                                <span>✍️ ${escapeHtml(authorName)}</span>
-                                <span style="display:flex; align-items:center; gap:6px;"><span class="answer-date">${ansDate}</span>${deleteAnswerBtn}</span>
+                try {
+                    const answersSnap = await answersRef.where("topicId", "==", topicId).orderBy("createdAt", "asc").get();
+                    answersSnap.forEach(ansDoc => {
+                        const ans = ansDoc.data();
+                        const ansId = ansDoc.id;
+                        const authorName = ans.authorName?.trim() || "Гость";
+                        const answerText = ans.text || "";
+                        const ansDate = formatDate(ans.createdAt);
+                        const deleteAnswerBtn = isAdminMode ? `<button class="delete-answer" data-answer-id="${ansId}" data-topic-id="${topicId}">🗑️ удалить</button>` : '';
+                        answersHtml += `
+                            <div class="answer-item">
+                                <div class="answer-author">
+                                    <span>✍️ ${escapeHtml(authorName)}</span>
+                                    <span style="display:flex; align-items:center; gap:6px;"><span class="answer-date">${ansDate}</span>${deleteAnswerBtn}</span>
+                                </div>
+                                <div class="answer-text">${escapeHtml(answerText).replace(/\n/g, '<br>')}</div>
                             </div>
-                            <div class="answer-text">${escapeHtml(answerText).replace(/\n/g, '<br>')}</div>
-                        </div>
-                    `;
-                });
+                        `;
+                    });
+                } catch (err) {
+                    console.error("Ошибка загрузки ответов:", err);
+                    answersHtml = '<div class="empty" style="padding: 20px;">⚠️ Ошибка загрузки ответов</div>';
+                }
                 
                 if (answersHtml === '') answersHtml = '<div class="empty" style="padding: 20px;">💬 Пока нет ответов. Будьте первым!</div>';
                 
-                // Кнопка удаления темы (только админ)
                 const deleteTopicBtn = isAdminMode ? `<button class="delete-topic-btn" data-topic-id="${topicId}">🗑️ Удалить тему</button>` : '';
                 
-                // Форма добавления ответа (гостевой)
                 const answerFormHtml = `
-                    <div class="answer-form" data-topic-form="${topicId}">
+                    <div class="answer-form">
                         <input type="text" id="guestName_${topicId}" class="guest-input" placeholder="Ваше имя (необязательно)" maxlength="50">
                         <textarea id="answerText_${topicId}" class="answer-textarea" placeholder="Напишите ответ... (без регистрации)" rows="2"></textarea>
                         <button class="send-btn" data-topic-id="${topicId}">📨 Отправить ответ</button>
@@ -399,7 +465,7 @@
                 topicsHtml += `
                     <div class="topic-card" data-topic-id="${topicId}">
                         <div class="topic-header">
-                            <div>
+                            <div style="flex:1">
                                 <div class="topic-title">${escapeHtml(title)}</div>
                                 <div class="topic-meta">📅 ${dateStr} • автор: Админ</div>
                                 ${description ? `<div class="topic-meta" style="margin-top:6px;">📝 ${escapeHtml(description)}</div>` : ''}
@@ -419,111 +485,133 @@
             }
             container.innerHTML = topicsHtml;
             
-            // После рендера привязать обработчики: раскрытие секций ответов, отправка ответов, удаление (темы и ответов)
-            document.querySelectorAll('.topic-card').forEach(card => {
-                const header = card.querySelector('.topic-header');
-                const answersDiv = card.querySelector('.answers-section');
-                // Клик по заголовку открывает/закрывает ответы
-                if (header && answersDiv) {
-                    header.addEventListener('click', (e) => {
-                        // Чтобы не срабатывало при клике на кнопку удаления (останавливаем всплытие)
-                        if (e.target.classList.contains('delete-topic-btn') || e.target.classList.contains('delete-answer')) return;
-                        answersDiv.classList.toggle('open');
-                    });
-                    // если изначально закрыто, но можно открыть первое, или по умолчанию открыть первую? сделаем закрытыми по умолчанию
-                    answersDiv.classList.remove('open'); 
-                }
-            });
+            // Привязываем обработчики
+            attachEventHandlers();
             
-            // Отправка ответов
-            document.querySelectorAll('.send-btn').forEach(btn => {
-                btn.addEventListener('click', async (e) => {
-                    e.stopPropagation();
-                    const topicId = btn.getAttribute('data-topic-id');
-                    const guestNameInput = document.getElementById(`guestName_${topicId}`);
-                    const answerTextarea = document.getElementById(`answerText_${topicId}`);
-                    const authorName = guestNameInput.value.trim() === "" ? "Гость" : guestNameInput.value.trim();
-                    const answerText = answerTextarea.value.trim();
-                    if (!answerText) {
-                        showToast("Напишите текст ответа!", 2000);
-                        return;
-                    }
-                    if (answerText.length > 2000) {
-                        showToast("Ответ слишком длинный (макс 2000 символов)", 2000);
-                        return;
-                    }
-                    try {
-                        await answersRef.add({
-                            topicId: topicId,
-                            authorName: authorName,
-                            text: answerText,
-                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                        });
-                        // очистка формы
-                        answerTextarea.value = '';
-                        if (guestNameInput.value.trim() !== "") guestNameInput.value = authorName; // оставляем имя если ввел
-                        showToast("✅ Ответ добавлен!", 1500);
-                        // обновляем только эту тему (перерендер)
-                        await renderAllTopics(); // проще обновить всё, но сохраняем режим админа
-                    } catch (err) {
-                        console.error(err);
-                        showToast("Ошибка при отправке ответа", 2000);
-                    }
-                });
-            });
-            
-            // Удаление темы (только админ)
-            if (isAdminMode) {
-                document.querySelectorAll('.delete-topic-btn').forEach(btn => {
-                    btn.addEventListener('click', async (e) => {
-                        e.stopPropagation();
-                        const topicId = btn.getAttribute('data-topic-id');
-                        if (confirm("⚠️ Удалить тему со всеми ответами? Это действие необратимо.")) {
-                            try {
-                                // удаляем все ответы этой темы
-                                const answersQuery = await answersRef.where("topicId", "==", topicId).get();
-                                const batch = db.batch();
-                                answersQuery.forEach(doc => batch.delete(doc.ref));
-                                batch.delete(topicsRef.doc(topicId));
-                                await batch.commit();
-                                showToast("Тема и ответы удалены", 2000);
-                                renderAllTopics();
-                            } catch (err) {
-                                console.error(err);
-                                showToast("Ошибка удаления темы", 2000);
-                            }
-                        }
-                    });
-                });
-                
-                // Удаление ответов (динамически через делегирование, но кнопки уже созданы, добавим обработчики после рендера)
-                document.querySelectorAll('.delete-answer').forEach(btn => {
-                    btn.addEventListener('click', async (e) => {
-                        e.stopPropagation();
-                        const answerId = btn.getAttribute('data-answer-id');
-                        const topicId = btn.getAttribute('data-topic-id');
-                        if (confirm("Удалить этот ответ?")) {
-                            try {
-                                await answersRef.doc(answerId).delete();
-                                showToast("Ответ удален", 1500);
-                                renderAllTopics();
-                            } catch (err) {
-                                showToast("Ошибка удаления", 2000);
-                            }
-                        }
-                    });
-                });
-            }
         } catch (error) {
             console.error("Ошибка рендеринга:", error);
-            document.getElementById("topicsList").innerHTML = '<div class="empty">❌ Ошибка загрузки данных. Проверьте консоль.</div>';
+            container.innerHTML = '<div class="empty">❌ Ошибка загрузки данных. Проверьте консоль разработчика (F12) для деталей.</div>';
+            showError("Ошибка загрузки данных: " + error.message);
         }
     }
-
-    // Создание темы (только админ, но проверка в UI: кнопка создает только если открыт админ-режим)
+    
+    function attachEventHandlers() {
+        // Раскрытие/скрытие ответов
+        document.querySelectorAll('.topic-card').forEach(card => {
+            const header = card.querySelector('.topic-header');
+            const answersDiv = card.querySelector('.answers-section');
+            if (header && answersDiv) {
+                // Удаляем старые обработчики, чтобы не дублировать
+                const newHeader = header.cloneNode(true);
+                header.parentNode.replaceChild(newHeader, header);
+                const newAnswersDiv = answersDiv.cloneNode(true);
+                answersDiv.parentNode.replaceChild(newAnswersDiv, answersDiv);
+                
+                const finalHeader = card.querySelector('.topic-header');
+                const finalAnswers = card.querySelector('.answers-section');
+                
+                finalHeader.addEventListener('click', (e) => {
+                    if (e.target.classList && (e.target.classList.contains('delete-topic-btn') || 
+                        e.target.classList.contains('delete-answer') ||
+                        e.target.classList.contains('send-btn'))) {
+                        return;
+                    }
+                    finalAnswers.classList.toggle('open');
+                });
+            }
+        });
+        
+        // Отправка ответов
+        document.querySelectorAll('.send-btn').forEach(btn => {
+            btn.removeEventListener('click', handleSendAnswer);
+            btn.addEventListener('click', handleSendAnswer);
+        });
+        
+        // Удаление тем
+        if (isAdminMode) {
+            document.querySelectorAll('.delete-topic-btn').forEach(btn => {
+                btn.removeEventListener('click', handleDeleteTopic);
+                btn.addEventListener('click', handleDeleteTopic);
+            });
+            
+            document.querySelectorAll('.delete-answer').forEach(btn => {
+                btn.removeEventListener('click', handleDeleteAnswer);
+                btn.addEventListener('click', handleDeleteAnswer);
+            });
+        }
+    }
+    
+    async function handleSendAnswer(e) {
+        e.stopPropagation();
+        const btn = e.currentTarget;
+        const topicId = btn.getAttribute('data-topic-id');
+        const guestNameInput = document.getElementById(`guestName_${topicId}`);
+        const answerTextarea = document.getElementById(`answerText_${topicId}`);
+        
+        const authorName = guestNameInput.value.trim() === "" ? "Гость" : guestNameInput.value.trim();
+        const answerText = answerTextarea.value.trim();
+        
+        if (!answerText) {
+            showToast("Напишите текст ответа!", 2000);
+            return;
+        }
+        if (answerText.length > 2000) {
+            showToast("Ответ слишком длинный (макс 2000 символов)", 2000);
+            return;
+        }
+        
+        try {
+            await answersRef.add({
+                topicId: topicId,
+                authorName: authorName,
+                text: answerText,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            answerTextarea.value = '';
+            showToast("✅ Ответ добавлен!", 1500);
+            await renderAllTopics();
+        } catch (err) {
+            console.error(err);
+            showToast("Ошибка при отправке ответа: " + err.message, 3000);
+        }
+    }
+    
+    async function handleDeleteTopic(e) {
+        e.stopPropagation();
+        const topicId = e.currentTarget.getAttribute('data-topic-id');
+        if (confirm("⚠️ Удалить тему со всеми ответами? Это действие необратимо.")) {
+            try {
+                const answersQuery = await answersRef.where("topicId", "==", topicId).get();
+                const batch = db.batch();
+                answersQuery.forEach(doc => batch.delete(doc.ref));
+                batch.delete(topicsRef.doc(topicId));
+                await batch.commit();
+                showToast("Тема и ответы удалены", 2000);
+                await renderAllTopics();
+            } catch (err) {
+                console.error(err);
+                showToast("Ошибка удаления темы: " + err.message, 3000);
+            }
+        }
+    }
+    
+    async function handleDeleteAnswer(e) {
+        e.stopPropagation();
+        const answerId = e.currentTarget.getAttribute('data-answer-id');
+        if (confirm("Удалить этот ответ?")) {
+            try {
+                await answersRef.doc(answerId).delete();
+                showToast("Ответ удален", 1500);
+                await renderAllTopics();
+            } catch (err) {
+                showToast("Ошибка удаления: " + err.message, 3000);
+            }
+        }
+    }
+    
     async function createNewTopic() {
         if (!isAdminMode) {
-            showToast("Вы не в режиме админа! Нажмите кнопку Админ-панель и введите код.", 2500);
+            showToast("Вы не в режиме админа! Нажмите 'Админ-панель' и введите пароль admin123", 3000);
             return;
         }
         const title = document.getElementById("topicTitle").value.trim();
@@ -545,42 +633,23 @@
             document.getElementById("topicTitle").value = "";
             document.getElementById("topicDesc").value = "";
             showToast("🎉 Тема создана!", 1500);
-            renderAllTopics();
+            await renderAllTopics();
         } catch (err) {
             console.error(err);
-            showToast("Ошибка создания темы", 2000);
+            showToast("Ошибка создания темы: " + err.message, 3000);
         }
     }
-
-    // Простой xss защита
-    function escapeHtml(str) {
-        if (!str) return '';
-        return str.replace(/[&<>]/g, function(m) {
-            if (m === '&') return '&amp;';
-            if (m === '<') return '&lt;';
-            if (m === '>') return '&gt;';
-            return m;
-        }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
-            return c;
-        });
-    }
-
-    // Админ-режим: требуется ввод пароля (простая защита, без регистрации пользователей)
-    let adminAuthenticated = false;
-    const ADMIN_SECRET = "admin123";   // простой пароль, можно сменить. Для удобства, но без сложной авторизации.
     
     function enableAdminMode() {
         if (adminAuthenticated) {
-            // уже админ, выключаем
             adminAuthenticated = false;
             isAdminMode = false;
             document.getElementById("adminPanel").classList.remove("show");
             document.getElementById("adminToggleBtn").textContent = "🔐 Админ-панель";
             showToast("Админ-режим выключен", 1500);
             renderAllTopics();
-            return;
         } else {
-            const pwd = prompt("Введите пароль администратора:", "");
+            const pwd = prompt("Введите пароль администратора (пароль: admin123):", "");
             if (pwd === ADMIN_SECRET) {
                 adminAuthenticated = true;
                 isAdminMode = true;
@@ -594,35 +663,48 @@
         }
     }
     
-    // Инициализация событий
+    // Инициализация приложения
+    async function init() {
+        if (!firebaseInitialized) {
+            return;
+        }
+        
+        // Проверяем подключение к Firestore
+        try {
+            await db.collection("topics").limit(1).get();
+            console.log("✅ Подключение к Firestore успешно");
+        } catch (error) {
+            console.error("❌ Ошибка подключения к Firestore:", error);
+            showError("Не удалось подключиться к Firestore. Проверьте правила безопасности в консоли Firebase.");
+            document.getElementById("topicsList").innerHTML = '<div class="empty">❌ Ошибка доступа к базе данных. Убедитесь, что в Firebase Console разрешены чтение и запись.</div>';
+            return;
+        }
+        
+        await createTestTopicIfEmpty();
+        await renderAllTopics();
+        
+        // Настройка реального времени
+        topicsRef.onSnapshot(() => {
+            if (!document.hidden) renderAllTopics();
+        }, (error) => {
+            console.error("Ошибка snapshot:", error);
+        });
+        
+        answersRef.onSnapshot(() => {
+            if (!document.hidden) renderAllTopics();
+        }, (error) => {
+            console.error("Ошибка snapshot:", error);
+        });
+    }
+    
+    // Назначаем глобальные обработчики
     document.getElementById("adminToggleBtn").addEventListener("click", enableAdminMode);
     document.getElementById("createTopicBtn").addEventListener("click", createNewTopic);
     
-    // Первоначальная загрузка (без админ-режима по умолчанию)
-    renderAllTopics().then(() => {
-        // по умолчанию панель скрыта, isAdminMode = false
-        // добавляем дополнительную проверку для кнопки удаления - они не появятся, т.к. isAdminMode=false.
-        // но если переключиться, то рендер сработает снова.
-    });
-    
-    // Обработка прослушки кликов для кнопок удаления после рендера — уже внутри renderAllTopics 
-    // Также если вдруг динамически добавились кнопки, обработчики уже повешены в самом рендере
-    
-    // Авто-обновление в реальном времени? Не требуется, но для наглядности добавим слушатель изменений (опционально)
-    // Для лучшего UX, но чтобы не перегружать, будем просто перерисовывать после действий.
-    // Однако если несколько вкладок - можно добавить snapshot, но для простоты оставим ручное обновление после мутаций.
-    // Но для синхронизации при удалении из другой вкладки - добавим лайв слушатель на изменения коллекций (проще всего)
-    let unsubTopics = null;
-    function startRealtimeUpdates() {
-        if (unsubTopics) unsubTopics();
-        unsubTopics = topicsRef.onSnapshot(() => {
-            if (!document.hidden) renderAllTopics();
-        });
-        answersRef.onSnapshot(() => {
-            if (!document.hidden) renderAllTopics();
-        });
+    // Запуск
+    if (firebaseInitialized) {
+        init();
     }
-    startRealtimeUpdates();
 </script>
 </body>
 </html>
