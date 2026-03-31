@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>СуперФорум | Мгновенное обновление</title>
+    <title>Современный форум | Все функции</title>
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -11,278 +11,560 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-            background: #f5f7fb;
-            color: #1e293b;
-            padding: 20px 16px;
-            transition: background 0.3s, color 0.2s;
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 24px 20px;
+            transition: all 0.3s ease;
         }
+
         body.dark {
-            background: #0f172a;
-            color: #e2e8f0;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
         }
-        body.dark .forum-header,
-        body.dark .admin-panel,
-        body.dark .topic-card,
-        body.dark .chat-widget {
-            background: #1e293b;
-            border-color: #334155;
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
         }
-        body.dark .answer-item {
-            background: #0f172a;
-            border-left-color: #3b82f6;
-        }
-        body.dark input, body.dark textarea {
-            background: #334155;
-            border-color: #475569;
-            color: white;
-        }
-        .container { max-width: 1200px; margin: 0 auto; }
-        
+
+        /* Современная шапка */
         .forum-header {
-            background: white;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
             border-radius: 32px;
-            padding: 20px 24px;
+            padding: 20px 28px;
             margin-bottom: 28px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            border: 1px solid #e9eef3;
+            box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             display: flex;
             flex-wrap: wrap;
             justify-content: space-between;
             align-items: center;
-            gap: 15px;
+            gap: 20px;
         }
-        .logo h1 { font-size: 1.6rem; display: flex; align-items: center; gap: 10px; }
-        .header-buttons { display: flex; gap: 12px; flex-wrap: wrap; }
-        .theme-toggle, .chat-toggle, .admin-login-btn {
-            background: #f1f4f9;
-            border: 1px solid #dce3ec;
-            padding: 8px 18px;
+
+        body.dark .forum-header {
+            background: rgba(30, 41, 59, 0.95);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .logo h1 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo h1 i {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .logo p {
+            font-size: 0.8rem;
+            color: #64748b;
+            margin-top: 6px;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .btn-icon {
+            background: rgba(102, 126, 234, 0.1);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            padding: 10px 20px;
             border-radius: 40px;
             cursor: pointer;
-            font-weight: 500;
-            transition: 0.2s;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            color: #4a5568;
+            font-size: 0.9rem;
         }
+
+        body.dark .btn-icon {
+            color: #e2e8f0;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-icon:hover {
+            transform: translateY(-2px);
+            background: rgba(102, 126, 234, 0.2);
+        }
+
+        /* Админ панель */
         .admin-panel {
-            background: white;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
             border-radius: 28px;
-            padding: 20px 24px;
+            padding: 24px;
             margin-bottom: 28px;
             display: none;
-            border: 1px solid #e2e8f0;
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
         }
-        .topic-form { display: flex; flex-direction: column; gap: 12px; }
+
+        body.dark .admin-panel {
+            background: rgba(30, 41, 59, 0.95);
+        }
+
+        .admin-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #667eea;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .topic-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
         .topic-form input, .topic-form textarea {
-            padding: 12px 16px;
+            padding: 14px 18px;
             border-radius: 28px;
-            border: 1px solid #cfdee9;
+            border: 2px solid #e2e8f0;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+            background: white;
         }
-        .btn-primary {
-            background: #1e2f41;
+
+        body.dark .topic-form input, body.dark .topic-form textarea {
+            background: #1e293b;
+            border-color: #475569;
             color: white;
-            padding: 12px 20px;
+        }
+
+        .topic-form input:focus, .topic-form textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 24px;
             border-radius: 40px;
             border: none;
             cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
         }
-        
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        /* Карточки тем */
         .topic-card {
-            background: white;
-            border-radius: 32px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 28px;
             margin-bottom: 24px;
-            border: 1px solid #eef2f8;
             overflow: hidden;
+            transition: all 0.3s;
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
+
+        body.dark .topic-card {
+            background: rgba(30, 41, 59, 0.95);
+        }
+
+        .topic-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.2);
+        }
+
         .topic-header {
-            padding: 18px 24px;
-            border-bottom: 1px solid #f0f4fa;
+            padding: 24px;
+            border-bottom: 2px solid rgba(102, 126, 234, 0.2);
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
         }
-        .topic-title { font-size: 1.4rem; font-weight: 700; margin-bottom: 6px; word-break: break-word; }
-        .topic-desc { color: #5b6e8c; margin-top: 6px; font-size: 0.9rem; }
-        .topic-meta { font-size: 0.7rem; color: #6c7a91; display: flex; gap: 16px; flex-wrap: wrap; margin-top: 10px; }
-        .delete-topic-btn { background: none; border: none; color: #b9c4d4; cursor: pointer; font-size: 1.1rem; }
-        
-        .answers-section { padding: 8px 24px 24px; }
-        .answers-list { margin: 16px 0; display: flex; flex-direction: column; gap: 16px; }
-        .answer-item {
-            background: #fafcff;
-            border-radius: 24px;
-            padding: 14px 18px;
-            border-left: 4px solid #cfdfed;
+
+        .topic-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #2d3748;
+            margin-bottom: 8px;
         }
-        .nested-answers {
-            margin-left: 32px;
+
+        body.dark .topic-title {
+            color: #f1f5f9;
+        }
+
+        .topic-desc {
+            color: #64748b;
+            margin-top: 8px;
+            font-size: 0.9rem;
+        }
+
+        .topic-meta {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            display: flex;
+            gap: 20px;
             margin-top: 12px;
-            border-left: 2px dashed #cbd5e1;
-            padding-left: 16px;
+            flex-wrap: wrap;
         }
+
+        .delete-topic-btn {
+            background: rgba(239, 68, 68, 0.1);
+            border: none;
+            color: #ef4444;
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 40px;
+            transition: all 0.3s;
+        }
+
+        .delete-topic-btn:hover {
+            background: #ef4444;
+            color: white;
+        }
+
+        /* Ответы */
+        .answers-section {
+            padding: 20px 24px 24px;
+        }
+
+        .answers-list {
+            margin: 16px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .answer-item {
+            background: rgba(241, 245, 249, 0.6);
+            border-radius: 24px;
+            padding: 16px 20px;
+            border-left: 4px solid #667eea;
+            transition: all 0.3s;
+        }
+
+        body.dark .answer-item {
+            background: rgba(15, 23, 42, 0.6);
+        }
+
+        .nested-answers {
+            margin-left: 40px;
+            margin-top: 16px;
+            border-left: 3px dashed #cbd5e1;
+            padding-left: 20px;
+        }
+
         .answer-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 8px;
+            margin-bottom: 12px;
             flex-wrap: wrap;
             gap: 8px;
         }
+
         .answer-author {
-            font-weight: 600;
-            color: #2563eb;
-            font-size: 0.85rem;
+            font-weight: 700;
+            color: #667eea;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
-        .answer-text { word-break: break-word; margin: 8px 0; line-height: 1.4; }
+
+        .answer-text {
+            word-break: break-word;
+            margin: 12px 0;
+            line-height: 1.5;
+            color: #2d3748;
+        }
+
+        body.dark .answer-text {
+            color: #e2e8f0;
+        }
+
         .answer-actions {
             display: flex;
-            gap: 15px;
-            margin-top: 10px;
-            font-size: 0.75rem;
+            gap: 12px;
+            margin-top: 12px;
             flex-wrap: wrap;
             align-items: center;
         }
-        .like-btn, .reply-btn, .mention-btn {
+
+        .action-btn {
             background: none;
             border: none;
             cursor: pointer;
-            color: #6c7a91;
-            transition: 0.2s;
+            color: #94a3b8;
+            transition: all 0.2s;
             font-size: 0.8rem;
-            padding: 4px 8px;
+            padding: 6px 12px;
             border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
         }
-        .like-btn:hover, .reply-btn:hover, .mention-btn:hover { background: #e2e8f0; }
-        .like-btn.liked { color: #ef4444; }
-        .reaction-buttons { display: inline-flex; gap: 6px; }
+
+        .action-btn:hover {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+        }
+
+        .like-btn.liked {
+            color: #ef4444;
+        }
+
+        .reaction-buttons {
+            display: inline-flex;
+            gap: 4px;
+        }
+
         .reaction-emoji {
             cursor: pointer;
             font-size: 1rem;
-            padding: 2px 6px;
-            border-radius: 20px;
-            transition: 0.1s;
+            padding: 4px 8px;
+            border-radius: 30px;
+            transition: all 0.2s;
         }
-        .reaction-emoji:hover { background: #e2e8f0; }
-        .answer-image { max-width: 200px; max-height: 150px; border-radius: 12px; margin-top: 8px; cursor: pointer; }
-        
-        .add-answer-form { margin-top: 20px; }
+
+        .reaction-emoji:hover {
+            background: rgba(102, 126, 234, 0.2);
+            transform: scale(1.1);
+        }
+
+        .answer-image {
+            max-width: 200px;
+            max-height: 150px;
+            border-radius: 16px;
+            margin-top: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .answer-image:hover {
+            transform: scale(1.05);
+        }
+
+        /* Форма ответа */
+        .add-answer-form {
+            margin-top: 24px;
+        }
+
         .reply-toolbar {
             display: flex;
-            gap: 10px;
+            gap: 12px;
             flex-wrap: wrap;
             align-items: flex-start;
         }
+
         .reply-toolbar input, .reply-toolbar textarea {
             flex: 1;
-            padding: 10px 14px;
+            padding: 12px 16px;
             border-radius: 40px;
-            border: 1px solid #dce5ef;
+            border: 2px solid #e2e8f0;
             font-family: inherit;
+            transition: all 0.3s;
+            background: white;
         }
-        .reply-toolbar textarea { min-width: 200px; resize: vertical; }
+
+        body.dark .reply-toolbar input, body.dark .reply-toolbar textarea {
+            background: #1e293b;
+            border-color: #475569;
+            color: white;
+        }
+
+        .reply-toolbar input:focus, .reply-toolbar textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .reply-toolbar textarea {
+            resize: vertical;
+            min-height: 70px;
+        }
+
         .btn-reply {
-            background: #eef3fc;
-            padding: 8px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 10px 24px;
             border-radius: 40px;
             border: none;
             cursor: pointer;
-            font-weight: 500;
+            font-weight: 600;
+            transition: all 0.3s;
         }
-        .attach-btn, .emoji-btn {
-            background: #f1f4f9;
-            border: 1px solid #dce3ec;
-            padding: 8px 14px;
+
+        .btn-reply:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .attach-btn {
+            background: rgba(102, 126, 234, 0.1);
+            border: 2px solid #e2e8f0;
+            padding: 10px 16px;
             border-radius: 40px;
             cursor: pointer;
+            transition: all 0.3s;
         }
-        
+
+        /* Чат */
         .chat-widget {
             position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 320px;
-            background: white;
-            border-radius: 24px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-            border: 1px solid #e2e8f0;
+            bottom: 24px;
+            right: 24px;
+            width: 340px;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(10px);
+            border-radius: 28px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(102, 126, 234, 0.3);
             display: none;
             flex-direction: column;
             z-index: 1000;
         }
-        .chat-widget.open { display: flex; }
+
+        body.dark .chat-widget {
+            background: rgba(30, 41, 59, 0.98);
+        }
+
+        .chat-widget.open {
+            display: flex;
+        }
+
         .chat-header {
-            padding: 12px 16px;
-            background: #1e293b;
+            padding: 16px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            border-radius: 24px 24px 0 0;
+            border-radius: 28px 28px 0 0;
             display: flex;
             justify-content: space-between;
             cursor: pointer;
+            font-weight: 600;
         }
+
         .chat-messages {
-            height: 300px;
+            height: 350px;
             overflow-y: auto;
-            padding: 12px;
+            padding: 16px;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 10px;
         }
+
         .chat-message {
-            background: #f1f5f9;
-            padding: 6px 12px;
-            border-radius: 18px;
-            font-size: 0.8rem;
+            background: rgba(102, 126, 234, 0.1);
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
         }
-        body.dark .chat-message { background: #2d3748; }
+
         .chat-input-area {
             display: flex;
-            padding: 12px;
-            gap: 8px;
-            border-top: 1px solid #e2e8f0;
+            padding: 16px;
+            gap: 10px;
+            border-top: 1px solid rgba(102, 126, 234, 0.2);
         }
+
         .chat-input-area input {
             flex: 1;
-            padding: 8px;
+            padding: 10px;
             border-radius: 40px;
-            border: 1px solid #cbd5e1;
+            border: 2px solid #e2e8f0;
+            background: white;
         }
-        
-        @media (max-width: 640px) {
-            .chat-widget { width: 280px; right: 10px; bottom: 10px; }
-            .topic-title { font-size: 1.2rem; }
-            .reply-toolbar { flex-direction: column; }
+
+        body.dark .chat-input-area input {
+            background: #1e293b;
+            border-color: #475569;
+            color: white;
         }
-        .empty-message { text-align: center; padding: 40px; color: #6c7e9e; background: white; border-radius: 32px; }
-        footer { text-align: center; margin-top: 40px; font-size: 0.7rem; padding: 16px; }
-        .loading-spinner { text-align: center; padding: 40px; }
+
+        .empty-message {
+            text-align: center;
+            padding: 40px;
+            color: #94a3b8;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 28px;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: white;
+            font-size: 0.8rem;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        @media (max-width: 768px) {
+            .chat-widget {
+                width: 300px;
+                right: 16px;
+                bottom: 16px;
+            }
+            .topic-title {
+                font-size: 1.2rem;
+            }
+            .reply-toolbar {
+                flex-direction: column;
+            }
+        }
     </style>
 </head>
 <body>
 <div class="container">
     <div class="forum-header">
-        <div class="logo"><h1><i class="fas fa-comments"></i> СуперФорум</h1></div>
+        <div class="logo">
+            <h1><i class="fas fa-comet"></i> NeoForum</h1>
+            <p>Современное общение без границ</p>
+        </div>
         <div class="header-buttons">
-            <button id="themeToggleBtn" class="theme-toggle"><i class="fas fa-moon"></i> Тема</button>
-            <button id="chatToggleBtn" class="chat-toggle"><i class="fas fa-comment-dots"></i> Чат</button>
-            <button id="adminLoginBtn" class="admin-login-btn"><i class="fas fa-lock"></i> Админ</button>
+            <button id="themeToggleBtn" class="btn-icon"><i class="fas fa-moon"></i> Тема</button>
+            <button id="chatToggleBtn" class="btn-icon"><i class="fas fa-comment-dots"></i> Чат</button>
+            <button id="adminLoginBtn" class="btn-icon"><i class="fas fa-crown"></i> Админ</button>
         </div>
     </div>
 
     <div id="adminPanel" class="admin-panel">
-        <div class="admin-title"><i class="fas fa-hammer"></i> Создать тему (только админ)</div>
+        <div class="admin-title"><i class="fas fa-gem"></i> Панель администратора</div>
         <div class="topic-form">
-            <input type="text" id="topicTitleInput" placeholder="Заголовок темы">
-            <textarea id="topicDescInput" rows="2" placeholder="Описание темы"></textarea>
-            <button id="createTopicBtn" class="btn-primary"><i class="fas fa-plus"></i> Создать тему</button>
+            <input type="text" id="topicTitleInput" placeholder="✨ Заголовок новой темы">
+            <textarea id="topicDescInput" rows="2" placeholder="📝 Описание темы (необязательно)"></textarea>
+            <button id="createTopicBtn" class="btn-primary"><i class="fas fa-plus-circle"></i> Создать тему</button>
         </div>
     </div>
 
     <div id="topicsContainer" class="topics-list">
-        <div class="loading-spinner"><i class="fas fa-spinner fa-pulse"></i> Загрузка форума...</div>
+        <div class="empty-message"><i class="fas fa-spinner fa-pulse"></i> Загрузка форума...</div>
     </div>
-    <footer>🔥 Лайки | 🧵 Вложенные ответы | @упоминания | 📸 Изображения | 😍 Эмодзи-реакции | 🌙 Тёмная тема | 💬 Чат</footer>
+    <footer>
+        <i class="fas fa-heart" style="color: #ff6b6b;"></i> Лайки | <i class="fas fa-comments"></i> Вложенные ответы | <i class="fas fa-at"></i> Упоминания | 
+        <i class="fas fa-image"></i> Изображения | <i class="fas fa-smile"></i> Эмодзи | <i class="fas fa-palette"></i> Тёмная тема | <i class="fas fa-comment-dots"></i> Чат
+    </footer>
 </div>
 
 <div id="chatWidget" class="chat-widget">
@@ -290,12 +572,11 @@
     <div id="chatMessagesList" class="chat-messages"></div>
     <div class="chat-input-area">
         <input type="text" id="chatInput" placeholder="Имя: сообщение (например, Анна: привет)">
-        <button id="sendChatBtn"><i class="fas fa-paper-plane"></i></button>
+        <button id="sendChatBtn" class="btn-primary" style="padding: 8px 16px;"><i class="fas fa-paper-plane"></i></button>
     </div>
 </div>
 
 <script>
-    // ==================== FIREBASE КОНФИГ ====================
     const firebaseConfig = {
         apiKey: "AIzaSyCMi3eKNZ4OgD2YCdhEFDOsmuclKZkjflo",
         authDomain: "from-b14b1.firebaseapp.com",
@@ -314,7 +595,7 @@
     const userId = localStorage.getItem('forum_user') || 'user_' + Math.random().toString(36).substr(2, 8);
     localStorage.setItem('forum_user', userId);
     
-    const adminPanel = document.getElementById('adminPanel');
+    const adminPanelDiv = document.getElementById('adminPanel');
     const topicsContainer = document.getElementById('topicsContainer');
     
     function escapeHtml(str) {
@@ -357,9 +638,9 @@
     }
     
     async function createTopic() {
-        if (!isAdmin) return alert("Только администратор!");
+        if (!isAdmin) return alert("Только администратор может создавать темы!");
         const title = document.getElementById('topicTitleInput').value.trim();
-        if (!title) return alert("Введите заголовок");
+        if (!title) return alert("Введите заголовок темы");
         await db.collection('topics').add({
             title: title,
             description: document.getElementById('topicDescInput').value.trim(),
@@ -370,7 +651,7 @@
     }
     
     async function deleteTopic(topicId) {
-        if (!isAdmin || !confirm("Удалить тему?")) return;
+        if (!isAdmin || !confirm("Удалить тему и все ответы?")) return;
         const answers = await db.collection('answers').where('topicId', '==', topicId).get();
         const batch = db.batch();
         answers.forEach(doc => batch.delete(doc.ref));
@@ -379,7 +660,7 @@
     }
     
     async function addAnswer(topicId, text, author, parentId = null, imageUrl = null) {
-        if (!text.trim() && !imageUrl) return alert("Напишите текст или добавьте фото");
+        if (!text.trim() && !imageUrl) return alert("Напишите ответ или добавьте изображение");
         await db.collection('answers').add({
             topicId, text: text.trim(), author: author.trim() || "Гость", parentId, imageUrl,
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
@@ -387,62 +668,52 @@
         });
     }
     
-    // ГЛАВНЫЙ РЕНДЕР - ИСПРАВЛЕН: ОДИН СЛУШАТЕЛЬ ДЛЯ ВСЕГО
-    function startRealtimeUpdates() {
-        // Слушаем изменения тем
-        db.collection('topics').orderBy('createdAt', 'desc').onSnapshot((topicsSnapshot) => {
-            // Слушаем изменения ответов (внутри, чтобы всегда свежие данные)
-            db.collection('answers').orderBy('createdAt', 'asc').onSnapshot((answersSnapshot) => {
-                // Собираем все ответы в Map
+    // Реальный рендер с мгновенными обновлениями
+    function startRealtime() {
+        db.collection('topics').orderBy('createdAt', 'desc').onSnapshot((topicsSnap) => {
+            db.collection('answers').orderBy('createdAt', 'asc').onSnapshot((answersSnap) => {
                 const answersMap = new Map();
-                answersSnapshot.forEach(doc => {
-                    answersMap.set(doc.id, { id: doc.id, ...doc.data() });
-                });
+                answersSnap.forEach(doc => answersMap.set(doc.id, { id: doc.id, ...doc.data() }));
                 
-                if (topicsSnapshot.empty) {
+                if (topicsSnap.empty) {
                     topicsContainer.innerHTML = '<div class="empty-message"><i class="fas fa-comment-slash"></i> Нет тем. Администратор, создайте первую тему!</div>';
                     return;
                 }
                 
                 let html = '';
-                
-                for (const topicDoc of topicsSnapshot.docs) {
+                for (const topicDoc of topicsSnap.docs) {
                     const topic = topicDoc.data();
                     const topicId = topicDoc.id;
                     const topicAnswers = Array.from(answersMap.values()).filter(a => a.topicId === topicId);
                     
-                    // Функция построения дерева ответов
-                    function renderAnswersTree(parentId = null) {
+                    function renderTree(parentId = null) {
                         const children = topicAnswers.filter(a => a.parentId === parentId);
-                        if (children.length === 0) return '';
-                        
+                        if (!children.length) return '';
                         let result = '<div class="nested-answers">';
                         for (const ans of children) {
-                            const likesCount = ans.likes ? ans.likes.length : 0;
-                            const isLiked = ans.likes ? ans.likes.includes(userId) : false;
+                            const likesCount = ans.likes?.length || 0;
+                            const isLiked = ans.likes?.includes(userId) || false;
                             const reactions = ans.reactions || {};
-                            
                             let reactionsHtml = '';
                             for (const [emoji, users] of Object.entries(reactions)) {
-                                reactionsHtml += `<span style="background:#e2e8f0; padding:2px 8px; border-radius:20px; font-size:0.7rem; margin-left:4px;">${emoji} ${users.length}</span>`;
+                                reactionsHtml += `<span style="background:rgba(102,126,234,0.2); padding:2px 8px; border-radius:20px; font-size:0.7rem; margin-left:4px;">${emoji} ${users.length}</span>`;
                             }
-                            
                             result += `
-                                <div class="answer-item" data-answer-id="${ans.id}">
+                                <div class="answer-item">
                                     <div class="answer-header">
-                                        <span class="answer-author"><i class="fas fa-user-circle"></i> ${escapeHtml(ans.author)}</span>
-                                        <small>${ans.createdAt?.toDate().toLocaleString() || 'только что'}</small>
+                                        <span class="answer-author"><i class="fas fa-user-astronaut"></i> ${escapeHtml(ans.author)}</span>
+                                        <small style="color:#94a3b8;">${ans.createdAt?.toDate().toLocaleString() || 'только что'}</small>
                                     </div>
                                     <div class="answer-text">${escapeHtml(ans.text)}</div>
                                     ${ans.imageUrl ? `<img src="${ans.imageUrl}" class="answer-image" onclick="window.open('${ans.imageUrl}')" />` : ''}
                                     <div class="answer-actions">
-                                        <button class="like-btn" data-id="${ans.id}" data-liked="${isLiked}">
-                                            <i class="fas fa-heart" style="color: ${isLiked ? '#ef4444' : '#6c7a91'}"></i> ${likesCount}
+                                        <button class="action-btn like-btn" data-id="${ans.id}">
+                                            <i class="fas fa-heart" style="color: ${isLiked ? '#ef4444' : '#94a3b8'}"></i> ${likesCount}
                                         </button>
-                                        <button class="reply-btn" data-id="${ans.id}" data-author="${escapeHtml(ans.author)}">
+                                        <button class="action-btn reply-btn" data-id="${ans.id}" data-author="${escapeHtml(ans.author)}">
                                             <i class="fas fa-reply"></i> Ответить
                                         </button>
-                                        <button class="mention-btn" data-author="${escapeHtml(ans.author)}">
+                                        <button class="action-btn mention-btn" data-author="${escapeHtml(ans.author)}">
                                             <i class="fas fa-at"></i> Упомянуть
                                         </button>
                                         <div class="reaction-buttons">
@@ -453,7 +724,7 @@
                                         </div>
                                         ${reactionsHtml}
                                     </div>
-                                    ${renderAnswersTree(ans.id)}
+                                    ${renderTree(ans.id)}
                                 </div>
                             `;
                         }
@@ -472,19 +743,19 @@
                                         <span><i class="fas fa-reply-all"></i> ${topicAnswers.length} ответов</span>
                                     </div>
                                 </div>
-                                ${isAdmin ? `<button class="delete-topic-btn" data-id="${topicId}"><i class="fas fa-trash-alt"></i></button>` : ''}
+                                ${isAdmin ? `<button class="delete-topic-btn" data-id="${topicId}"><i class="fas fa-trash-alt"></i> Удалить</button>` : ''}
                             </div>
                             <div class="answers-section">
                                 <div class="answers-list">
-                                    ${renderAnswersTree(null)}
+                                    ${renderTree(null)}
                                 </div>
                                 <div class="add-answer-form" data-topic="${topicId}">
                                     <div class="reply-toolbar">
-                                        <input type="text" placeholder="Ваше имя" class="answer-name" id="name-${topicId}" style="flex:0.7">
+                                        <input type="text" placeholder="Ваше имя" class="answer-name" id="name-${topicId}" style="flex:0.5">
                                         <textarea rows="2" placeholder="Написать ответ..." class="answer-textarea" id="text-${topicId}" style="flex:2"></textarea>
                                         <input type="file" accept="image/*" class="image-upload" id="image-${topicId}" style="display:none">
-                                        <button class="attach-btn" data-topic="${topicId}"><i class="fas fa-image"></i></button>
-                                        <button class="btn-reply submit-answer" data-topic="${topicId}"><i class="fas fa-paper-plane"></i> Ответить</button>
+                                        <button class="attach-btn" data-topic="${topicId}"><i class="fas fa-image"></i> Фото</button>
+                                        <button class="btn-reply submit-answer" data-topic="${topicId}"><i class="fas fa-paper-plane"></i> Отправить</button>
                                     </div>
                                 </div>
                             </div>
@@ -493,30 +764,18 @@
                 }
                 
                 topicsContainer.innerHTML = html;
-                attachEventHandlers();
+                attachEvents();
             });
         });
     }
     
-    function attachEventHandlers() {
-        // Лайки
+    function attachEvents() {
         document.querySelectorAll('.like-btn').forEach(btn => {
-            btn.onclick = async (e) => {
-                e.stopPropagation();
-                const id = btn.dataset.id;
-                await toggleLike(id);
-            };
+            btn.onclick = async () => await toggleLike(btn.dataset.id);
         });
-        
-        // Реакции
         document.querySelectorAll('.reaction-emoji').forEach(el => {
-            el.onclick = async (e) => {
-                e.stopPropagation();
-                await addReaction(el.dataset.id, el.dataset.emoji);
-            };
+            el.onclick = async () => await addReaction(el.dataset.id, el.dataset.emoji);
         });
-        
-        // Ответить (вложенный)
         document.querySelectorAll('.reply-btn').forEach(btn => {
             btn.onclick = () => {
                 const parentId = btn.dataset.id;
@@ -528,8 +787,6 @@
                 textarea.dataset.parentId = parentId;
             };
         });
-        
-        // Упомянуть
         document.querySelectorAll('.mention-btn').forEach(btn => {
             btn.onclick = () => {
                 const author = btn.dataset.author;
@@ -539,16 +796,9 @@
                 textarea.focus();
             };
         });
-        
-        // Прикрепить изображение
         document.querySelectorAll('.attach-btn').forEach(btn => {
-            btn.onclick = () => {
-                const topicId = btn.dataset.topic;
-                document.getElementById(`image-${topicId}`).click();
-            };
+            btn.onclick = () => document.getElementById(`image-${btn.dataset.topic}`).click();
         });
-        
-        // Загрузка изображения
         document.querySelectorAll('.image-upload').forEach(input => {
             input.onchange = async (e) => {
                 const file = e.target.files[0];
@@ -557,7 +807,6 @@
                 const nameInput = document.getElementById(`name-${topicId}`);
                 const textarea = document.getElementById(`text-${topicId}`);
                 const parentId = textarea.dataset.parentId || null;
-                
                 const url = await uploadImage(file);
                 await addAnswer(topicId, textarea.value, nameInput.value, parentId, url);
                 textarea.value = '';
@@ -565,22 +814,17 @@
                 input.value = '';
             };
         });
-        
-        // Отправить ответ
         document.querySelectorAll('.submit-answer').forEach(btn => {
             btn.onclick = async () => {
                 const topicId = btn.dataset.topic;
                 const nameInput = document.getElementById(`name-${topicId}`);
                 const textarea = document.getElementById(`text-${topicId}`);
                 const parentId = textarea.dataset.parentId || null;
-                
                 await addAnswer(topicId, textarea.value, nameInput.value, parentId, null);
                 textarea.value = '';
                 delete textarea.dataset.parentId;
             };
         });
-        
-        // Удаление темы (админ)
         if (isAdmin) {
             document.querySelectorAll('.delete-topic-btn').forEach(btn => {
                 btn.onclick = () => deleteTopic(btn.dataset.id);
@@ -606,7 +850,7 @@
                 const msg = doc.data();
                 const div = document.createElement('div');
                 div.className = 'chat-message';
-                div.innerHTML = `<b>${escapeHtml(msg.author)}</b>: ${escapeHtml(msg.text)} <small>${msg.timestamp?.toDate().toLocaleTimeString() || ''}</small>`;
+                div.innerHTML = `<b>${escapeHtml(msg.author)}</b>: ${escapeHtml(msg.text)} <small style="color:#94a3b8;">${msg.timestamp?.toDate().toLocaleTimeString() || ''}</small>`;
                 chatMessages.appendChild(div);
             });
             chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -629,13 +873,9 @@
             });
             chatInput.value = '';
         };
-        
-        chatInput.onkeypress = (e) => {
-            if (e.key === 'Enter') sendBtn.onclick();
-        };
+        chatInput.onkeypress = (e) => { if (e.key === 'Enter') sendBtn.onclick(); };
     }
     
-    // Темная тема
     function initTheme() {
         const saved = localStorage.getItem('darkTheme');
         if (saved === 'true') document.body.classList.add('dark');
@@ -645,25 +885,21 @@
         };
     }
     
-    // Админ вход
     document.getElementById('adminLoginBtn').onclick = () => {
         const pwd = prompt("Введите пароль администратора:");
         if (pwd === ADMIN_PASSWORD) {
             isAdmin = true;
-            adminPanel.style.display = "block";
-            alert("Админ-режим активирован!");
-            startRealtimeUpdates(); // перезапускаем для отображения кнопок удаления
-        } else if (pwd) {
-            alert("Неверный пароль");
-        }
+            adminPanelDiv.style.display = "block";
+            alert("✅ Админ-режим активирован!");
+            startRealtime();
+        } else if (pwd) alert("❌ Неверный пароль");
     };
     
     document.getElementById('createTopicBtn').onclick = createTopic;
     
-    // Запуск
     initTheme();
     initChat();
-    startRealtimeUpdates();
+    startRealtime();
 </script>
 </body>
 </html>
