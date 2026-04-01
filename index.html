@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Archives Park Forum | Telegram Bot</title>
+    <title>Archives Park Forum | Telegram Integration</title>
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
     <style>
@@ -47,7 +47,6 @@
             display: inline-flex;
             align-items: center;
             gap: 10px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
         .user-id {
             font-family: monospace;
@@ -98,9 +97,6 @@
             padding: 10px;
             border-bottom: 1px solid #e2e8f0;
         }
-        .user-item:last-child {
-            border-bottom: none;
-        }
         .make-admin-btn, .remove-admin-btn {
             padding: 5px 12px;
             font-size: 12px;
@@ -122,10 +118,6 @@
             border: 1px solid #cbd5e1;
             font-size: 1rem;
             width: 100%;
-        }
-        input:focus, textarea:focus {
-            outline: none;
-            border-color: #667eea;
         }
         button {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -225,6 +217,21 @@
             border-radius: 20px;
             margin-bottom: 20px;
         }
+        .telegram-button {
+            display: inline-block;
+            background: #0088cc;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: bold;
+            margin-top: 15px;
+            transition: all 0.2s;
+        }
+        .telegram-button:hover {
+            transform: translateY(-2px);
+            background: #006699;
+        }
         .code-block {
             background: #1e293b;
             color: #e2e8f0;
@@ -257,11 +264,27 @@
             padding: 40px;
             color: #64748b;
         }
-        .bot-instruction {
-            background: #f1f5f9;
-            border-radius: 16px;
-            padding: 15px;
-            margin-top: 15px;
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 28px;
+            max-width: 500px;
+            width: 90%;
+        }
+        .modal.show {
+            display: flex;
         }
         @media (max-width: 680px) {
             .topic-header {
@@ -278,7 +301,7 @@
         <div class="user-info">
             <div>
                 <h1>📢 Archives Park Forum</h1>
-                <p style="color: #64748b; margin-top: 5px;">Управление через Telegram | GitHub Pages</p>
+                <p style="color: #64748b; margin-top: 5px;">Telegram интеграция | GitHub Pages</p>
             </div>
             <div class="user-card">
                 <span>👤 Ваш ID:</span>
@@ -290,20 +313,16 @@
         <div class="stats" id="stats"></div>
         
         <div class="telegram-setup">
-            <h3>🤖 Ваш Telegram Бот</h3>
-            <p>Бот: <strong>@archivesparkibot</strong></p>
-            <p style="margin-top: 10px;">🔗 Ссылка: <a href="https://t.me/archivesparkibot" target="_blank" style="color: #ffd700;">https://t.me/archivesparkibot</a></p>
+            <h3>🤖 Создание тем через Telegram</h3>
+            <p>Нажмите на кнопку ниже, чтобы создать тему через Telegram:</p>
+            <a href="#" id="telegramCreateBtn" class="telegram-button">📱 Создать тему в Telegram</a>
+            <p style="margin-top: 10px; font-size: 12px;">* Откроется Telegram с предзаполненной командой</p>
             
-            <div class="bot-instruction" style="background: rgba(0,0,0,0.3);">
-                <h4>📝 Как настроить бота:</h4>
-                <div class="code-block">
-                    <strong>1. Откройте бота @archivesparkibot в Telegram</strong><br>
-                    <strong>2. Отправьте команду /start</strong><br>
-                    <strong>3. Для создания темы используйте:</strong><br>
-                    /newtopic Заголовок | Описание<br><br>
-                    <strong>📌 Пример:</strong><br>
-                    /newtopic Важная новость | Обсуждаем новые функции форума
-                </div>
+            <div class="code-block" style="margin-top: 15px;">
+                <strong>📝 Или отправьте команду вручную боту @archivesparkibot:</strong><br>
+                /newtopic Заголовок | Описание<br><br>
+                <strong>Пример:</strong><br>
+                /newtopic Важная новость | Обсуждаем новые функции форума
             </div>
         </div>
         
@@ -318,11 +337,10 @@
             <hr style="margin: 20px 0;">
             <div>
                 <h4>👥 Управление администраторами</h4>
-                <p>Все пользователи форума (могут назначать админов):</p>
+                <p>Все пользователи форума:</p>
                 <div id="usersList" class="users-list"></div>
                 <p style="font-size: 12px; color: #475569; margin-top: 10px;">
-                    ℹ️ Первый зарегистрированный пользователь становится администратором.<br>
-                    Админ может назначать других админов через эту панель.
+                    ℹ️ Первый пользователь = администратор. Админ может назначать других.
                 </p>
             </div>
         </div>
@@ -331,6 +349,18 @@
     <div id="topicsList"></div>
 </div>
 <div id="toastMsg" class="toast-msg"></div>
+
+<!-- Модальное окно для создания темы через Telegram -->
+<div id="telegramModal" class="modal">
+    <div class="modal-content">
+        <h3>📱 Создать тему через Telegram</h3>
+        <p>Введите данные для темы:</p>
+        <input type="text" id="modalTitle" placeholder="Заголовок темы" style="margin: 10px 0;">
+        <textarea id="modalDesc" rows="3" placeholder="Описание темы" style="margin: 10px 0;"></textarea>
+        <button id="sendToTelegramBtn" style="margin: 10px 0;">📤 Отправить в Telegram</button>
+        <button onclick="closeModal()" style="background: #64748b;">❌ Отмена</button>
+    </div>
+</div>
 
 <script>
     // Firebase конфигурация
@@ -343,19 +373,12 @@
         appId: "1:604060443375:web:f6fc69f385a4c59ee3311a"
     };
     
-    // Инициализация Firebase
     const app = firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
     
-    // Настройки для Firestore
-    db.settings({
-        ignoreUndefinedProperties: true
-    });
+    db.settings({ ignoreUndefinedProperties: true });
     
-    // Ваш токен бота
-    const BOT_TOKEN = "8751597537:AAG-W7_DLlAw8FmpOxINf0dYvMN1p7CFogA";
     const BOT_USERNAME = "archivesparkibot";
-    
     let currentUser = null;
     let isAdmin = false;
     
@@ -399,7 +422,7 @@
                 currentUser = { userId, isAdmin: isFirstUser };
                 
                 if (isFirstUser) {
-                    showToast("🎉 Поздравляем! Вы первый пользователь и назначены администратором!");
+                    showToast("🎉 Вы первый пользователь! Вы назначены администратором!");
                 }
             } else {
                 currentUser = {
@@ -424,7 +447,7 @@
             return currentUser;
         } catch (error) {
             console.error("Ошибка регистрации:", error);
-            showToast("❌ Ошибка подключения к базе данных. Проверьте настройки Firebase.", true);
+            showToast("❌ Ошибка подключения к базе данных", true);
             return null;
         }
     }
@@ -446,19 +469,14 @@
                 userDiv.innerHTML = `
                     <div>
                         <strong>${user.userId.substring(0, 25)}...</strong><br>
-                        <small>📅 ${formatDate(user.createdAt)}</small><br>
-                        <small>${user.isAdmin ? '👑 Администратор' : '👤 Пользователь'}</small>
+                        <small>${user.isAdmin ? '👑 Админ' : '👤 Пользователь'}</small>
                     </div>
                     ${!user.isAdmin ? 
-                        `<button class="make-admin-btn" data-id="${user.userId}">👑 Назначить админом</button>` :
-                        `<button class="remove-admin-btn" data-id="${user.userId}">🔽 Забрать админку</button>`
+                        `<button class="make-admin-btn" data-id="${user.userId}">👑 Назначить</button>` :
+                        `<button class="remove-admin-btn" data-id="${user.userId}">🔽 Забрать</button>`
                     }
                 `;
                 usersList.appendChild(userDiv);
-            }
-            
-            if (usersSnapshot.empty) {
-                usersList.innerHTML = '<div class="empty">Пока нет других пользователей</div>';
             }
             
             document.querySelectorAll('.make-admin-btn').forEach(btn => {
@@ -474,19 +492,16 @@
     
     async function makeAdmin(userId, makeAdminBool) {
         if (!isAdmin) {
-            showToast("❌ Только администратор может назначать других админов!");
+            showToast("❌ Только администратор может назначать админов!");
             return;
         }
         
         try {
-            await db.collection("users").doc(userId).update({
-                isAdmin: makeAdminBool
-            });
-            showToast(makeAdminBool ? "✅ Пользователь назначен администратором!" : "🔽 Права администратора забраны");
+            await db.collection("users").doc(userId).update({ isAdmin: makeAdminBool });
+            showToast(makeAdminBool ? "✅ Назначен администратором!" : "🔽 Права забраны");
             loadUsersList();
         } catch (error) {
-            console.error(error);
-            showToast("❌ Ошибка при изменении прав", true);
+            showToast("❌ Ошибка", true);
         }
     }
     
@@ -540,7 +555,6 @@
             });
             return answers;
         } catch (error) {
-            console.error("Ошибка загрузки ответов:", error);
             return [];
         }
     }
@@ -553,14 +567,12 @@
             const topicsSnapshot = await db.collection("topics").orderBy("createdAt", "desc").get();
             
             if (topicsSnapshot.empty) {
-                // Создаем приветственную тему
                 await db.collection("topics").add({
                     title: "🌟 Добро пожаловать на форум Archives Park!",
-                    description: "Это первая тема на нашем форуме. Здесь вы можете:\n\n✅ Обсуждать интересные темы\n✅ Отвечать на сообщения\n✅ Создавать новые темы (только админ)\n\nАдмин может назначать других админов через панель управления.\n\n📱 Также вы можете создавать темы через Telegram бота: @archivesparkibot\n\nПриятного общения! 🎉",
+                    description: "Это первая тема. Здесь вы можете обсуждать интересные темы, отвечать на сообщения и создавать новые темы (только админ).\n\n📱 Также вы можете создавать темы через Telegram бота @archivesparkibot\n\nПриятного общения! 🎉",
                     author: "Система",
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
-                container.innerHTML = '<div class="loading">📝 Создаю приветственную тему...</div>';
                 setTimeout(() => renderTopics(), 1000);
                 return;
             }
@@ -576,7 +588,7 @@
                     answersHtml = '<div class="empty" style="padding: 20px;">💬 Нет ответов. Будьте первым!</div>';
                 } else {
                     answers.forEach(answer => {
-                        const deleteBtn = isAdmin ? `<button class="delete-answer" data-answer-id="${answer.id}" style="background:#ef4444; padding:4px 12px; border-radius:20px;">🗑️ Удалить</button>` : '';
+                        const deleteBtn = isAdmin ? `<button class="delete-answer" data-answer-id="${answer.id}" style="background:#ef4444; padding:4px 12px; border-radius:20px;">🗑️</button>` : '';
                         answersHtml += `
                             <div class="answer-item">
                                 <div class="answer-author">
@@ -604,7 +616,7 @@
                         <div class="answers-section" id="answers-${topicId}">
                             <div id="answers-list-${topicId}">${answersHtml}</div>
                             <div class="answer-form">
-                                <input type="text" id="name-${topicId}" placeholder="Ваше имя (необязательно)" class="guest-input">
+                                <input type="text" id="name-${topicId}" placeholder="Ваше имя (необязательно)">
                                 <textarea id="answer-${topicId}" rows="2" placeholder="Напишите ответ..."></textarea>
                                 <button class="send-btn" data-topic-id="${topicId}">📨 Отправить ответ</button>
                             </div>
@@ -613,7 +625,6 @@
                 `;
             }
             container.innerHTML = topicsHtml;
-            
             attachEventHandlers();
             
         } catch (error) {
@@ -666,7 +677,7 @@
                 btn.addEventListener('click', async (e) => {
                     e.stopPropagation();
                     const topicId = btn.dataset.topicId;
-                    if (confirm("Удалить тему и все ответы? Это действие необратимо!")) {
+                    if (confirm("Удалить тему и все ответы?")) {
                         try {
                             const answers = await db.collection("answers").where("topicId", "==", topicId).get();
                             const batch = db.batch();
@@ -687,7 +698,7 @@
                 btn.addEventListener('click', async (e) => {
                     e.stopPropagation();
                     const answerId = btn.dataset.answerId;
-                    if (confirm("Удалить этот ответ?")) {
+                    if (confirm("Удалить ответ?")) {
                         try {
                             await db.collection("answers").doc(answerId).delete();
                             showToast("✅ Ответ удален");
@@ -703,7 +714,7 @@
     }
     
     async function createTopic(title, description, author = null) {
-        if (!isAdmin && author !== 'bot') {
+        if (!isAdmin && author !== 'telegram') {
             showToast("❌ Только администраторы могут создавать темы!");
             return false;
         }
@@ -730,6 +741,32 @@
         }
     }
     
+    function openTelegramModal() {
+        document.getElementById("telegramModal").classList.add("show");
+    }
+    
+    function closeModal() {
+        document.getElementById("telegramModal").classList.remove("show");
+    }
+    
+    function sendToTelegram() {
+        const title = document.getElementById("modalTitle").value.trim();
+        const desc = document.getElementById("modalDesc").value.trim();
+        
+        if (!title) {
+            showToast("Введите заголовок темы!");
+            return;
+        }
+        
+        const message = `/newtopic ${title} | ${desc || "Без описания"}`;
+        const encodedMessage = encodeURIComponent(message);
+        const telegramUrl = `https://t.me/${BOT_USERNAME}?text=${encodedMessage}`;
+        
+        window.open(telegramUrl, '_blank');
+        closeModal();
+        showToast("📱 Открыт Telegram! Отправьте сообщение боту");
+    }
+    
     async function init() {
         await registerUser();
         await renderTopics();
@@ -747,6 +784,13 @@
             document.getElementById("topicDesc").value = '';
         });
         
+        document.getElementById("telegramCreateBtn")?.addEventListener('click', (e) => {
+            e.preventDefault();
+            openTelegramModal();
+        });
+        
+        document.getElementById("sendToTelegramBtn")?.addEventListener('click', sendToTelegram);
+        
         // Real-time обновления
         db.collection("topics").onSnapshot(() => {
             renderTopics();
@@ -762,7 +806,7 @@
             db.collection("users").onSnapshot(() => loadUsersList());
         }
         
-        showToast("✨ Форум загружен! Используйте админ-панель для создания тем");
+        showToast("✨ Форум загружен! Нажмите кнопку Telegram для создания темы");
     }
     
     init();
