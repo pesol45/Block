@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Форум | GitHub Pages + Telegram Bot</title>
+    <title>Archives Park Forum | Telegram Bot</title>
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
     <style>
@@ -14,7 +14,7 @@
             font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
         }
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
             min-height: 100vh;
             padding: 20px;
         }
@@ -64,8 +64,8 @@
             font-weight: bold;
             font-size: 12px;
         }
-        .telegram-badge {
-            background: #0088cc;
+        .user-badge {
+            background: #64748b;
             color: white;
             padding: 4px 12px;
             border-radius: 20px;
@@ -78,7 +78,6 @@
             margin-bottom: 28px;
             display: none;
             border: 2px solid #f59e0b;
-            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
         }
         .admin-panel.show {
             display: block;
@@ -108,7 +107,6 @@
             border-radius: 20px;
             border: none;
             cursor: pointer;
-            transition: all 0.2s;
         }
         .make-admin-btn {
             background: #10b981;
@@ -124,12 +122,10 @@
             border: 1px solid #cbd5e1;
             font-size: 1rem;
             width: 100%;
-            transition: all 0.2s;
         }
         input:focus, textarea:focus {
             outline: none;
             border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
         }
         button {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -143,7 +139,6 @@
         }
         button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
         }
         .topic-card {
             background: white;
@@ -151,11 +146,6 @@
             margin-bottom: 28px;
             overflow: hidden;
             box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
-            transition: all 0.3s;
-        }
-        .topic-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 35px -10px rgba(0,0,0,0.2);
         }
         .topic-header {
             background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
@@ -165,10 +155,6 @@
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
-            transition: all 0.2s;
-        }
-        .topic-header:hover {
-            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
         }
         .topic-title {
             font-size: 1.4rem;
@@ -183,21 +169,9 @@
         .answers-section {
             padding: 20px 24px;
             display: none;
-            background: white;
         }
         .answers-section.open {
             display: block;
-            animation: slideDown 0.3s ease;
-        }
-        @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
         }
         .answer-item {
             background: linear-gradient(135deg, #f9f9ff 0%, #f0f0ff 100%);
@@ -205,10 +179,6 @@
             padding: 14px 18px;
             margin-bottom: 14px;
             border-left: 4px solid #667eea;
-            transition: all 0.2s;
-        }
-        .answer-item:hover {
-            transform: translateX(5px);
         }
         .answer-author {
             font-weight: 700;
@@ -244,13 +214,12 @@
             z-index: 1000;
             opacity: 0;
             transition: opacity 0.3s;
-            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.2);
         }
         .show-toast {
             opacity: 1;
         }
         .telegram-setup {
-            background: linear-gradient(135deg, #0088cc 0%, #006699 100%);
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
             color: white;
             padding: 20px;
             border-radius: 20px;
@@ -282,20 +251,17 @@
             padding: 10px 20px;
             border-radius: 20px;
             color: white;
-            text-align: center;
         }
         .loading {
             text-align: center;
             padding: 40px;
             color: #64748b;
         }
-        .error-box {
-            background: #fee2e2;
-            border-left: 4px solid #dc2626;
+        .bot-instruction {
+            background: #f1f5f9;
+            border-radius: 16px;
             padding: 15px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            color: #991b1b;
+            margin-top: 15px;
         }
         @media (max-width: 680px) {
             .topic-header {
@@ -311,8 +277,8 @@
     <div class="header">
         <div class="user-info">
             <div>
-                <h1>📢 Форум + Telegram Бот</h1>
-                <p style="color: #64748b; margin-top: 5px;">Работает на GitHub Pages | Управление через Telegram</p>
+                <h1>📢 Archives Park Forum</h1>
+                <p style="color: #64748b; margin-top: 5px;">Управление через Telegram | GitHub Pages</p>
             </div>
             <div class="user-card">
                 <span>👤 Ваш ID:</span>
@@ -324,34 +290,42 @@
         <div class="stats" id="stats"></div>
         
         <div class="telegram-setup">
-            <h3>🤖 Telegram Бот активен!</h3>
-            <p>Бот: <strong>@test_forum_2024_bot</strong></p>
-            <p>Команды: <code>/start</code> - приветствие | <code>/newtopic Заголовок | Описание</code> - создать тему</p>
-            <div class="code-block">
-                ✅ Бот настроен и готов к работе!<br>
-                📝 Пример: /newtopic Важная новость | Обсуждение новых функций<br>
-                🔗 Ссылка на бота: <a href="https://t.me/test_forum_2024_bot" target="_blank" style="color: #ffd700;">https://t.me/test_forum_2024_bot</a>
+            <h3>🤖 Ваш Telegram Бот</h3>
+            <p>Бот: <strong>@archivesparkibot</strong></p>
+            <p style="margin-top: 10px;">🔗 Ссылка: <a href="https://t.me/archivesparkibot" target="_blank" style="color: #ffd700;">https://t.me/archivesparkibot</a></p>
+            
+            <div class="bot-instruction" style="background: rgba(0,0,0,0.3);">
+                <h4>📝 Как настроить бота:</h4>
+                <div class="code-block">
+                    <strong>1. Откройте бота @archivesparkibot в Telegram</strong><br>
+                    <strong>2. Отправьте команду /start</strong><br>
+                    <strong>3. Для создания темы используйте:</strong><br>
+                    /newtopic Заголовок | Описание<br><br>
+                    <strong>📌 Пример:</strong><br>
+                    /newtopic Важная новость | Обсуждаем новые функции форума
+                </div>
             </div>
         </div>
         
         <div id="adminPanel" class="admin-panel">
             <h3>👑 Админ-панель</h3>
             <div>
-                <h4>Создать новую тему</h4>
+                <h4>➕ Создать новую тему</h4>
                 <input type="text" id="topicTitle" placeholder="Заголовок темы">
                 <textarea id="topicDesc" rows="2" placeholder="Описание" style="margin-top: 10px;"></textarea>
-                <button id="createTopicBtn" style="margin-top: 10px;">➕ Создать тему</button>
+                <button id="createTopicBtn" style="margin-top: 10px;">📝 Создать тему</button>
             </div>
             <hr style="margin: 20px 0;">
             <div>
                 <h4>👥 Управление администраторами</h4>
-                <p>Все пользователи форума:</p>
+                <p>Все пользователи форума (могут назначать админов):</p>
                 <div id="usersList" class="users-list"></div>
-                <p style="font-size: 12px; color: #475569;">ℹ️ Каждый пользователь получает уникальный ID при первом посещении</p>
+                <p style="font-size: 12px; color: #475569; margin-top: 10px;">
+                    ℹ️ Первый зарегистрированный пользователь становится администратором.<br>
+                    Админ может назначать других админов через эту панель.
+                </p>
             </div>
         </div>
-        
-        <div id="connectionStatus" style="margin-top: 15px; padding: 10px; border-radius: 12px;"></div>
     </div>
 
     <div id="topicsList"></div>
@@ -369,29 +343,18 @@
         appId: "1:604060443375:web:f6fc69f385a4c59ee3311a"
     };
     
-    let db;
-    let firestoreInitialized = false;
+    // Инициализация Firebase
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
     
-    // Инициализация Firebase с обработкой ошибок
-    try {
-        const app = firebase.initializeApp(firebaseConfig);
-        db = firebase.firestore();
-        
-        // Настройка для лучшей совместимости
-        db.settings({
-            ignoreUndefinedProperties: true,
-            merge: true
-        });
-        
-        firestoreInitialized = true;
-        console.log("✅ Firebase инициализирован");
-    } catch (error) {
-        console.error("❌ Ошибка Firebase:", error);
-        document.getElementById("connectionStatus").innerHTML = '<div class="error-box">❌ Ошибка подключения к Firebase: ' + error.message + '</div>';
-    }
+    // Настройки для Firestore
+    db.settings({
+        ignoreUndefinedProperties: true
+    });
     
+    // Ваш токен бота
     const BOT_TOKEN = "8751597537:AAG-W7_DLlAw8FmpOxINf0dYvMN1p7CFogA";
-    const BOT_USERNAME = "test_forum_2024_bot";
+    const BOT_USERNAME = "archivesparkibot";
     
     let currentUser = null;
     let isAdmin = false;
@@ -417,8 +380,6 @@
     }
     
     async function registerUser() {
-        if (!firestoreInitialized) return null;
-        
         const userId = getUserId();
         const userRef = db.collection("users").doc(userId);
         
@@ -438,7 +399,7 @@
                 currentUser = { userId, isAdmin: isFirstUser };
                 
                 if (isFirstUser) {
-                    showToast("🎉 Вы первый пользователь! Вы назначены администратором.");
+                    showToast("🎉 Поздравляем! Вы первый пользователь и назначены администратором!");
                 }
             } else {
                 currentUser = {
@@ -448,12 +409,13 @@
             }
             
             document.getElementById("userIdDisplay").textContent = currentUser.userId;
+            
             if (currentUser.isAdmin) {
                 document.getElementById("roleBadge").innerHTML = '<span class="admin-badge">👑 Администратор</span>';
                 document.getElementById("adminPanel").classList.add("show");
                 isAdmin = true;
             } else {
-                document.getElementById("roleBadge").innerHTML = '<span class="telegram-badge">👤 Пользователь</span>';
+                document.getElementById("roleBadge").innerHTML = '<span class="user-badge">👤 Пользователь</span>';
                 isAdmin = false;
             }
             
@@ -462,39 +424,18 @@
             return currentUser;
         } catch (error) {
             console.error("Ошибка регистрации:", error);
-            showToast("❌ Ошибка подключения к базе данных. Проверьте правила безопасности Firebase.", true);
-            document.getElementById("connectionStatus").innerHTML = `
-                <div class="error-box">
-                    ⚠️ Ошибка доступа к Firestore!<br>
-                    Необходимо настроить правила безопасности в Firebase Console:<br>
-                    <code style="background:#000; padding:5px; display:block; margin-top:5px;">
-                    rules_version = '2';<br>
-                    service cloud.firestore {<br>
-                      match /databases/{database}/documents {<br>
-                        match /{document=**} {<br>
-                          allow read, write: if true;<br>
-                        }<br>
-                      }<br>
-                    }
-                    </code>
-                </div>
-            `;
+            showToast("❌ Ошибка подключения к базе данных. Проверьте настройки Firebase.", true);
             return null;
         }
     }
     
     async function loadUsersList() {
-        if (!isAdmin || !firestoreInitialized) return;
+        if (!isAdmin) return;
         
         try {
             const usersSnapshot = await db.collection("users").orderBy("createdAt", "desc").get();
             const usersList = document.getElementById("usersList");
             usersList.innerHTML = '';
-            
-            if (usersSnapshot.empty) {
-                usersList.innerHTML = '<div class="empty">Нет пользователей</div>';
-                return;
-            }
             
             for (const doc of usersSnapshot.docs) {
                 const user = doc.data();
@@ -504,15 +445,20 @@
                 userDiv.className = 'user-item';
                 userDiv.innerHTML = `
                     <div>
-                        <strong>${user.userId.substring(0, 20)}...</strong><br>
-                        <small>Статус: ${user.isAdmin ? '👑 Админ' : '👤 Пользователь'}</small>
+                        <strong>${user.userId.substring(0, 25)}...</strong><br>
+                        <small>📅 ${formatDate(user.createdAt)}</small><br>
+                        <small>${user.isAdmin ? '👑 Администратор' : '👤 Пользователь'}</small>
                     </div>
                     ${!user.isAdmin ? 
-                        `<button class="make-admin-btn" data-id="${user.userId}">👑 Сделать админом</button>` :
+                        `<button class="make-admin-btn" data-id="${user.userId}">👑 Назначить админом</button>` :
                         `<button class="remove-admin-btn" data-id="${user.userId}">🔽 Забрать админку</button>`
                     }
                 `;
                 usersList.appendChild(userDiv);
+            }
+            
+            if (usersSnapshot.empty) {
+                usersList.innerHTML = '<div class="empty">Пока нет других пользователей</div>';
             }
             
             document.querySelectorAll('.make-admin-btn').forEach(btn => {
@@ -528,7 +474,7 @@
     
     async function makeAdmin(userId, makeAdminBool) {
         if (!isAdmin) {
-            showToast("❌ Только администратор может назначать админов!");
+            showToast("❌ Только администратор может назначать других админов!");
             return;
         }
         
@@ -536,7 +482,7 @@
             await db.collection("users").doc(userId).update({
                 isAdmin: makeAdminBool
             });
-            showToast(makeAdminBool ? "✅ Пользователь стал администратором!" : "🔽 Админка забрана");
+            showToast(makeAdminBool ? "✅ Пользователь назначен администратором!" : "🔽 Права администратора забраны");
             loadUsersList();
         } catch (error) {
             console.error(error);
@@ -545,8 +491,6 @@
     }
     
     async function updateStats() {
-        if (!firestoreInitialized) return;
-        
         try {
             const topicsSnapshot = await db.collection("topics").get();
             const usersSnapshot = await db.collection("users").get();
@@ -583,8 +527,6 @@
     }
     
     async function getAnswersForTopic(topicId) {
-        if (!firestoreInitialized) return [];
-        
         try {
             const answersSnapshot = await db.collection("answers").where("topicId", "==", topicId).get();
             let answers = [];
@@ -604,11 +546,6 @@
     }
     
     async function renderTopics() {
-        if (!firestoreInitialized) {
-            document.getElementById("topicsList").innerHTML = '<div class="empty">⚠️ Ожидание подключения к базе данных...</div>';
-            return;
-        }
-        
         const container = document.getElementById("topicsList");
         container.innerHTML = '<div class="loading">⏳ Загрузка тем...</div>';
         
@@ -616,14 +553,14 @@
             const topicsSnapshot = await db.collection("topics").orderBy("createdAt", "desc").get();
             
             if (topicsSnapshot.empty) {
-                // Создаем тестовую тему автоматически
+                // Создаем приветственную тему
                 await db.collection("topics").add({
-                    title: "Добро пожаловать на форум!",
-                    description: "Это тестовая тема. Вы можете отвечать на неё. Админ может создавать новые темы через панель или Telegram бота.",
+                    title: "🌟 Добро пожаловать на форум Archives Park!",
+                    description: "Это первая тема на нашем форуме. Здесь вы можете:\n\n✅ Обсуждать интересные темы\n✅ Отвечать на сообщения\n✅ Создавать новые темы (только админ)\n\nАдмин может назначать других админов через панель управления.\n\n📱 Также вы можете создавать темы через Telegram бота: @archivesparkibot\n\nПриятного общения! 🎉",
                     author: "Система",
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
-                container.innerHTML = '<div class="loading">📝 Создаю тестовую тему...</div>';
+                container.innerHTML = '<div class="loading">📝 Создаю приветственную тему...</div>';
                 setTimeout(() => renderTopics(), 1000);
                 return;
             }
@@ -639,7 +576,7 @@
                     answersHtml = '<div class="empty" style="padding: 20px;">💬 Нет ответов. Будьте первым!</div>';
                 } else {
                     answers.forEach(answer => {
-                        const deleteBtn = isAdmin ? `<button class="delete-answer" data-answer-id="${answer.id}" style="background:#ef4444; padding:4px 12px; border-radius:20px;">🗑️</button>` : '';
+                        const deleteBtn = isAdmin ? `<button class="delete-answer" data-answer-id="${answer.id}" style="background:#ef4444; padding:4px 12px; border-radius:20px;">🗑️ Удалить</button>` : '';
                         answersHtml += `
                             <div class="answer-item">
                                 <div class="answer-author">
@@ -660,7 +597,7 @@
                             <div style="flex:1">
                                 <div class="topic-title">${escapeHtml(topic.title)}</div>
                                 <div class="topic-meta">📅 ${formatDate(topic.createdAt)} • автор: ${escapeHtml(topic.author || 'Админ')}</div>
-                                ${topic.description ? `<div class="topic-meta">📝 ${escapeHtml(topic.description)}</div>` : ''}
+                                ${topic.description ? `<div class="topic-meta" style="white-space: pre-wrap;">📝 ${escapeHtml(topic.description)}</div>` : ''}
                             </div>
                             ${deleteTopicBtn}
                         </div>
@@ -681,7 +618,7 @@
             
         } catch (error) {
             console.error("Ошибка рендеринга:", error);
-            container.innerHTML = '<div class="empty">❌ Ошибка загрузки данных. Проверьте настройки Firebase.</div>';
+            container.innerHTML = '<div class="empty">❌ Ошибка загрузки данных. Проверьте консоль (F12).</div>';
         }
     }
     
@@ -729,18 +666,18 @@
                 btn.addEventListener('click', async (e) => {
                     e.stopPropagation();
                     const topicId = btn.dataset.topicId;
-                    if (confirm("Удалить тему и все ответы?")) {
+                    if (confirm("Удалить тему и все ответы? Это действие необратимо!")) {
                         try {
                             const answers = await db.collection("answers").where("topicId", "==", topicId).get();
                             const batch = db.batch();
                             answers.forEach(doc => batch.delete(doc.ref));
                             batch.delete(db.collection("topics").doc(topicId));
                             await batch.commit();
-                            showToast("Тема удалена");
+                            showToast("✅ Тема удалена");
                             renderTopics();
                             updateStats();
                         } catch (err) {
-                            showToast("Ошибка удаления", true);
+                            showToast("❌ Ошибка удаления", true);
                         }
                     }
                 });
@@ -750,14 +687,14 @@
                 btn.addEventListener('click', async (e) => {
                     e.stopPropagation();
                     const answerId = btn.dataset.answerId;
-                    if (confirm("Удалить ответ?")) {
+                    if (confirm("Удалить этот ответ?")) {
                         try {
                             await db.collection("answers").doc(answerId).delete();
-                            showToast("Ответ удален");
+                            showToast("✅ Ответ удален");
                             renderTopics();
                             updateStats();
                         } catch (err) {
-                            showToast("Ошибка удаления", true);
+                            showToast("❌ Ошибка удаления", true);
                         }
                     }
                 });
@@ -794,8 +731,6 @@
     }
     
     async function init() {
-        if (!firestoreInitialized) return;
-        
         await registerUser();
         await renderTopics();
         await updateStats();
@@ -816,22 +751,18 @@
         db.collection("topics").onSnapshot(() => {
             renderTopics();
             updateStats();
-        }, (error) => {
-            console.error("Snapshot error:", error);
         });
         
         db.collection("answers").onSnapshot(() => {
             renderTopics();
             updateStats();
-        }, (error) => {
-            console.error("Snapshot error:", error);
         });
         
         if (isAdmin) {
             db.collection("users").onSnapshot(() => loadUsersList());
         }
         
-        showToast("✨ Форум загружен! Вы можете создавать темы через админ-панель");
+        showToast("✨ Форум загружен! Используйте админ-панель для создания тем");
     }
     
     init();
