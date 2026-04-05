@@ -2,8 +2,10 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Генератор профилей | Random User API</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Динамический сайт | Админ-панель</title>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <style>
         * {
             margin: 0;
@@ -12,359 +14,524 @@
         }
 
         body {
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
-            padding: 1rem;
-        }
-
-        .card {
-            background: white;
-            border-radius: 2rem;
-            max-width: 500px;
-            width: 100%;
             padding: 2rem;
-            box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.4);
-            text-align: center;
-            transition: all 0.2s ease;
         }
 
-        h1 {
-            font-size: 1.8rem;
-            background: linear-gradient(120deg, #667eea, #764ba2);
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Публичный контент */
+        .public-content {
+            background: white;
+            border-radius: 1.5rem;
+            padding: 2rem;
+            box-shadow: 0 20px 35px -10px rgba(0,0,0,0.2);
+            margin-bottom: 2rem;
+        }
+
+        .public-content h1 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #667eea, #764ba2);
             background-clip: text;
             -webkit-background-clip: text;
             color: transparent;
-            margin-bottom: 0.25rem;
         }
 
-        .sub {
-            color: #6c757d;
-            margin-bottom: 1.8rem;
-            font-size: 0.9rem;
-            border-bottom: 1px solid #e9ecef;
-            display: inline-block;
-            padding-bottom: 0.3rem;
-        }
-
-        /* Аватар */
-        .avatar-wrapper {
-            margin-bottom: 1.5rem;
-        }
-        .avatar {
-            width: 140px;
-            height: 140px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 4px solid white;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+        .content-card {
+            background: #f8f9fa;
+            border-radius: 1rem;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid #764ba2;
             transition: transform 0.2s;
         }
-        .avatar:hover {
-            transform: scale(1.02);
+
+        .content-card:hover {
+            transform: translateX(5px);
         }
 
-        /* Информация */
-        .info {
-            background: #f8f9fa;
+        .content-card h3 {
+            color: #333;
+            margin-bottom: 0.5rem;
+            font-size: 1.3rem;
+        }
+
+        .content-card p {
+            color: #555;
+            line-height: 1.5;
+        }
+
+        .content-card small {
+            color: #999;
+            font-size: 0.75rem;
+            display: block;
+            margin-top: 0.5rem;
+        }
+
+        /* Админ-панель */
+        .admin-panel {
+            background: #1e1e2f;
             border-radius: 1.5rem;
-            padding: 1.2rem;
-            margin: 1rem 0;
-            text-align: left;
+            padding: 1.5rem;
+            color: white;
+            margin-top: 1.5rem;
         }
 
-        .info-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: baseline;
-            padding: 0.6rem 0;
-            border-bottom: 1px dashed #dee2e6;
-        }
-        .info-row:last-child {
-            border-bottom: none;
-        }
-        .label {
-            font-weight: 600;
-            color: #495057;
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .value {
-            color: #212529;
-            font-weight: 500;
-            word-break: break-word;
-            text-align: right;
-            max-width: 60%;
+        .admin-panel h2 {
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
         }
 
-        /* Кнопки */
-        .btn-group {
-            display: flex;
-            gap: 1rem;
-            flex-wrap: wrap;
-            justify-content: center;
-            margin: 1.5rem 0 1rem;
+        .admin-panel h3 {
+            margin: 1rem 0 0.5rem;
+            font-size: 1.1rem;
+            color: #aaa;
         }
-        button {
-            background: white;
+
+        .admin-form {
+            background: #2a2a3b;
+            padding: 1rem;
+            border-radius: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .admin-form input,
+        .admin-form textarea {
+            width: 100%;
+            padding: 0.75rem;
+            margin-bottom: 0.75rem;
             border: none;
-            padding: 0.7rem 1.5rem;
-            border-radius: 3rem;
-            font-weight: 600;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            border-radius: 0.5rem;
+            font-family: inherit;
+            background: #3a3a4f;
+            color: white;
+            resize: vertical;
         }
-        .btn-primary {
-            background: linear-gradient(100deg, #667eea, #764ba2);
+
+        .admin-form input::placeholder,
+        .admin-form textarea::placeholder {
+            color: #888;
+        }
+
+        .admin-form input:focus,
+        .admin-form textarea:focus {
+            outline: none;
+            ring: 2px solid #764ba2;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
             border: none;
-        }
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px -5px rgba(102, 126, 234, 0.5);
-        }
-        .btn-outline {
-            background: white;
-            border: 1px solid #dee2e6;
-        }
-        .btn-outline:hover {
-            background: #f1f3f5;
-            border-color: #adb5bd;
-        }
-        button:active {
-            transform: translateY(1px);
+            padding: 0.6rem 1.2rem;
+            border-radius: 2rem;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
         }
 
-        /* лоадер */
-        .loader {
-            display: inline-block;
-            width: 30px;
-            height: 30px;
-            border: 3px solid #e9ecef;
-            border-radius: 50%;
-            border-top-color: #764ba2;
-            animation: spin 0.6s linear infinite;
-            margin: 1rem auto;
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
         }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            margin-left: 0.5rem;
+            padding: 0.3rem 0.8rem;
+            font-size: 0.8rem;
         }
+
+        .btn-logout {
+            background: #444;
+            margin-top: 1rem;
+        }
+
+        .admin-item {
+            background: #2a2a3b;
+            border-radius: 0.75rem;
+            padding: 0.75rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .admin-item-info {
+            flex: 1;
+        }
+
+        .admin-item-info strong {
+            color: #fff;
+        }
+
+        .admin-item-info p {
+            color: #bbb;
+            font-size: 0.85rem;
+            margin-top: 0.25rem;
+        }
+
+        /* Модальное окно входа */
+        .login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .login-box {
+            background: white;
+            padding: 2rem;
+            border-radius: 1.5rem;
+            width: 350px;
+            text-align: center;
+            box-shadow: 0 25px 50px -12px black;
+        }
+
+        .login-box h3 {
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+
+        .login-box p {
+            color: #666;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+        }
+
+        .login-box input {
+            width: 100%;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 0.75rem;
+            font-size: 1.2rem;
+            text-align: center;
+            letter-spacing: 4px;
+        }
+
+        .error-msg {
+            color: #e74c3c;
+            margin-top: 0.5rem;
+            font-size: 0.85rem;
+        }
+
         .hidden {
             display: none;
         }
 
-        footer {
-            font-size: 0.7rem;
-            color: #adb5bd;
-            margin-top: 1rem;
+        .loading {
             text-align: center;
+            padding: 2rem;
+            color: white;
         }
-        .error-msg {
-            background: #fff0f0;
-            color: #c92a2a;
-            border-radius: 2rem;
-            padding: 0.6rem;
-            font-size: 0.85rem;
-            margin-top: 1rem;
+
+        footer {
+            text-align: center;
+            margin-top: 2rem;
+            color: rgba(255,255,255,0.6);
+            font-size: 0.8rem;
         }
     </style>
 </head>
 <body>
-
-<div class="card" id="app">
-    <h1>🎲 Случайный профиль</h1>
-    <div class="sub">Random User Generator</div>
-
-    <!-- Блок аватара -->
-    <div class="avatar-wrapper">
-        <img class="avatar" id="avatar" src="https://randomuser.me/api/portraits/women/68.jpg" alt="avatar">
-    </div>
-
-    <!-- Блок данных -->
-    <div class="info" id="infoBlock">
-        <div class="info-row">
-            <span class="label">👤 Имя</span>
-            <span class="value" id="fullname">Jane Smith</span>
-        </div>
-        <div class="info-row">
-            <span class="label">📧 Email</span>
-            <span class="value" id="email">jane.smith@example.com</span>
-        </div>
-        <div class="info-row">
-            <span class="label">📍 Страна / Город</span>
-            <span class="value" id="location">Ireland, Dublin</span>
-        </div>
-        <div class="info-row">
-            <span class="label">🎂 Возраст (д/р)</span>
-            <span class="value" id="age">28 лет (01.01.1995)</span>
-        </div>
-        <div class="info-row">
-            <span class="label">📞 Телефон</span>
-            <span class="value" id="phone">+353 123 456 789</span>
-        </div>
-        <div class="info-row">
-            <span class="label">🔑 Username</span>
-            <span class="value" id="username">blueduck387</span>
+<div class="container">
+    <!-- Публичная часть -->
+    <div class="public-content">
+        <h1>✨ Динамический контент</h1>
+        <div id="contentList">
+            <div class="loading">Загрузка...</div>
         </div>
     </div>
 
-    <!-- Кнопки управления -->
-    <div class="btn-group">
-        <button class="btn-primary" id="generateBtn">✨ Новый человек</button>
-        <button class="btn-outline" id="copyBtn">📋 Скопировать данные</button>
+    <!-- Админ-панель (скрыта по умолчанию) -->
+    <div id="adminPanel" class="admin-panel hidden">
+        <h2>🔧 Админ-панель</h2>
+        <div class="admin-form">
+            <h3>➕ Создать новый блок</h3>
+            <input type="text" id="blockTitle" placeholder="Заголовок">
+            <textarea id="blockContent" rows="3" placeholder="Содержание..."></textarea>
+            <button id="addBlockBtn">📌 Добавить</button>
+        </div>
+        <h3>📋 Управление блоками</h3>
+        <div id="adminBlocksList"></div>
+        <button id="logoutBtn" class="btn-logout">🚪 Выйти из админ-панели</button>
     </div>
+    <footer>Контент управляется через админ-панель | Telegram-бот для входа</footer>
+</div>
 
-    <div id="loader" class="loader hidden"></div>
-    <div id="errorMsg" class="error-msg hidden"></div>
-    <footer>Данные из Random User API • Реальный генератор</footer>
+<!-- Модальное окно входа -->
+<div id="loginOverlay" class="login-overlay">
+    <div class="login-box">
+        <h3>🔐 Вход для администратора</h3>
+        <p>Получите 6-значный код в Telegram-боте</p>
+        <input type="text" id="adminCode" placeholder="000000" maxlength="6">
+        <button id="loginBtn">Войти</button>
+        <div id="loginError" class="error-msg"></div>
+    </div>
 </div>
 
 <script>
-    // Элементы DOM
-    const avatarEl = document.getElementById('avatar');
-    const fullnameEl = document.getElementById('fullname');
-    const emailEl = document.getElementById('email');
-    const locationEl = document.getElementById('location');
-    const ageEl = document.getElementById('age');
-    const phoneEl = document.getElementById('phone');
-    const usernameEl = document.getElementById('username');
-    const generateBtn = document.getElementById('generateBtn');
-    const copyBtn = document.getElementById('copyBtn');
-    const loader = document.getElementById('loader');
-    const errorMsgDiv = document.getElementById('errorMsg');
+    // ========== Firebase Конфигурация ==========
+    const firebaseConfig = {
+        apiKey: "AIzaSyCaWv0A5OCgdAgUFn9lMzQ_tVaga0scpQA",
+        authDomain: "site-5378a.firebaseapp.com",
+        projectId: "site-5378a",
+        storageBucket: "site-5378a.firebasestorage.app",
+        messagingSenderId: "1080576728275",
+        appId: "1:1080576728275:web:efdb524baf64d8bd9ac826"
+    };
 
-    // Вспомогательная функция: показать/скрыть лоадер
-    function setLoading(isLoading) {
-        if (isLoading) {
-            loader.classList.remove('hidden');
-            errorMsgDiv.classList.add('hidden');
-            generateBtn.disabled = true;
-            generateBtn.style.opacity = '0.6';
-        } else {
-            loader.classList.add('hidden');
-            generateBtn.disabled = false;
-            generateBtn.style.opacity = '1';
-        }
+    // Инициализация Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // Глобальные переменные
+    let isAdmin = false;
+    let currentUserId = null;
+
+    // ========== Функции ==========
+    
+    // Экранирование HTML
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
 
-    function showError(text) {
-        errorMsgDiv.innerText = text;
-        errorMsgDiv.classList.remove('hidden');
-        setTimeout(() => {
-            errorMsgDiv.classList.add('hidden');
-        }, 4000);
-    }
-
-    // Форматирование даты рождения и возраста
-    function formatDateAndAge(dob) {
-        const birthDate = new Date(dob.date);
-        const today = new Date();
-        let age = today.getFullYear() - birthDate.getFullYear();
-        const m = today.getMonth() - birthDate.getMonth();
-        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-            age--;
-        }
-        const day = birthDate.getDate().toString().padStart(2, '0');
-        const month = (birthDate.getMonth() + 1).toString().padStart(2, '0');
-        const year = birthDate.getFullYear();
-        return `${age} лет (${day}.${month}.${year})`;
-    }
-
-    // Получение локации в красивом виде: страна + город
-    function formatLocation(location) {
-        const city = location.city || location.town || 'unknown';
-        const country = location.country || 'unknown';
-        return `${country}, ${city}`;
-    }
-
-    // Главная функция получения данных из API
-    async function fetchRandomUser() {
-        setLoading(true);
+    // Загрузка публичного контента
+    async function loadPublicContent() {
         try {
-            // Используем Random User API, запрашиваем 1 результат, русский язык для названий
-            const response = await fetch('https://randomuser.me/api/?inc=name,email,picture,location,dob,phone,login&nat=us,gb,fr,de,au,ca,ru,nz&noinfo');
-            if (!response.ok) {
-                throw new Error(`Ошибка HTTP: ${response.status}`);
+            const snapshot = await db.collection('site_content')
+                .orderBy('createdAt', 'desc')
+                .get();
+            
+            const container = document.getElementById('contentList');
+            
+            if (snapshot.empty) {
+                container.innerHTML = '<div class="content-card">Пока нет контента. Зайдите в админ-панель, чтобы добавить.</div>';
+                return;
             }
-            const data = await response.json();
-            const user = data.results[0];
-
-            // Сборка полного имени
-            const fullName = `${user.name.first} ${user.name.last}`;
-
-            // Аватар (используем medium для баланса качества/скорости)
-            const avatarUrl = user.picture.large || user.picture.medium;
-
-            // Локация
-            const locationStr = formatLocation(user.location);
-
-            // Возраст + дата рождения
-            const ageFormatted = formatDateAndAge(user.dob);
-
-            // Обновляем DOM
-            avatarEl.src = avatarUrl;
-            avatarEl.alt = `Avatar of ${fullName}`;
-            fullnameEl.innerText = fullName;
-            emailEl.innerText = user.email;
-            locationEl.innerText = locationStr;
-            ageEl.innerText = ageFormatted;
-            phoneEl.innerText = user.phone;
-            usernameEl.innerText = user.login.username;
-
+            
+            let html = '';
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                html += `
+                    <div class="content-card">
+                        <h3>${escapeHtml(data.title)}</h3>
+                        <p>${escapeHtml(data.content)}</p>
+                        <small>📅 ${data.createdAt ? new Date(data.createdAt.toDate()).toLocaleString('ru-RU') : 'только что'}</small>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
         } catch (error) {
             console.error('Ошибка загрузки:', error);
-            showError('Не удалось загрузить профиль. Проверьте интернет или попробуйте позже.');
-            // Можно оставить старые данные, не трогаем
-        } finally {
-            setLoading(false);
+            document.getElementById('contentList').innerHTML = '<div class="content-card">❌ Ошибка загрузки контента</div>';
         }
     }
 
-    // Функция копирования всей карточки в виде текста
-    async function copyProfileToClipboard() {
-        // Собираем текущие данные со страницы (даже если старые — пользователь скопирует то, что видит)
-        const profileText = `
-👤 Имя: ${fullnameEl.innerText}
-📧 Email: ${emailEl.innerText}
-📍 Локация: ${locationEl.innerText}
-🎂 Возраст: ${ageEl.innerText}
-📞 Телефон: ${phoneEl.innerText}
-🔑 Логин: ${usernameEl.innerText}
-🖼 Аватар: ${avatarEl.src}
-        `.trim();
-
+    // Загрузка для админа (с кнопками удаления)
+    async function loadAdminBlocks() {
+        if (!isAdmin) return;
+        
         try {
-            await navigator.clipboard.writeText(profileText);
-            // Кратковременная подсказка (можно заменить на всплывающий тост)
-            const originalText = copyBtn.innerText;
-            copyBtn.innerText = '✅ Скопировано!';
-            setTimeout(() => {
-                copyBtn.innerText = originalText;
-            }, 1500);
-        } catch (err) {
-            console.error('Ошибка копирования:', err);
-            showError('Не удалось скопировать данные, разрешите доступ к буферу обмена.');
+            const snapshot = await db.collection('site_content')
+                .orderBy('createdAt', 'desc')
+                .get();
+            
+            const container = document.getElementById('adminBlocksList');
+            
+            if (snapshot.empty) {
+                container.innerHTML = '<div style="color:#aaa;">Нет блоков. Создайте первый!</div>';
+                return;
+            }
+            
+            let html = '';
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                html += `
+                    <div class="admin-item" data-id="${doc.id}">
+                        <div class="admin-item-info">
+                            <strong>${escapeHtml(data.title)}</strong>
+                            <p>${escapeHtml(data.content.substring(0, 100))}${data.content.length > 100 ? '...' : ''}</p>
+                        </div>
+                        <button class="btn-danger delete-btn" data-id="${doc.id}">🗑 Удалить</button>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+            
+            // Навешиваем обработчики на кнопки удаления
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', () => deleteBlock(btn.dataset.id));
+            });
+        } catch (error) {
+            console.error('Ошибка загрузки админ-панели:', error);
         }
     }
 
-    // Инициализация: при загрузке страницы получить случайного пользователя
-    // и навесить обработчики
-    async function init() {
-        await fetchRandomUser();
-        generateBtn.addEventListener('click', fetchRandomUser);
-        copyBtn.addEventListener('click', copyProfileToClipboard);
+    // Добавление блока
+    async function addBlock() {
+        const title = document.getElementById('blockTitle').value.trim();
+        const content = document.getElementById('blockContent').value.trim();
+        
+        if (!title || !content) {
+            alert('Заполните и заголовок, и содержание');
+            return;
+        }
+        
+        try {
+            await db.collection('site_content').add({
+                title: title,
+                content: content,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                createdBy: currentUserId || 'admin'
+            });
+            
+            // Очищаем поля
+            document.getElementById('blockTitle').value = '';
+            document.getElementById('blockContent').value = '';
+            
+            // Обновляем оба вида
+            await loadPublicContent();
+            await loadAdminBlocks();
+        } catch (error) {
+            console.error('Ошибка добавления:', error);
+            alert('Ошибка при добавлении блока');
+        }
     }
 
-    // Запускаем приложение
+    // Удаление блока
+    async function deleteBlock(id) {
+        if (!confirm('Удалить этот блок? Отменить будет нельзя.')) return;
+        
+        try {
+            await db.collection('site_content').doc(id).delete();
+            await loadPublicContent();
+            await loadAdminBlocks();
+        } catch (error) {
+            console.error('Ошибка удаления:', error);
+            alert('Ошибка при удалении');
+        }
+    }
+
+    // ========== Проверка кода через бекенд ==========
+    // ВАЖНО: Этот URL нужно заменить на реальный адрес вашего сервера с ботом
+    // Если бот запущен локально, используйте ngrok или хостинг (Railway, Render и т.д.)
+    const API_URL = 'https://your-server.com/verify-code'; // ЗАМЕНИТЕ НА РЕАЛЬНЫЙ URL!
+    
+    async function verifyAdminCode(code) {
+        try {
+            // Пробуем отправить запрос на ваш сервер с ботом
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code: code })
+            });
+            
+            if (!response.ok) {
+                throw new Error('Сервер недоступен');
+            }
+            
+            const result = await response.json();
+            return result;
+        } catch (error) {
+            console.error('Ошибка проверки кода:', error);
+            // Если сервер бота не запущен — используем демо-режим (только для теста!)
+            // ВНИМАНИЕ: Уберите этот фолбэк в продакшене!
+            if (code === '123456') {
+                return { success: true, user_id: 1209403544 };
+            }
+            return { success: false, error: 'Сервер проверки недоступен. Убедитесь, что бот запущен.' };
+        }
+    }
+
+    // Вход в админку
+    async function login() {
+        const code = document.getElementById('adminCode').value.trim();
+        const errorDiv = document.getElementById('loginError');
+        
+        if (!code || code.length !== 6) {
+            errorDiv.textContent = 'Введите 6-значный код';
+            return;
+        }
+        
+        errorDiv.textContent = 'Проверяем...';
+        
+        const result = await verifyAdminCode(code);
+        
+        if (result.success && result.user_id === 1209403544) {
+            isAdmin = true;
+            currentUserId = result.user_id;
+            
+            // Скрываем окно входа
+            document.getElementById('loginOverlay').classList.add('hidden');
+            // Показываем админ-панель
+            document.getElementById('adminPanel').classList.remove('hidden');
+            // Загружаем админские данные
+            await loadAdminBlocks();
+            // Обновляем публичный контент (чтобы убрать лишнее, если нужно)
+            await loadPublicContent();
+            
+            // Сохраняем сессию в localStorage
+            localStorage.setItem('adminSession', 'true');
+        } else {
+            errorDiv.textContent = '❌ Неверный код или доступ запрещён';
+        }
+    }
+
+    // Выход из админки
+    function logout() {
+        isAdmin = false;
+        currentUserId = null;
+        localStorage.removeItem('adminSession');
+        document.getElementById('adminPanel').classList.add('hidden');
+        document.getElementById('loginOverlay').classList.remove('hidden');
+        document.getElementById('adminCode').value = '';
+        document.getElementById('loginError').textContent = '';
+        loadPublicContent(); // перезагружаем публичную версию
+    }
+
+    // Проверка сохранённой сессии
+    function checkSession() {
+        const saved = localStorage.getItem('adminSession');
+        if (saved === 'true') {
+            // Не автоматически логиним — код всё равно нужен повторно
+            // Но можно показать подсказку
+            console.log('Сессия была, но нужен новый код для безопасности');
+        }
+    }
+
+    // ========== Инициализация ==========
+    async function init() {
+        await loadPublicContent();
+        checkSession();
+        
+        // Обработчики событий
+        document.getElementById('loginBtn').onclick = login;
+        document.getElementById('addBlockBtn').onclick = addBlock;
+        document.getElementById('logoutBtn').onclick = logout;
+        
+        // Нажатие Enter в поле кода
+        document.getElementById('adminCode').onkeypress = (e) => {
+            if (e.key === 'Enter') login();
+        };
+    }
+    
     init();
 </script>
 </body>
