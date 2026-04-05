@@ -3,812 +3,368 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Archives Park Forum | Telegram Integration</title>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+    <title>Генератор профилей | Random User API</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
         }
+
         body {
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            padding: 20px;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        .header {
-            background: white;
-            border-radius: 28px;
-            padding: 20px 28px;
-            margin-bottom: 28px;
-            box-shadow: 0 20px 35px -10px rgba(0,0,0,0.2);
-        }
-        .user-info {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 15px;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #e2e8f0;
-        }
-        .user-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 10px 20px;
-            border-radius: 50px;
-            color: white;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .user-id {
-            font-family: monospace;
-            background: rgba(255,255,255,0.2);
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-        }
-        .admin-badge {
-            background: #fbbf24;
-            color: #1e293b;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-weight: bold;
-            font-size: 12px;
-        }
-        .user-badge {
-            background: #64748b;
-            color: white;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-        }
-        .admin-panel {
-            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-            border-radius: 28px;
-            padding: 20px 24px;
-            margin-bottom: 28px;
-            display: none;
-            border: 2px solid #f59e0b;
-        }
-        .admin-panel.show {
-            display: block;
-        }
-        .users-list {
-            max-height: 300px;
-            overflow-y: auto;
-            margin: 15px 0;
-            border: 1px solid #fbbf24;
-            border-radius: 16px;
-            padding: 10px;
-            background: white;
-        }
-        .user-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px;
-            border-bottom: 1px solid #e2e8f0;
-        }
-        .make-admin-btn, .remove-admin-btn {
-            padding: 5px 12px;
-            font-size: 12px;
-            border-radius: 20px;
-            border: none;
-            cursor: pointer;
-        }
-        .make-admin-btn {
-            background: #10b981;
-            color: white;
-        }
-        .remove-admin-btn {
-            background: #ef4444;
-            color: white;
-        }
-        input, textarea {
-            padding: 12px 16px;
-            border-radius: 24px;
-            border: 1px solid #cbd5e1;
-            font-size: 1rem;
-            width: 100%;
-        }
-        button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 40px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        button:hover {
-            transform: translateY(-2px);
-        }
-        .topic-card {
-            background: white;
-            border-radius: 28px;
-            margin-bottom: 28px;
-            overflow: hidden;
-            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
-        }
-        .topic-header {
-            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-            padding: 18px 24px;
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-        .topic-title {
-            font-size: 1.4rem;
-            font-weight: 700;
-            color: #0f172a;
-        }
-        .topic-meta {
-            font-size: 0.8rem;
-            color: #475569;
-            margin-top: 6px;
-        }
-        .answers-section {
-            padding: 20px 24px;
-            display: none;
-        }
-        .answers-section.open {
-            display: block;
-        }
-        .answer-item {
-            background: linear-gradient(135deg, #f9f9ff 0%, #f0f0ff 100%);
-            border-radius: 20px;
-            padding: 14px 18px;
-            margin-bottom: 14px;
-            border-left: 4px solid #667eea;
-        }
-        .answer-author {
-            font-weight: 700;
-            margin-bottom: 6px;
-            display: flex;
-            justify-content: space-between;
-            flex-wrap: wrap;
-        }
-        .answer-date {
-            font-size: 0.7rem;
-            color: #64748b;
-        }
-        .delete-answer, .delete-topic-btn {
-            background: #ef4444;
-            padding: 4px 12px;
-            font-size: 12px;
-            border-radius: 20px;
-        }
-        .answer-form {
-            margin-top: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        .toast-msg {
-            position: fixed;
-            bottom: 30px;
-            left: 20px;
-            background: #0f172a;
-            color: white;
-            padding: 12px 24px;
-            border-radius: 50px;
-            z-index: 1000;
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-        .show-toast {
-            opacity: 1;
-        }
-        .telegram-setup {
-            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
-            color: white;
-            padding: 20px;
-            border-radius: 20px;
-            margin-bottom: 20px;
-        }
-        .telegram-button {
-            display: inline-block;
-            background: #0088cc;
-            color: white;
-            padding: 12px 24px;
-            border-radius: 50px;
-            text-decoration: none;
-            font-weight: bold;
-            margin-top: 15px;
-            transition: all 0.2s;
-        }
-        .telegram-button:hover {
-            transform: translateY(-2px);
-            background: #006699;
-        }
-        .code-block {
-            background: #1e293b;
-            color: #e2e8f0;
-            padding: 15px;
-            border-radius: 12px;
-            font-family: monospace;
-            overflow-x: auto;
-            margin: 10px 0;
-            font-size: 12px;
-        }
-        .empty {
-            text-align: center;
-            padding: 40px;
-            color: #64748b;
-        }
-        .stats {
-            display: flex;
-            gap: 20px;
-            margin-top: 10px;
-            flex-wrap: wrap;
-        }
-        .stat-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 10px 20px;
-            border-radius: 20px;
-            color: white;
-        }
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #64748b;
-        }
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
             justify-content: center;
             align-items: center;
-            z-index: 2000;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            padding: 1rem;
         }
-        .modal-content {
+
+        .card {
             background: white;
-            padding: 30px;
-            border-radius: 28px;
+            border-radius: 2rem;
             max-width: 500px;
-            width: 90%;
+            width: 100%;
+            padding: 2rem;
+            box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.4);
+            text-align: center;
+            transition: all 0.2s ease;
         }
-        .modal.show {
+
+        h1 {
+            font-size: 1.8rem;
+            background: linear-gradient(120deg, #667eea, #764ba2);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            margin-bottom: 0.25rem;
+        }
+
+        .sub {
+            color: #6c757d;
+            margin-bottom: 1.8rem;
+            font-size: 0.9rem;
+            border-bottom: 1px solid #e9ecef;
+            display: inline-block;
+            padding-bottom: 0.3rem;
+        }
+
+        /* Аватар */
+        .avatar-wrapper {
+            margin-bottom: 1.5rem;
+        }
+        .avatar {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid white;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s;
+        }
+        .avatar:hover {
+            transform: scale(1.02);
+        }
+
+        /* Информация */
+        .info {
+            background: #f8f9fa;
+            border-radius: 1.5rem;
+            padding: 1.2rem;
+            margin: 1rem 0;
+            text-align: left;
+        }
+
+        .info-row {
             display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            padding: 0.6rem 0;
+            border-bottom: 1px dashed #dee2e6;
         }
-        @media (max-width: 680px) {
-            .topic-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 10px;
-            }
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        .label {
+            font-weight: 600;
+            color: #495057;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .value {
+            color: #212529;
+            font-weight: 500;
+            word-break: break-word;
+            text-align: right;
+            max-width: 60%;
+        }
+
+        /* Кнопки */
+        .btn-group {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin: 1.5rem 0 1rem;
+        }
+        button {
+            background: white;
+            border: none;
+            padding: 0.7rem 1.5rem;
+            border-radius: 3rem;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .btn-primary {
+            background: linear-gradient(100deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -5px rgba(102, 126, 234, 0.5);
+        }
+        .btn-outline {
+            background: white;
+            border: 1px solid #dee2e6;
+        }
+        .btn-outline:hover {
+            background: #f1f3f5;
+            border-color: #adb5bd;
+        }
+        button:active {
+            transform: translateY(1px);
+        }
+
+        /* лоадер */
+        .loader {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 3px solid #e9ecef;
+            border-radius: 50%;
+            border-top-color: #764ba2;
+            animation: spin 0.6s linear infinite;
+            margin: 1rem auto;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .hidden {
+            display: none;
+        }
+
+        footer {
+            font-size: 0.7rem;
+            color: #adb5bd;
+            margin-top: 1rem;
+            text-align: center;
+        }
+        .error-msg {
+            background: #fff0f0;
+            color: #c92a2a;
+            border-radius: 2rem;
+            padding: 0.6rem;
+            font-size: 0.85rem;
+            margin-top: 1rem;
         }
     </style>
 </head>
 <body>
-<div class="container">
-    <div class="header">
-        <div class="user-info">
-            <div>
-                <h1>📢 Archives Park Forum</h1>
-                <p style="color: #64748b; margin-top: 5px;">Telegram интеграция | GitHub Pages</p>
-            </div>
-            <div class="user-card">
-                <span>👤 Ваш ID:</span>
-                <span class="user-id" id="userIdDisplay">загрузка...</span>
-                <span id="roleBadge"></span>
-            </div>
+
+<div class="card" id="app">
+    <h1>🎲 Случайный профиль</h1>
+    <div class="sub">Random User Generator</div>
+
+    <!-- Блок аватара -->
+    <div class="avatar-wrapper">
+        <img class="avatar" id="avatar" src="https://randomuser.me/api/portraits/women/68.jpg" alt="avatar">
+    </div>
+
+    <!-- Блок данных -->
+    <div class="info" id="infoBlock">
+        <div class="info-row">
+            <span class="label">👤 Имя</span>
+            <span class="value" id="fullname">Jane Smith</span>
         </div>
-        
-        <div class="stats" id="stats"></div>
-        
-        <div class="telegram-setup">
-            <h3>🤖 Создание тем через Telegram</h3>
-            <p>Нажмите на кнопку ниже, чтобы создать тему через Telegram:</p>
-            <a href="#" id="telegramCreateBtn" class="telegram-button">📱 Создать тему в Telegram</a>
-            <p style="margin-top: 10px; font-size: 12px;">* Откроется Telegram с предзаполненной командой</p>
-            
-            <div class="code-block" style="margin-top: 15px;">
-                <strong>📝 Или отправьте команду вручную боту @archivesparkibot:</strong><br>
-                /newtopic Заголовок | Описание<br><br>
-                <strong>Пример:</strong><br>
-                /newtopic Важная новость | Обсуждаем новые функции форума
-            </div>
+        <div class="info-row">
+            <span class="label">📧 Email</span>
+            <span class="value" id="email">jane.smith@example.com</span>
         </div>
-        
-        <div id="adminPanel" class="admin-panel">
-            <h3>👑 Админ-панель</h3>
-            <div>
-                <h4>➕ Создать новую тему</h4>
-                <input type="text" id="topicTitle" placeholder="Заголовок темы">
-                <textarea id="topicDesc" rows="2" placeholder="Описание" style="margin-top: 10px;"></textarea>
-                <button id="createTopicBtn" style="margin-top: 10px;">📝 Создать тему</button>
-            </div>
-            <hr style="margin: 20px 0;">
-            <div>
-                <h4>👥 Управление администраторами</h4>
-                <p>Все пользователи форума:</p>
-                <div id="usersList" class="users-list"></div>
-                <p style="font-size: 12px; color: #475569; margin-top: 10px;">
-                    ℹ️ Первый пользователь = администратор. Админ может назначать других.
-                </p>
-            </div>
+        <div class="info-row">
+            <span class="label">📍 Страна / Город</span>
+            <span class="value" id="location">Ireland, Dublin</span>
+        </div>
+        <div class="info-row">
+            <span class="label">🎂 Возраст (д/р)</span>
+            <span class="value" id="age">28 лет (01.01.1995)</span>
+        </div>
+        <div class="info-row">
+            <span class="label">📞 Телефон</span>
+            <span class="value" id="phone">+353 123 456 789</span>
+        </div>
+        <div class="info-row">
+            <span class="label">🔑 Username</span>
+            <span class="value" id="username">blueduck387</span>
         </div>
     </div>
 
-    <div id="topicsList"></div>
-</div>
-<div id="toastMsg" class="toast-msg"></div>
-
-<!-- Модальное окно для создания темы через Telegram -->
-<div id="telegramModal" class="modal">
-    <div class="modal-content">
-        <h3>📱 Создать тему через Telegram</h3>
-        <p>Введите данные для темы:</p>
-        <input type="text" id="modalTitle" placeholder="Заголовок темы" style="margin: 10px 0;">
-        <textarea id="modalDesc" rows="3" placeholder="Описание темы" style="margin: 10px 0;"></textarea>
-        <button id="sendToTelegramBtn" style="margin: 10px 0;">📤 Отправить в Telegram</button>
-        <button onclick="closeModal()" style="background: #64748b;">❌ Отмена</button>
+    <!-- Кнопки управления -->
+    <div class="btn-group">
+        <button class="btn-primary" id="generateBtn">✨ Новый человек</button>
+        <button class="btn-outline" id="copyBtn">📋 Скопировать данные</button>
     </div>
+
+    <div id="loader" class="loader hidden"></div>
+    <div id="errorMsg" class="error-msg hidden"></div>
+    <footer>Данные из Random User API • Реальный генератор</footer>
 </div>
 
 <script>
-    // Firebase конфигурация
-    const firebaseConfig = {
-        apiKey: "AIzaSyCMi3eKNZ4OgD2YCdhEFDOsmuclKZkjflo",
-        authDomain: "from-b14b1.firebaseapp.com",
-        projectId: "from-b14b1",
-        storageBucket: "from-b14b1.firebasestorage.app",
-        messagingSenderId: "604060443375",
-        appId: "1:604060443375:web:f6fc69f385a4c59ee3311a"
-    };
-    
-    const app = firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-    
-    db.settings({ ignoreUndefinedProperties: true });
-    
-    const BOT_USERNAME = "archivesparkibot";
-    let currentUser = null;
-    let isAdmin = false;
-    
-    function showToast(message, isError = false) {
-        const toast = document.getElementById("toastMsg");
-        toast.textContent = message;
-        toast.style.background = isError ? '#dc2626' : '#0f172a';
-        toast.classList.add("show-toast");
+    // Элементы DOM
+    const avatarEl = document.getElementById('avatar');
+    const fullnameEl = document.getElementById('fullname');
+    const emailEl = document.getElementById('email');
+    const locationEl = document.getElementById('location');
+    const ageEl = document.getElementById('age');
+    const phoneEl = document.getElementById('phone');
+    const usernameEl = document.getElementById('username');
+    const generateBtn = document.getElementById('generateBtn');
+    const copyBtn = document.getElementById('copyBtn');
+    const loader = document.getElementById('loader');
+    const errorMsgDiv = document.getElementById('errorMsg');
+
+    // Вспомогательная функция: показать/скрыть лоадер
+    function setLoading(isLoading) {
+        if (isLoading) {
+            loader.classList.remove('hidden');
+            errorMsgDiv.classList.add('hidden');
+            generateBtn.disabled = true;
+            generateBtn.style.opacity = '0.6';
+        } else {
+            loader.classList.add('hidden');
+            generateBtn.disabled = false;
+            generateBtn.style.opacity = '1';
+        }
+    }
+
+    function showError(text) {
+        errorMsgDiv.innerText = text;
+        errorMsgDiv.classList.remove('hidden');
         setTimeout(() => {
-            toast.classList.remove("show-toast");
-            toast.style.background = '#0f172a';
-        }, 3000);
+            errorMsgDiv.classList.add('hidden');
+        }, 4000);
     }
-    
-    function getUserId() {
-        let userId = localStorage.getItem('forum_user_id');
-        if (!userId) {
-            userId = 'user_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
-            localStorage.setItem('forum_user_id', userId);
+
+    // Форматирование даты рождения и возраста
+    function formatDateAndAge(dob) {
+        const birthDate = new Date(dob.date);
+        const today = new Date();
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const m = today.getMonth() - birthDate.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
         }
-        return userId;
+        const day = birthDate.getDate().toString().padStart(2, '0');
+        const month = (birthDate.getMonth() + 1).toString().padStart(2, '0');
+        const year = birthDate.getFullYear();
+        return `${age} лет (${day}.${month}.${year})`;
     }
-    
-    async function registerUser() {
-        const userId = getUserId();
-        const userRef = db.collection("users").doc(userId);
-        
+
+    // Получение локации в красивом виде: страна + город
+    function formatLocation(location) {
+        const city = location.city || location.town || 'unknown';
+        const country = location.country || 'unknown';
+        return `${country}, ${city}`;
+    }
+
+    // Главная функция получения данных из API
+    async function fetchRandomUser() {
+        setLoading(true);
         try {
-            const userDoc = await userRef.get();
-            
-            if (!userDoc.exists) {
-                const usersSnapshot = await db.collection("users").get();
-                const isFirstUser = usersSnapshot.empty;
-                
-                await userRef.set({
-                    userId: userId,
-                    isAdmin: isFirstUser,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    lastSeen: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                currentUser = { userId, isAdmin: isFirstUser };
-                
-                if (isFirstUser) {
-                    showToast("🎉 Вы первый пользователь! Вы назначены администратором!");
-                }
-            } else {
-                currentUser = {
-                    userId: userId,
-                    isAdmin: userDoc.data().isAdmin || false
-                };
+            // Используем Random User API, запрашиваем 1 результат, русский язык для названий
+            const response = await fetch('https://randomuser.me/api/?inc=name,email,picture,location,dob,phone,login&nat=us,gb,fr,de,au,ca,ru,nz&noinfo');
+            if (!response.ok) {
+                throw new Error(`Ошибка HTTP: ${response.status}`);
             }
-            
-            document.getElementById("userIdDisplay").textContent = currentUser.userId;
-            
-            if (currentUser.isAdmin) {
-                document.getElementById("roleBadge").innerHTML = '<span class="admin-badge">👑 Администратор</span>';
-                document.getElementById("adminPanel").classList.add("show");
-                isAdmin = true;
-            } else {
-                document.getElementById("roleBadge").innerHTML = '<span class="user-badge">👤 Пользователь</span>';
-                isAdmin = false;
-            }
-            
-            await userRef.update({ lastSeen: firebase.firestore.FieldValue.serverTimestamp() });
-            
-            return currentUser;
+            const data = await response.json();
+            const user = data.results[0];
+
+            // Сборка полного имени
+            const fullName = `${user.name.first} ${user.name.last}`;
+
+            // Аватар (используем medium для баланса качества/скорости)
+            const avatarUrl = user.picture.large || user.picture.medium;
+
+            // Локация
+            const locationStr = formatLocation(user.location);
+
+            // Возраст + дата рождения
+            const ageFormatted = formatDateAndAge(user.dob);
+
+            // Обновляем DOM
+            avatarEl.src = avatarUrl;
+            avatarEl.alt = `Avatar of ${fullName}`;
+            fullnameEl.innerText = fullName;
+            emailEl.innerText = user.email;
+            locationEl.innerText = locationStr;
+            ageEl.innerText = ageFormatted;
+            phoneEl.innerText = user.phone;
+            usernameEl.innerText = user.login.username;
+
         } catch (error) {
-            console.error("Ошибка регистрации:", error);
-            showToast("❌ Ошибка подключения к базе данных", true);
-            return null;
+            console.error('Ошибка загрузки:', error);
+            showError('Не удалось загрузить профиль. Проверьте интернет или попробуйте позже.');
+            // Можно оставить старые данные, не трогаем
+        } finally {
+            setLoading(false);
         }
     }
-    
-    async function loadUsersList() {
-        if (!isAdmin) return;
-        
+
+    // Функция копирования всей карточки в виде текста
+    async function copyProfileToClipboard() {
+        // Собираем текущие данные со страницы (даже если старые — пользователь скопирует то, что видит)
+        const profileText = `
+👤 Имя: ${fullnameEl.innerText}
+📧 Email: ${emailEl.innerText}
+📍 Локация: ${locationEl.innerText}
+🎂 Возраст: ${ageEl.innerText}
+📞 Телефон: ${phoneEl.innerText}
+🔑 Логин: ${usernameEl.innerText}
+🖼 Аватар: ${avatarEl.src}
+        `.trim();
+
         try {
-            const usersSnapshot = await db.collection("users").orderBy("createdAt", "desc").get();
-            const usersList = document.getElementById("usersList");
-            usersList.innerHTML = '';
-            
-            for (const doc of usersSnapshot.docs) {
-                const user = doc.data();
-                if (user.userId === currentUser.userId) continue;
-                
-                const userDiv = document.createElement('div');
-                userDiv.className = 'user-item';
-                userDiv.innerHTML = `
-                    <div>
-                        <strong>${user.userId.substring(0, 25)}...</strong><br>
-                        <small>${user.isAdmin ? '👑 Админ' : '👤 Пользователь'}</small>
-                    </div>
-                    ${!user.isAdmin ? 
-                        `<button class="make-admin-btn" data-id="${user.userId}">👑 Назначить</button>` :
-                        `<button class="remove-admin-btn" data-id="${user.userId}">🔽 Забрать</button>`
-                    }
-                `;
-                usersList.appendChild(userDiv);
-            }
-            
-            document.querySelectorAll('.make-admin-btn').forEach(btn => {
-                btn.addEventListener('click', () => makeAdmin(btn.dataset.id, true));
-            });
-            document.querySelectorAll('.remove-admin-btn').forEach(btn => {
-                btn.addEventListener('click', () => makeAdmin(btn.dataset.id, false));
-            });
-        } catch (error) {
-            console.error("Ошибка загрузки пользователей:", error);
+            await navigator.clipboard.writeText(profileText);
+            // Кратковременная подсказка (можно заменить на всплывающий тост)
+            const originalText = copyBtn.innerText;
+            copyBtn.innerText = '✅ Скопировано!';
+            setTimeout(() => {
+                copyBtn.innerText = originalText;
+            }, 1500);
+        } catch (err) {
+            console.error('Ошибка копирования:', err);
+            showError('Не удалось скопировать данные, разрешите доступ к буферу обмена.');
         }
     }
-    
-    async function makeAdmin(userId, makeAdminBool) {
-        if (!isAdmin) {
-            showToast("❌ Только администратор может назначать админов!");
-            return;
-        }
-        
-        try {
-            await db.collection("users").doc(userId).update({ isAdmin: makeAdminBool });
-            showToast(makeAdminBool ? "✅ Назначен администратором!" : "🔽 Права забраны");
-            loadUsersList();
-        } catch (error) {
-            showToast("❌ Ошибка", true);
-        }
-    }
-    
-    async function updateStats() {
-        try {
-            const topicsSnapshot = await db.collection("topics").get();
-            const usersSnapshot = await db.collection("users").get();
-            const answersSnapshot = await db.collection("answers").get();
-            
-            document.getElementById("stats").innerHTML = `
-                <div class="stat-card">📝 Тем: ${topicsSnapshot.size}</div>
-                <div class="stat-card">💬 Ответов: ${answersSnapshot.size}</div>
-                <div class="stat-card">👥 Пользователей: ${usersSnapshot.size}</div>
-            `;
-        } catch (error) {
-            console.error("Ошибка статистики:", error);
-        }
-    }
-    
-    function formatDate(timestamp) {
-        if (!timestamp) return "только что";
-        try {
-            const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-            return date.toLocaleString("ru-RU", {day:'numeric', month:'long', hour:'2-digit', minute:'2-digit'});
-        } catch(e) {
-            return "неизвестно";
-        }
-    }
-    
-    function escapeHtml(str) {
-        if (!str) return '';
-        return str.replace(/[&<>]/g, function(m) {
-            if (m === '&') return '&amp;';
-            if (m === '<') return '&lt;';
-            if (m === '>') return '&gt;';
-            return m;
-        });
-    }
-    
-    async function getAnswersForTopic(topicId) {
-        try {
-            const answersSnapshot = await db.collection("answers").where("topicId", "==", topicId).get();
-            let answers = [];
-            answersSnapshot.forEach(doc => {
-                answers.push({ id: doc.id, ...doc.data() });
-            });
-            answers.sort((a, b) => {
-                const dateA = a.createdAt?.toDate?.() || new Date(0);
-                const dateB = b.createdAt?.toDate?.() || new Date(0);
-                return dateA - dateB;
-            });
-            return answers;
-        } catch (error) {
-            return [];
-        }
-    }
-    
-    async function renderTopics() {
-        const container = document.getElementById("topicsList");
-        container.innerHTML = '<div class="loading">⏳ Загрузка тем...</div>';
-        
-        try {
-            const topicsSnapshot = await db.collection("topics").orderBy("createdAt", "desc").get();
-            
-            if (topicsSnapshot.empty) {
-                await db.collection("topics").add({
-                    title: "🌟 Добро пожаловать на форум Archives Park!",
-                    description: "Это первая тема. Здесь вы можете обсуждать интересные темы, отвечать на сообщения и создавать новые темы (только админ).\n\n📱 Также вы можете создавать темы через Telegram бота @archivesparkibot\n\nПриятного общения! 🎉",
-                    author: "Система",
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                setTimeout(() => renderTopics(), 1000);
-                return;
-            }
-            
-            let topicsHtml = '';
-            for (const topicDoc of topicsSnapshot.docs) {
-                const topic = topicDoc.data();
-                const topicId = topicDoc.id;
-                const answers = await getAnswersForTopic(topicId);
-                
-                let answersHtml = '';
-                if (answers.length === 0) {
-                    answersHtml = '<div class="empty" style="padding: 20px;">💬 Нет ответов. Будьте первым!</div>';
-                } else {
-                    answers.forEach(answer => {
-                        const deleteBtn = isAdmin ? `<button class="delete-answer" data-answer-id="${answer.id}" style="background:#ef4444; padding:4px 12px; border-radius:20px;">🗑️</button>` : '';
-                        answersHtml += `
-                            <div class="answer-item">
-                                <div class="answer-author">
-                                    <span>✍️ ${escapeHtml(answer.authorName || 'Гость')}</span>
-                                    <span><span class="answer-date">${formatDate(answer.createdAt)}</span> ${deleteBtn}</span>
-                                </div>
-                                <div class="answer-text">${escapeHtml(answer.text).replace(/\n/g, '<br>')}</div>
-                            </div>
-                        `;
-                    });
-                }
-                
-                const deleteTopicBtn = isAdmin ? `<button class="delete-topic-btn" data-topic-id="${topicId}" style="background:#ef4444;">🗑️ Удалить тему</button>` : '';
-                
-                topicsHtml += `
-                    <div class="topic-card">
-                        <div class="topic-header">
-                            <div style="flex:1">
-                                <div class="topic-title">${escapeHtml(topic.title)}</div>
-                                <div class="topic-meta">📅 ${formatDate(topic.createdAt)} • автор: ${escapeHtml(topic.author || 'Админ')}</div>
-                                ${topic.description ? `<div class="topic-meta" style="white-space: pre-wrap;">📝 ${escapeHtml(topic.description)}</div>` : ''}
-                            </div>
-                            ${deleteTopicBtn}
-                        </div>
-                        <div class="answers-section" id="answers-${topicId}">
-                            <div id="answers-list-${topicId}">${answersHtml}</div>
-                            <div class="answer-form">
-                                <input type="text" id="name-${topicId}" placeholder="Ваше имя (необязательно)">
-                                <textarea id="answer-${topicId}" rows="2" placeholder="Напишите ответ..."></textarea>
-                                <button class="send-btn" data-topic-id="${topicId}">📨 Отправить ответ</button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
-            container.innerHTML = topicsHtml;
-            attachEventHandlers();
-            
-        } catch (error) {
-            console.error("Ошибка рендеринга:", error);
-            container.innerHTML = '<div class="empty">❌ Ошибка загрузки данных. Проверьте консоль (F12).</div>';
-        }
-    }
-    
-    function attachEventHandlers() {
-        document.querySelectorAll('.topic-header').forEach(header => {
-            header.addEventListener('click', (e) => {
-                if (e.target.classList.contains('delete-topic-btn') || e.target.classList.contains('delete-answer')) return;
-                const answersDiv = header.parentElement.querySelector('.answers-section');
-                if (answersDiv) answersDiv.classList.toggle('open');
-            });
-        });
-        
-        document.querySelectorAll('.send-btn').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
-                const topicId = btn.dataset.topicId;
-                const nameInput = document.getElementById(`name-${topicId}`);
-                const answerInput = document.getElementById(`answer-${topicId}`);
-                const authorName = nameInput.value.trim() || "Гость";
-                const answerText = answerInput.value.trim();
-                
-                if (!answerText) {
-                    showToast("Напишите ответ!");
-                    return;
-                }
-                
-                try {
-                    await db.collection("answers").add({
-                        topicId: topicId,
-                        authorName: authorName,
-                        text: answerText,
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-                    answerInput.value = '';
-                    showToast("✅ Ответ добавлен!");
-                    renderTopics();
-                    updateStats();
-                } catch (err) {
-                    showToast("❌ Ошибка: " + err.message, true);
-                }
-            });
-        });
-        
-        if (isAdmin) {
-            document.querySelectorAll('.delete-topic-btn').forEach(btn => {
-                btn.addEventListener('click', async (e) => {
-                    e.stopPropagation();
-                    const topicId = btn.dataset.topicId;
-                    if (confirm("Удалить тему и все ответы?")) {
-                        try {
-                            const answers = await db.collection("answers").where("topicId", "==", topicId).get();
-                            const batch = db.batch();
-                            answers.forEach(doc => batch.delete(doc.ref));
-                            batch.delete(db.collection("topics").doc(topicId));
-                            await batch.commit();
-                            showToast("✅ Тема удалена");
-                            renderTopics();
-                            updateStats();
-                        } catch (err) {
-                            showToast("❌ Ошибка удаления", true);
-                        }
-                    }
-                });
-            });
-            
-            document.querySelectorAll('.delete-answer').forEach(btn => {
-                btn.addEventListener('click', async (e) => {
-                    e.stopPropagation();
-                    const answerId = btn.dataset.answerId;
-                    if (confirm("Удалить ответ?")) {
-                        try {
-                            await db.collection("answers").doc(answerId).delete();
-                            showToast("✅ Ответ удален");
-                            renderTopics();
-                            updateStats();
-                        } catch (err) {
-                            showToast("❌ Ошибка удаления", true);
-                        }
-                    }
-                });
-            });
-        }
-    }
-    
-    async function createTopic(title, description, author = null) {
-        if (!isAdmin && author !== 'telegram') {
-            showToast("❌ Только администраторы могут создавать темы!");
-            return false;
-        }
-        
-        if (!title.trim()) {
-            showToast("Введите заголовок!");
-            return false;
-        }
-        
-        try {
-            await db.collection("topics").add({
-                title: title.trim(),
-                description: description?.trim() || "",
-                author: author || currentUser?.userId || "Админ",
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            showToast("✅ Тема создана!");
-            renderTopics();
-            updateStats();
-            return true;
-        } catch (error) {
-            showToast("❌ Ошибка: " + error.message, true);
-            return false;
-        }
-    }
-    
-    function openTelegramModal() {
-        document.getElementById("telegramModal").classList.add("show");
-    }
-    
-    function closeModal() {
-        document.getElementById("telegramModal").classList.remove("show");
-    }
-    
-    function sendToTelegram() {
-        const title = document.getElementById("modalTitle").value.trim();
-        const desc = document.getElementById("modalDesc").value.trim();
-        
-        if (!title) {
-            showToast("Введите заголовок темы!");
-            return;
-        }
-        
-        const message = `/newtopic ${title} | ${desc || "Без описания"}`;
-        const encodedMessage = encodeURIComponent(message);
-        const telegramUrl = `https://t.me/${BOT_USERNAME}?text=${encodedMessage}`;
-        
-        window.open(telegramUrl, '_blank');
-        closeModal();
-        showToast("📱 Открыт Telegram! Отправьте сообщение боту");
-    }
-    
+
+    // Инициализация: при загрузке страницы получить случайного пользователя
+    // и навесить обработчики
     async function init() {
-        await registerUser();
-        await renderTopics();
-        await updateStats();
-        
-        if (isAdmin) {
-            await loadUsersList();
-        }
-        
-        document.getElementById("createTopicBtn")?.addEventListener('click', () => {
-            const title = document.getElementById("topicTitle").value;
-            const desc = document.getElementById("topicDesc").value;
-            createTopic(title, desc);
-            document.getElementById("topicTitle").value = '';
-            document.getElementById("topicDesc").value = '';
-        });
-        
-        document.getElementById("telegramCreateBtn")?.addEventListener('click', (e) => {
-            e.preventDefault();
-            openTelegramModal();
-        });
-        
-        document.getElementById("sendToTelegramBtn")?.addEventListener('click', sendToTelegram);
-        
-        // Real-time обновления
-        db.collection("topics").onSnapshot(() => {
-            renderTopics();
-            updateStats();
-        });
-        
-        db.collection("answers").onSnapshot(() => {
-            renderTopics();
-            updateStats();
-        });
-        
-        if (isAdmin) {
-            db.collection("users").onSnapshot(() => loadUsersList());
-        }
-        
-        showToast("✨ Форум загружен! Нажмите кнопку Telegram для создания темы");
+        await fetchRandomUser();
+        generateBtn.addEventListener('click', fetchRandomUser);
+        copyBtn.addEventListener('click', copyProfileToClipboard);
     }
-    
+
+    // Запускаем приложение
     init();
 </script>
 </body>
