@@ -253,6 +253,17 @@
             margin-left: 1rem;
             vertical-align: middle;
         }
+
+        /* Подсказка для админ-доступа */
+        .admin-hint {
+            background: rgba(0,0,0,0.7);
+            color: #ffd700;
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            font-size: 0.8rem;
+            display: inline-block;
+            margin-top: 1rem;
+        }
     </style>
 </head>
 <body>
@@ -262,6 +273,9 @@
         <h1>✨ Динамический контент <span id="adminBadge" class="admin-badge hidden">ADMIN MODE</span></h1>
         <div id="contentList">
             <div class="loading">Загрузка...</div>
+        </div>
+        <div id="adminHint" class="admin-hint hidden">
+            🔐 Админ-режим активен. Вы можете управлять контентом.
         </div>
     </div>
 
@@ -282,7 +296,7 @@
 </div>
 
 <!-- Модальное окно входа -->
-<div id="loginOverlay" class="login-overlay">
+<div id="loginOverlay" class="login-overlay hidden">
     <div class="login-box">
         <h3>🔐 Вход в админ-панель</h3>
         <p>Введите пароль для доступа</p>
@@ -308,25 +322,21 @@
     const db = firebase.firestore();
 
     // ========== НАСТРОЙКИ ДОСТУПА ==========
-    // Пароль для входа в админку (можно изменить)
     const ADMIN_PASSWORD = "admin123";
     
-    // Секретный путь — если URL заканчивается на /admin, показываем форму входа
-    // Для обычного доступа: https://pesol45.github.io/Block/
-    // Для админ-панели: https://pesol45.github.io/Block/admin
+    // Параметр в URL для вызова формы входа: ?admin или &admin
+    // Например: https://pesol45.github.io/Block/?admin
     
     let isAdmin = false;
 
     // ========== Функции ==========
     
-    // Экранирование HTML
     function escapeHtml(text) {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
     }
 
-    // Загрузка публичного контента
     async function loadPublicContent() {
         try {
             const snapshot = await db.collection('site_content')
@@ -358,7 +368,6 @@
         }
     }
 
-    // Загрузка для админа (с кнопками удаления)
     async function loadAdminBlocks() {
         if (!isAdmin) return;
         
@@ -389,7 +398,6 @@
             });
             container.innerHTML = html;
             
-            // Навешиваем обработчики на кнопки удаления
             document.querySelectorAll('.delete-btn').forEach(btn => {
                 btn.addEventListener('click', () => deleteBlock(btn.dataset.id));
             });
@@ -398,7 +406,6 @@
         }
     }
 
-    // Добавление блока
     async function addBlock() {
         const title = document.getElementById('blockTitle').value.trim();
         const content = document.getElementById('blockContent').value.trim();
@@ -416,11 +423,9 @@
                 createdBy: 'admin'
             });
             
-            // Очищаем поля
             document.getElementById('blockTitle').value = '';
             document.getElementById('blockContent').value = '';
             
-            // Обновляем оба вида
             await loadPublicContent();
             await loadAdminBlocks();
         } catch (error) {
@@ -429,7 +434,6 @@
         }
     }
 
-    // Удаление блока
     async function deleteBlock(id) {
         if (!confirm('Удалить этот блок? Отменить будет нельзя.')) return;
         
@@ -443,30 +447,16 @@
         }
     }
 
-    // ========== Логика входа через URL ==========
+    // ========== Логика входа через параметр URL ==========
     
-    // Проверяем, нужно ли показать админ-панель
-    function checkAdminAccess() {
-        // Получаем текущий путь (то, что после домена)
-        // Например: https://pesol45.github.io/Block/admin → path = "/Block/admin"
-        // Нам нужно проверить, заканчивается ли путь на /admin
-        const path = window.location.pathname;
-        
-        // Проверяем, есть ли /admin в конце пути (без учёта слеша в конце)
-        const isAdminPath = path.endsWith('/admin') || path === '/admin';
-        
-        if (isAdminPath) {
-            // Показываем форму входа
-            document.getElementById('loginOverlay').classList.remove('hidden');
-        } else {
-            // Обычный режим — скрываем всё админское
-            document.getElementById('loginOverlay').classList.add('hidden');
-            document.getElementById('adminPanel').classList.add('hidden');
-            document.getElementById('adminBadge').classList.add('hidden');
-        }
+    function showLoginForm() {
+        document.getElementById('loginOverlay').classList.remove('hidden');
     }
     
-    // Вход с паролем
+    function hideLoginForm() {
+        document.getElementById('loginOverlay').classList.add('hidden');
+    }
+    
     function loginWithPassword() {
         const password = document.getElementById('adminPassword').value;
         const errorDiv = document.getElementById('loginError');
@@ -474,70 +464,72 @@
         if (password === ADMIN_PASSWORD) {
             isAdmin = true;
             
-            // Скрываем окно входа
-            document.getElementById('loginOverlay').classList.add('hidden');
-            // Показываем админ-панель
+            hideLoginForm();
             document.getElementById('adminPanel').classList.remove('hidden');
             document.getElementById('adminBadge').classList.remove('hidden');
+            document.getElementById('adminHint').classList.remove('hidden');
             
-            // Загружаем админские данные
             loadAdminBlocks();
             
-            // Сохраняем сессию в sessionStorage (закроется при закрытии вкладки)
+            // Сохраняем сессию
             sessionStorage.setItem('adminAuthenticated', 'true');
             
-            // Меняем URL обратно на обычный (чтобы при обновлении не было путаницы)
-            // Но оставляем возможность обновить страницу
-            const newUrl = window.location.href.replace('/admin', '').replace(/\/$/, '');
-            window.history.pushState({}, '', newUrl);
+            // Очищаем поле
+            document.getElementById('adminPassword').value = '';
+            errorDiv.textContent = '';
+            
+            // Убираем параметр ?admin из URL (без перезагрузки)
+            const url = new URL(window.location.href);
+            url.searchParams.delete('admin');
+            window.history.pushState({}, '', url);
         } else {
             errorDiv.textContent = '❌ Неверный пароль';
             document.getElementById('adminPassword').value = '';
         }
     }
     
-    // Выход из админки
     function logout() {
         isAdmin = false;
         sessionStorage.removeItem('adminAuthenticated');
         document.getElementById('adminPanel').classList.add('hidden');
         document.getElementById('adminBadge').classList.add('hidden');
+        document.getElementById('adminHint').classList.add('hidden');
         
-        // Возвращаемся на обычную версию
-        const normalUrl = window.location.href.split('?')[0].replace('/admin', '').replace(/\/$/, '');
-        window.location.href = normalUrl;
+        // Перезагружаем публичный контент (на всякий случай)
+        loadPublicContent();
     }
     
-    // Проверка сохранённой сессии
     function checkSession() {
         const savedSession = sessionStorage.getItem('adminAuthenticated');
         if (savedSession === 'true') {
-            // Автоматически восстанавливаем админ-режим
             isAdmin = true;
             document.getElementById('adminPanel').classList.remove('hidden');
             document.getElementById('adminBadge').classList.remove('hidden');
-            document.getElementById('loginOverlay').classList.add('hidden');
+            document.getElementById('adminHint').classList.remove('hidden');
             loadAdminBlocks();
+        }
+    }
+    
+    function checkUrlForAdminAccess() {
+        // Проверяем GET-параметр ?admin
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('admin')) {
+            // Показываем форму входа
+            showLoginForm();
         }
     }
 
     // ========== Инициализация ==========
     async function init() {
-        // Сначала загружаем публичный контент (он нужен всем)
         await loadPublicContent();
-        
-        // Проверяем, не залогинены ли мы уже
         checkSession();
+        checkUrlForAdminAccess(); // Проверяем ?admin в URL
         
-        // Проверяем URL и показываем форму входа если нужно
-        checkAdminAccess();
-        
-        // Обработчики событий
+        // Обработчики
         document.getElementById('loginBtn').onclick = loginWithPassword;
         document.getElementById('addBlockBtn').onclick = addBlock;
         document.getElementById('logoutBtn').onclick = logout;
         
-        // Нажатие Enter в поле пароля
         document.getElementById('adminPassword').onkeypress = (e) => {
             if (e.key === 'Enter') loginWithPassword();
         };
