@@ -223,22 +223,13 @@
         .resend-btn {
             background: #555 !important;
         }
-        .warning-banner {
-            background: #8B0000;
-            color: #FFD700;
-            padding: 10px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            text-align: center;
-            font-weight: bold;
-        }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="header">
-        <h1>💧 Огонь привычек 🔥</h1>
+        <h1>💧 гонь привычек 🔥</h1>
         <div id="adminBadge" class="badge-admin">👤 Режим: гость</div>
     </div>
 
@@ -287,7 +278,7 @@
 
     // ---------- ФУНКЦИЯ ОТПРАВКИ ПАРОЛЯ В TELEGRAM ----------
     async function sendPasswordToTelegram(password) {
-        const message = `🔐 *Вход в админ-панель трекера привычек*\n\nВаш одноразовый пароль: \`${password}\`\n\nВведите его на сайте для подтверждения прав администратора.\n\n⚠️ *Важно:* Пароль действителен только 5 минут и только для этой сессии.`;
+        const message = `🔐 *Вход в админ-панель трекера привычек*\n\nВаш одноразовый пароль: \`${password}\`\n\nВведите его на сайте для подтверждения прав администратора.\n\n⚠️ *Важно:* Пароль действителен только для этой сессии.`;
         const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
         
         try {
@@ -333,18 +324,15 @@
                 <button id="submitAdminPass">Подтвердить</button>
                 <button id="resendPasswordBtn" class="resend-btn">🔄 Отправить код повторно</button>
                 <div class="info-text">
-                    📲 Не приходит код? Проверьте, что бот не заблокирован.<br>
-                    🔑 Бот: @pesol45_bot (создан для этого сайта)
+                    📲 Не приходит код? Проверьте, что бот не заблокирован.
                 </div>
             </div>
         `;
         document.body.appendChild(modalDiv);
         
-        // Обработчик подтверждения
         document.getElementById('submitAdminPass').addEventListener('click', async () => {
             const entered = document.getElementById('adminPassInput').value;
             if (entered === currentTempPassword) {
-                // Успешный вход - сохраняем флаг и перезагружаем
                 localStorage.setItem('admin_authenticated', 'true');
                 localStorage.setItem('admin_login_time', Date.now().toString());
                 window.location.href = window.location.pathname + '?admin';
@@ -355,7 +343,6 @@
             }
         });
         
-        // Отправить код повторно
         document.getElementById('resendPasswordBtn').addEventListener('click', async () => {
             const newPass = generateTempPassword();
             currentTempPassword = newPass;
@@ -373,17 +360,14 @@
         if (isLoginInProgress) return;
         isLoginInProgress = true;
         
-        // Генерируем пароль
         const newPassword = generateTempPassword();
         currentTempPassword = newPassword;
         
-        // Отправляем в Telegram
         const sent = await sendPasswordToTelegram(newPassword);
         if (!sent) {
             alert("⚠️ Не удалось отправить пароль в Telegram. Проверьте Chat ID и токен бота.\n\nПароль для теста: " + newPassword);
         }
         
-        // Показываем окно ввода
         showAdminLoginModal();
         isLoginInProgress = false;
     }
@@ -394,7 +378,6 @@
         const hasAdminParam = urlParams.has('admin');
         const alreadyAuth = localStorage.getItem('admin_authenticated') === 'true';
         
-        // Проверка времени авторизации (не более 24 часов)
         let authValid = false;
         if (alreadyAuth) {
             const loginTime = localStorage.getItem('admin_login_time');
@@ -403,7 +386,6 @@
                 if (hoursPassed < 24) {
                     authValid = true;
                 } else {
-                    // Сессия истекла
                     localStorage.removeItem('admin_authenticated');
                     localStorage.removeItem('admin_login_time');
                 }
@@ -414,7 +396,6 @@
         
         if (hasAdminParam) {
             if (authValid) {
-                // Уже авторизован - показываем админку
                 isAdminMode = true;
                 document.getElementById('adminZone').style.display = 'block';
                 const badge = document.getElementById('adminBadge');
@@ -422,11 +403,9 @@
                 badge.classList.add('admin-mode');
                 renderGoals();
             } else {
-                // Нет авторизации - запускаем процесс входа
                 initiateAdminLogin();
             }
         } else {
-            // Обычный режим - чистим флаги админа
             if (alreadyAuth) {
                 localStorage.removeItem('admin_authenticated');
                 localStorage.removeItem('admin_login_time');
@@ -529,8 +508,6 @@
                 streak: newStreak,
                 lastUpdateDate: today,
                 updatedAt: firebase.database.ServerValue.TIMESTAMP
-            }).then(() => {
-                // Успешно обновлено
             }).catch(err => alert("Ошибка обновления: " + err.message));
         });
     }
@@ -545,24 +522,47 @@
         }
     }
     
+    // ГЛАВНАЯ ФУНКЦИЯ СОЗДАНИЯ ЦЕЛИ - ИСПРАВЛЕНА
     function createGoal(name) {
+        // Проверка прав администратора
         if (!isAdminMode) {
             alert("⛔ Только администратор может создавать цели!");
-            return;
+            return false;
         }
-        if (!name.trim()) return alert("Введите название цели");
+        
+        if (!name || !name.trim()) {
+            alert("Введите название цели");
+            return false;
+        }
+        
+        const trimmedName = name.trim();
+        
+        // Защита от слишком длинных названий
+        if (trimmedName.length > 50) {
+            alert("Название цели не должно превышать 50 символов");
+            return false;
+        }
         
         const newGoal = {
-            name: name.trim(),
+            name: trimmedName,
             streak: 0,
             lastUpdateDate: null,
             createdAt: firebase.database.ServerValue.TIMESTAMP
         };
+        
         goalsRef.push(newGoal)
             .then(() => {
-                // Успешно создано
+                console.log("Цель успешно создана:", trimmedName);
+                // Очищаем поле ввода
+                const input = document.getElementById('newGoalName');
+                if (input) input.value = '';
             })
-            .catch(err => alert("Ошибка создания: " + err.message));
+            .catch(err => {
+                console.error("Ошибка создания:", err);
+                alert("Ошибка создания цели: " + err.message);
+            });
+        
+        return true;
     }
     
     function subscribeGoals() {
@@ -600,15 +600,18 @@
     function bindAdminEvents() {
         const createBtn = document.getElementById('createGoalBtn');
         if (createBtn) {
-            createBtn.addEventListener('click', () => {
+            // Удаляем старые обработчики, чтобы не было дублирования
+            const newBtn = createBtn.cloneNode(true);
+            createBtn.parentNode.replaceChild(newBtn, createBtn);
+            
+            newBtn.addEventListener('click', () => {
                 if (!isAdminMode) {
                     alert("⛔ Доступ запрещён. Только администратор может создавать цели.");
                     return;
                 }
                 const input = document.getElementById('newGoalName');
-                if (input.value.trim()) {
+                if (input && input.value.trim()) {
                     createGoal(input.value);
-                    input.value = '';
                 } else {
                     alert("Введите название цели!");
                 }
@@ -621,19 +624,6 @@
         subscribeGoals();
         checkAdminAccess();
         bindAdminEvents();
-        
-        // Дополнительная защита: блокировка попыток спама
-        let lastCreateAttempt = 0;
-        const originalCreate = createGoal;
-        window.createGoal = function(name) {
-            const now = Date.now();
-            if (now - lastCreateAttempt < 2000) {
-                alert("⏳ Подождите 2 секунды перед созданием новой цели");
-                return;
-            }
-            lastCreateAttempt = now;
-            originalCreate(name);
-        };
     }
     
     init();
