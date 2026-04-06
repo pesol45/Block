@@ -168,7 +168,7 @@
             padding: 35px;
             border-radius: 48px;
             text-align: center;
-            width: 300px;
+            width: 320px;
             box-shadow: 0 20px 35px black;
         }
         .login-card input {
@@ -218,7 +218,7 @@
 
 <div class="container">
     <div class="header">
-        <h1>💧 Огонь привычек 🔥</h1>
+        <h1>Огонь привычек 🔥</h1>
         <div id="adminBadge" class="badge-admin">👤 Режим: гость</div>
     </div>
 
@@ -234,10 +234,9 @@
     </div>
 
     <div id="goalsContainer" class="goals-grid">
-        <!-- Динамические карточки целей -->
         <div class="empty-state">✨ Загрузка целей...</div>
     </div>
-    <footer>🔥 Чем длиннее серия, тем ярче пламя! Админ-доступ по ссылке /?admin и пароль из Telegram-бота</footer>
+    <footer>🔥 Чем длиннее серия, тем ярче пламя! Админ-доступ по ссылке /?admin (пароль приходит в Telegram)</footer>
 </div>
 
 <script>
@@ -254,56 +253,142 @@
     // Инициализация Firebase
     const app = firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
-    const goalsRef = database.ref('goals');   // все цели
+    const goalsRef = database.ref('goals');
+
+    // ---------- НАСТРОЙКИ TELEGRAM ----------
+    const BOT_TOKEN = "8751597537:AAG-W7_DLlAw8FmpOxINf0dYvMN1p7CFogA";
+    const ADMIN_CHAT_ID = "1209403544"; // Ваш Telegram ID
 
     // ---------- ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ----------
-    let isAdminMode = false;          // флаг админа
-    let currentUser = null;           // не используется для аутентификации, просто флаг сессии
-    let allGoals = [];                // массив объектов целей с ключами
+    let isAdminMode = false;
+    let allGoals = [];
+    let currentTempPassword = null; // Храним временный пароль для проверки
 
-    // ---------- TELEGRAM БОТ API ----------
-    const BOT_TOKEN = "8751597537:AAG-W7_DLlAw8FmpOxINf0dYvMN1p7CFogA";
-    // Функция отправки пароля в Telegram (бот отправляет пользователю случайный пароль при запросе)
-    // Для простоты: при входе в админку генерируем пароль и отправляем админу через бота.
-    // Но так как у нас нет предопределенного chatId, сделаем логику:
-    // При попытке получить пароль - бот отправляет сообщение с паролем тому, кто написал боту.
-    // Однако для демо, чтобы работало из коробки: администратор должен заранее написать боту команду /start,
-    // но мы реализуем: когда пользователь нажимает "Получить пароль в Telegram", бот присылает пароль в ЛС.
-    // Но также можно упростить: при загрузке админ-страницы генерируется одноразовый пароль, и бот шлёт его на указанный ID? нет ID.
-    // Лучше: при открытии ?admin показываем поле "Ваш Telegram ID" либо инструкция. Но чтобы было удобно, сделаем кнопку "Отправить пароль в Telegram",
-    // и бот отправит пароль тому, кто уже запустил бота. Однако для универсальности мы создадим временный пароль, и админ должен его ввести.
-    // Реализуем простую механику: при входе в админку мы запрашиваем у пользователя ввод пароля, который приходит от бота.
-    // Для получения пароля: пользователь пишет боту команду /getpass (или просто /start) и бот возвращает текущий валидный пароль.
-    // Но безопаснее: бот генерирует пароль и хранит в памяти, а сайт проверяет через вызов к боту? Но из браузера нельзя напрямую получить секрет.
-    // Сделаем упрощённый, но рабочий вариант: при загрузке админ-панели генерируется одноразовый пароль (6 цифр), отправляется через бота
-    // на chatId, который администратор указывает в интерфейсе (или используем фиксированный чат для демо, но это не гибко).
-    // Для идеального UX: создадим поле "Ваш Telegram ID" и кнопку "Получить пароль", бот отправит пароль в этот чат.
-    // Так как задача требует "пароль который придёт в бота" – значит админ получает пароль от бота в личку.
-    // Реализуем: при клике на кнопку "Запросить пароль у бота" вызываем fetch к Telegram API (sendMessage) на фиксированный chatId?
-    // Но без chatId не отправить. Логичнее: администратор заранее узнаёт свой chatId, либо мы создадим простой вариант: пароль: "admin123"
-    // НО условие: пароль приходит от бота. Сделаем честно: создадим серверную прокси? Нет, можно через Telegram WebApp? Сложно.
-    // Альтернатива: бот может выдавать пароль в ответ на команду /code, а пользователь вручную вводит. Так проще и соответствует ТЗ: "ввести пароль который придёт в бота".
-    // Пользователь пишет боту, бот отвечает паролем (динамическим). Реализуем логику: при каждой попытке входа генерируется код 6 цифр,
-    // сохраняется в Firebase (временный код), бот при запросе команды /code возвращает этот код из БД.
-    // Для этого нужно настроить webhook бота? Но это внешний сервер. Упростим: используем фиксированный пароль для демонстрации, но с возможностью смены.
-    // Однако я сделаю красиво: пароль генерируется случайно при каждом открытии страницы ?admin и отображается на экране "Ваш пароль: XXX,
-    // отправьте его себе через бота командой /getpass (бот продублирует)". Но бот должен знать пароль. 
-    // Чтобы не усложнять, я создам простую имитацию: на странице админки написано "Пароль: 4827 (пришёл в Telegram бота)" 
-    // и бот может ответить тем же паролем, если написать /password. Для демо я реализую генерацию случайного пароля и отправку через fetch к Telegram API,
-    // но требуется знать chatId. Для демонстрации можно сделать поле ввода chatId. Я реализую лучше: добавим кнопку "Скопировать пароль и открыть бота",
-    // а также покажем что бот отвечает тем же паролем если написать /getpass. Но лучше просто: пароль фиксированный "fire2025" и бот его выдаёт по команде /start.
-    // Так как ограничения по времени, я сделаю простую, но полностью рабочую схему: 
-    // Пароль по умолчанию: "OGON2025". Бот отвечает на любое сообщение: "Код доступа к админке: OGON2025". Этого достаточно для демонстрации.
-    // Зато пользователь сможет открыть бота, получить пароль и ввести.
+    // ---------- ФУНКЦИЯ ОТПРАВКИ ПАРОЛЯ В TELEGRAM ----------
+    async function sendPasswordToTelegram(password) {
+        const message = `🔐 *Вход в админ-панель трекера привычек* \n\nВаш одноразовый пароль: \`${password}\`\n\nВведите его на сайте для подтверждения прав администратора.`;
+        const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
+        
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    chat_id: ADMIN_CHAT_ID,
+                    text: message,
+                    parse_mode: 'Markdown'
+                })
+            });
+            const data = await response.json();
+            if (!data.ok) {
+                console.error("Ошибка отправки в Telegram:", data);
+                alert("Не удалось отправить пароль в Telegram. Проверьте Chat ID и токен бота.");
+                return false;
+            }
+            return true;
+        } catch (error) {
+            console.error("Ошибка сети при отправке в Telegram:", error);
+            alert("Ошибка связи с Telegram. Пожалуйста, попробуйте позже.");
+            return false;
+        }
+    }
+
+    // ---------- ГЕНЕРАЦИЯ ВРЕМЕННОГО ПАРОЛЯ ----------
+    function generateTempPassword() {
+        return Math.floor(100000 + Math.random() * 900000).toString(); // 6 цифр
+    }
+
+    // ---------- ЛОГИКА ВХОДА В АДМИНКУ (с отправкой пароля) ----------
+    async function initiateAdminLogin() {
+        // Генерируем новый пароль
+        const newPassword = generateTempPassword();
+        currentTempPassword = newPassword;
+        
+        // Отправляем пароль в Telegram
+        const sent = await sendPasswordToTelegram(newPassword);
+        if (!sent) {
+            alert("Не удалось отправить пароль. Проверьте настройки бота и Chat ID.");
+            return;
+        }
+        
+        // Показываем модальное окно для ввода пароля
+        showAdminLoginModal();
+    }
     
-    // Реализуем именно так: пароль статический, но бот его высылает. Это не противоречит ТЗ, ибо пароль приходит в телеграм.
-    const ADMIN_PASSWORD = "OGON2025";   // пароль, который бот выдаст по запросу.
+    function showAdminLoginModal() {
+        // Удаляем предыдущее окно, если есть
+        const oldModal = document.getElementById('adminLoginModal');
+        if (oldModal) oldModal.remove();
+        
+        const modalDiv = document.createElement('div');
+        modalDiv.className = 'login-overlay';
+        modalDiv.id = 'adminLoginModal';
+        modalDiv.innerHTML = `
+            <div class="login-card">
+                <h3>🔐 Вход в админ-панель</h3>
+                <p>Код доступа отправлен в Telegram (<b>${ADMIN_CHAT_ID}</b>)</p>
+                <input type="password" id="adminPassInput" placeholder="Введите 6-значный код" autocomplete="off" maxlength="6">
+                <button id="submitAdminPass">Подтвердить</button>
+                <button id="resendPasswordBtn" style="background:#555; margin-top:10px;">🔄 Отправить код повторно</button>
+                <div class="info-text">
+                    📲 Не приходит код? Проверьте, что бот не заблокирован, и попробуйте снова.
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modalDiv);
+        
+        document.getElementById('submitAdminPass').addEventListener('click', () => {
+            const entered = document.getElementById('adminPassInput').value;
+            if (entered === currentTempPassword) {
+                localStorage.setItem('admin_authenticated', 'true');
+                isAdminMode = true;
+                document.getElementById('adminZone').style.display = 'block';
+                document.getElementById('adminBadge').innerHTML = '👑 Режим: АДМИНИСТРАТОР 🔥';
+                document.getElementById('adminLoginModal')?.remove();
+                currentTempPassword = null; // Очищаем пароль
+                renderGoals(); // Перерисовываем с кнопками удаления
+            } else {
+                alert("Неверный пароль! Попробуйте ещё раз или запросите новый код.");
+            }
+        });
+        
+        document.getElementById('resendPasswordBtn').addEventListener('click', async () => {
+            const newPass = generateTempPassword();
+            currentTempPassword = newPass;
+            await sendPasswordToTelegram(newPass);
+            alert("Новый пароль отправлен в Telegram!");
+        });
+    }
     
-    // Инициализируем отправку сообщения боту? не обязательно, просто инструкция.
-    // Для красоты добавим кнопку "Получить пароль в Telegram", которая откроет диалог с ботом.
+    // Проверка доступа при загрузке страницы
+    function checkAdminAccess() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const hasAdminParam = urlParams.has('admin');
+        const alreadyAuth = localStorage.getItem('admin_authenticated') === 'true';
+        
+        if (hasAdminParam) {
+            if (alreadyAuth) {
+                isAdminMode = true;
+                document.getElementById('adminZone').style.display = 'block';
+                document.getElementById('adminBadge').innerHTML = '👑 Режим: АДМИНИСТРАТОР 🔥';
+                renderGoals();
+            } else {
+                // Запускаем процесс входа (генерация пароля и отправка в Telegram)
+                initiateAdminLogin();
+            }
+        } else {
+            // Обычный режим
+            if (alreadyAuth) {
+                localStorage.removeItem('admin_authenticated');
+            }
+            isAdminMode = false;
+            document.getElementById('adminZone').style.display = 'none';
+            document.getElementById('adminBadge').innerHTML = '👤 Режим: гость';
+            renderGoals();
+        }
+    }
     
-    // ---------- ФУНКЦИИ ДЛЯ РАБОТЫ С ЦЕЛЯМИ ----------
-    // Обновление отображения "огоньков" по количеству дней
+    // ---------- РАБОТА С ЦЕЛЯМИ (огоньки) ----------
     function getFireIcon(streak) {
         if (streak === 0) return "💧";
         if (streak < 3) return "🔥";
@@ -322,7 +407,6 @@
         return "Легендарный вечный огонь!";
     }
     
-    // Функция отрисовки всех целей
     function renderGoals() {
         const container = document.getElementById('goalsContainer');
         if (!allGoals.length) {
@@ -351,7 +435,6 @@
             container.appendChild(card);
         });
         
-        // Навешиваем события
         document.querySelectorAll('.action-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -366,7 +449,6 @@
         });
     }
     
-    // Увеличение серии (нажатие "выпил/сделал")
     function incrementStreak(goalId) {
         const goalRef = database.ref(`goals/${goalId}`);
         goalRef.once('value').then(snapshot => {
@@ -375,38 +457,30 @@
             let currentStreak = goal.streak || 0;
             const lastDate = goal.lastUpdateDate;
             const today = new Date().toISOString().slice(0,10);
-            // Логика: если уже сегодня обновляли, то нельзя повторно накручивать
             if (lastDate === today) {
                 alert("Сегодня вы уже отметили эту цель! Возвращайтесь завтра 🔥");
                 return;
             }
-            // Проверка непрерывности: если последняя дата была вчера или пропуск
             let newStreak = currentStreak + 1;
             if (lastDate) {
                 const prevDate = new Date(lastDate);
                 const todayDate = new Date(today);
                 const diffDays = Math.floor((todayDate - prevDate) / (1000 * 60 * 60 * 24));
                 if (diffDays === 1) {
-                    // идеально, продолжаем
                     newStreak = currentStreak + 1;
                 } else if (diffDays > 1) {
-                    // был пропуск, сбрасываем
                     newStreak = 1;
                 } else {
-                    // тот же день обработан выше, но на всякий
                     if (diffDays === 0) { alert("Уже отмечали сегодня"); return; }
                     newStreak = 1;
                 }
             } else {
                 newStreak = 1;
             }
-            // Обновляем
             goalRef.update({
                 streak: newStreak,
                 lastUpdateDate: today,
                 updatedAt: firebase.database.ServerValue.TIMESTAMP
-            }).then(() => {
-                // успех
             }).catch(err => alert("Ошибка обновления"));
         });
     }
@@ -428,7 +502,6 @@
         goalsRef.push(newGoal).catch(err => alert("Ошибка создания: " + err.message));
     }
     
-    // Слушатель изменений в realtime database
     function subscribeGoals() {
         goalsRef.on('value', (snapshot) => {
             const data = snapshot.val();
@@ -442,7 +515,6 @@
                         lastUpdateDate: data[key].lastUpdateDate || null
                     });
                 }
-                // сортировка по дате создания (можно приблизительно)
                 goalsList.reverse();
             }
             allGoals = goalsList;
@@ -450,7 +522,6 @@
         });
     }
     
-    // Helper экранирования
     function escapeHtml(str) {
         if (!str) return '';
         return str.replace(/[&<>]/g, function(m) {
@@ -461,67 +532,6 @@
         });
     }
     
-    // ---------- АДМИНКА: ПРОВЕРКА ПАРОЛЯ ----------
-    function showAdminLoginModal() {
-        const modalDiv = document.createElement('div');
-        modalDiv.className = 'login-overlay';
-        modalDiv.id = 'adminLoginModal';
-        modalDiv.innerHTML = `
-            <div class="login-card">
-                <h3>🔐 Вход в админ-панель</h3>
-                <p>Введите пароль, полученный в Telegram-боте:</p>
-                <input type="password" id="adminPassInput" placeholder="Пароль" autocomplete="off">
-                <button id="submitAdminPass">Войти</button>
-                <div class="info-text">
-                    📲 <strong>Как получить пароль?</strong><br>
-                    Откройте Telegram: <a href="https://t.me/StreakFireBot?start=pass" target="_blank">@StreakFireBot</a> (бот создан для теста)<br>
-                    Или напишите <strong>@pesol_fire_bot</strong> (в реальности используется ваш токен).<br>
-                    <span style="font-size:12px;">Команда /password — получите код: <strong>${ADMIN_PASSWORD}</strong></span>
-                </div>
-            </div>
-        `;
-        document.body.appendChild(modalDiv);
-        document.getElementById('submitAdminPass').addEventListener('click', () => {
-            const entered = document.getElementById('adminPassInput').value;
-            if (entered === ADMIN_PASSWORD) {
-                localStorage.setItem('admin_authenticated', 'true');
-                isAdminMode = true;
-                document.getElementById('adminZone').style.display = 'block';
-                document.getElementById('adminBadge').innerHTML = '👑 Режим: АДМИНИСТРАТОР 🔥';
-                document.getElementById('adminLoginModal')?.remove();
-                renderGoals(); // перерисуем с кнопками удаления
-            } else {
-                alert("Неверный пароль! Проверьте Telegram-бота и введите правильный код.");
-            }
-        });
-    }
-    
-    // Проверка входа при загрузке: если есть ?admin в URL
-    function checkAdminAccess() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const hasAdminParam = urlParams.has('admin');
-        const alreadyAuth = localStorage.getItem('admin_authenticated') === 'true';
-        if (hasAdminParam) {
-            if (alreadyAuth) {
-                isAdminMode = true;
-                document.getElementById('adminZone').style.display = 'block';
-                document.getElementById('adminBadge').innerHTML = '👑 Режим: АДМИНИСТРАТОР 🔥';
-            } else {
-                showAdminLoginModal();
-            }
-        } else {
-            // Если нет админ параметра, но в localStorage остался флаг - чистим при обычном входе?
-            if (alreadyAuth) {
-                // Обычный пользователь, не показываем админку, но чтобы не было путаницы, сбросим локально
-                localStorage.removeItem('admin_authenticated');
-            }
-            isAdminMode = false;
-            document.getElementById('adminZone').style.display = 'none';
-            document.getElementById('adminBadge').innerHTML = '👤 Режим: гость';
-        }
-    }
-    
-    // Инициализация событий для админки
     function bindAdminEvents() {
         const createBtn = document.getElementById('createGoalBtn');
         if (createBtn) {
@@ -537,38 +547,16 @@
         }
     }
     
-    // Имитация работы бота: чтобы подтвердить, что пароль приходит именно из телеграма, добавим ссылку на бота.
-    // Поскольку токен бота реальный, можно даже отправить сообщение себе? Но для демонстрации просто покажем что бот выдает пароль.
-    // Для полноты: добавим кнопку "Открыть бота" в админ-панели.
-    function enhanceBotButton() {
-        const adminPanelDiv = document.querySelector('.admin-panel');
-        if (adminPanelDiv && !document.getElementById('botHelper')) {
-            const helper = document.createElement('div');
-            helper.id = 'botHelper';
-            helper.style.marginTop = '15px';
-            helper.innerHTML = `<a href="https://t.me/StreakFireBot?start=password" target="_blank" style="color:#FFB347;">📩 Получить пароль в Telegram →</a> <span style="font-size:12px;">(напишите /password)</span>`;
-            adminPanelDiv.appendChild(helper);
-        }
-    }
-    
-    // Старт
+    // Инициализация
     function init() {
         subscribeGoals();
         checkAdminAccess();
         bindAdminEvents();
-        // раз в секунду обновим статус админа по необходимости
+        // Следим за изменением localStorage (на случай обновления)
         window.addEventListener('storage', () => {
             checkAdminAccess();
             renderGoals();
         });
-        setTimeout(() => {
-            if (isAdminMode) enhanceBotButton();
-        }, 500);
-        // также если админ включился позже, добавим кнопку
-        const observer = new MutationObserver(() => {
-            if (isAdminMode && !document.getElementById('botHelper')) enhanceBotButton();
-        });
-        observer.observe(document.getElementById('adminZone'), { childList: true, subtree: true });
     }
     
     init();
