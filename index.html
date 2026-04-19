@@ -2,38 +2,109 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <meta name="referrer" content="no-referrer">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jack's Video Vault</title>
     <style>
         :root { --bg: #0a0a0a; --panel: #161616; --text: #eee; --accent: #dc3545; --blue: #007bff; }
-        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; }
+        body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; padding: 20px; }
         .container { max-width: 1000px; margin: 0 auto; }
-        
-        .admin-panel { background: var(--panel); padding: 25px; border-radius: 12px; border: 1px solid #333; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-        h1, h2 { margin-top: 0; color: #fff; }
-        
+        .admin-panel { background: var(--panel); padding: 25px; border-radius: 12px; border: 1px solid #333; margin-bottom: 30px; }
         .input-group { display: flex; gap: 10px; margin-bottom: 15px; }
-        input { flex-grow: 1; padding: 12px; background: #000; border: 1px solid #444; color: #fff; border-radius: 6px; outline: none; }
-        input:focus { border-color: var(--blue); }
-        
-        button { padding: 12px 24px; cursor: pointer; border: none; font-weight: bold; border-radius: 6px; transition: 0.2s; }
+        input { flex-grow: 1; padding: 12px; background: #000; border: 1px solid #444; color: #fff; border-radius: 6px; }
+        button { padding: 12px 24px; cursor: pointer; border: none; font-weight: bold; border-radius: 6px; }
         .btn-find { background: var(--blue); color: #fff; }
-        .btn-find:hover { background: #0056b3; }
-        
-        .preview-box { display: none; margin-top: 20px; padding-top: 20px; border-top: 1px solid #333; text-align: center; }
-        .preview-box video { max-width: 100%; max-height: 400px; border-radius: 8px; border: 1px solid #444; }
-        .btn-add { background: #28a745; color: #fff; margin-top: 15px; width: 100%; font-size: 16px; }
-        .btn-add:hover { background: #218838; }
-
+        .preview-box { display: none; margin-top: 20px; text-align: center; border-top: 1px solid #333; padding-top: 20px; }
+        .preview-box video { max-width: 100%; max-height: 400px; border-radius: 8px; }
+        .btn-add { background: #28a745; color: #fff; margin-top: 15px; width: 100%; }
         .video-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
-        .card { background: var(--panel); border-radius: 10px; border: 1px solid #333; overflow: hidden; position: relative; transition: transform 0.2s; }
-        .card:hover { transform: translateY(-5px); }
-        .card video { width: 100%; display: block; background: #000; }
-        .card-info { padding: 10px; font-size: 11px; color: #777; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        
-        .del-btn { position: absolute; top: 8px; right: 8px; background: rgba(220, 53, 69, 0.8); color: white; border-radius: 4px; padding: 4px 8px; font-size: 12px; z-index: 10; }
-        .del-btn:hover { background: rgba(220, 53, 69, 1); }
+        .card { background: var(--panel); border-radius: 10px; border: 1px solid #333; overflow: hidden; position: relative; }
+        .card video { width: 100%; display: block; background: #000; min-height: 150px; }
+        .del-btn { position: absolute; top: 8px; right: 8px; background: rgba(220, 53, 69, 0.8); color: white; border-radius: 4px; padding: 4px 8px; z-index: 10; }
+    </style>
+</head>
+<body>
 
+<div class="container">
+    <div class="admin-panel">
+        <h1>Панель управления</h1>
+        <div class="input-group">
+            <input type="text" id="targetUrl" placeholder="Вставь ссылку на страницу...">
+            <button class="btn-find" onclick="parseSite()">Найти</button>
+        </div>
+        <div id="previewBox" class="preview-box">
+            <video id="previewVid" controls playsinline></video>
+            <button class="btn-add" onclick="confirmAdd()">Добавить в коллекцию</button>
+        </div>
+    </div>
+    <div id="grid" class="video-grid"></div>
+</div>
+
+<script>
+    let library = JSON.parse(localStorage.getItem('jack_vault') || '[]');
+    let currentFoundUrl = "";
+
+    async function parseSite() {
+        const url = document.getElementById('targetUrl').value.trim();
+        if (!url) return;
+        
+        document.querySelector('.btn-find').innerText = "Парсим...";
+
+        try {
+            // Используем другой прокси на всякий случай
+            const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+            const response = await fetch(proxyUrl);
+            const data = await response.json();
+            const html = data.contents;
+            
+            // Ищем mp4. Сначала в тегах source, потом просто в тексте
+            let mp4 = "";
+            const regExp = /(https?:\/\/[^"']+\.mp4[^"']*)/i;
+            const match = html.match(regExp);
+            
+            if (match) {
+                mp4 = match[0].replace(/&amp;/g, '&');
+                currentFoundUrl = mp4;
+                const vid = document.getElementById('previewVid');
+                vid.src = mp4;
+                document.getElementById('previewBox').style.display = 'block';
+            } else {
+                alert("Видео не найдено. Возможно, оно защищено или ссылка в JS.");
+            }
+        } catch (e) {
+            alert("Ошибка прокси: " + e.message);
+        } finally {
+            document.querySelector('.btn-find').innerText = "Найти";
+        }
+    }
+
+    function confirmAdd() {
+        if (!currentFoundUrl || library.includes(currentFoundUrl)) return;
+        library.push(currentFoundUrl);
+        localStorage.setItem('jack_vault', JSON.stringify(library));
+        render();
+    }
+
+    function removeVideo(i) {
+        library.splice(i, 1);
+        localStorage.setItem('jack_vault', JSON.stringify(library));
+        render();
+    }
+
+    function render() {
+        const grid = document.getElementById('grid');
+        grid.innerHTML = library.map((url, i) => `
+            <div class="card">
+                <button class="del-btn" onclick="removeVideo(${i})">X</button>
+                <video src="${url}" controls playsinline preload="metadata"></video>
+            </div>
+        `).join('');
+    }
+
+    render();
+</script>
+</body>
+</html>
         .loader { display: none; color: var(--blue); margin-bottom: 10px; font-weight: bold; }
     </style>
 </head>
