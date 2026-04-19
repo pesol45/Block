@@ -2,38 +2,157 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Jack's Video Grabber</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jack's Video Vault</title>
     <style>
-        body { background: #0a0a0a; color: #eee; font-family: sans-serif; padding: 20px; }
-        .panel { background: #161616; padding: 20px; border: 1px solid #333; border-radius: 10px; margin-bottom: 20px; }
-        input { width: 70%; padding: 12px; background: #000; border: 1px solid #444; color: #fff; }
-        button { padding: 12px 20px; cursor: pointer; border: none; font-weight: bold; border-radius: 5px; }
-        .btn-find { background: #007bff; color: #fff; }
-        .btn-add { background: #28a745; color: #fff; margin-top: 10px; display: none; }
-        .preview-box { margin-top: 20px; text-align: center; border-top: 1px solid #333; padding-top: 20px; display: none; }
+        :root { --bg: #0a0a0a; --panel: #161616; --text: #eee; --accent: #dc3545; --blue: #007bff; }
+        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        
+        .admin-panel { background: var(--panel); padding: 25px; border-radius: 12px; border: 1px solid #333; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        h1, h2 { margin-top: 0; color: #fff; }
+        
+        .input-group { display: flex; gap: 10px; margin-bottom: 15px; }
+        input { flex-grow: 1; padding: 12px; background: #000; border: 1px solid #444; color: #fff; border-radius: 6px; outline: none; }
+        input:focus { border-color: var(--blue); }
+        
+        button { padding: 12px 24px; cursor: pointer; border: none; font-weight: bold; border-radius: 6px; transition: 0.2s; }
+        .btn-find { background: var(--blue); color: #fff; }
+        .btn-find:hover { background: #0056b3; }
+        
+        .preview-box { display: none; margin-top: 20px; padding-top: 20px; border-top: 1px solid #333; text-align: center; }
+        .preview-box video { max-width: 100%; max-height: 400px; border-radius: 8px; border: 1px solid #444; }
+        .btn-add { background: #28a745; color: #fff; margin-top: 15px; width: 100%; font-size: 16px; }
+        .btn-add:hover { background: #218838; }
+
         .video-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
-        .card { background: #161616; padding: 10px; border: 1px solid #333; border-radius: 8px; position: relative; }
-        video { width: 100%; border-radius: 5px; }
-        .del { position: absolute; top: 5px; right: 5px; background: #dc3545; color: #fff; border-radius: 3px; cursor: pointer; }
-        h2 { color: #555; }
+        .card { background: var(--panel); border-radius: 10px; border: 1px solid #333; overflow: hidden; position: relative; transition: transform 0.2s; }
+        .card:hover { transform: translateY(-5px); }
+        .card video { width: 100%; display: block; background: #000; }
+        .card-info { padding: 10px; font-size: 11px; color: #777; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        
+        .del-btn { position: absolute; top: 8px; right: 8px; background: rgba(220, 53, 69, 0.8); color: white; border-radius: 4px; padding: 4px 8px; font-size: 12px; z-index: 10; }
+        .del-btn:hover { background: rgba(220, 53, 69, 1); }
+
+        .loader { display: none; color: var(--blue); margin-bottom: 10px; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<div class="panel">
-    <h2>Админка: Парсинг по ссылке</h2>
-    <input type="text" id="targetUrl" placeholder="Вставь ссылку на страницу с видео (например, с sex-studentki)">
-    <button class="btn-find" onclick="parseSite()">Найти видео</button>
-    
-    <div id="previewBox" class="preview-box">
-        <p>Нашел вот это. Добавляем?</p>
-        <video id="previewVid" controls muted style="max-height: 300px;"></video>
-        <br>
-        <button id="addBtn" class="btn-add" onclick="confirmAdd()">Да, добавить в коллекцию</button>
+<div class="container">
+    <div class="admin-panel">
+        <h1>Панель управления</h1>
+        <div class="input-group">
+            <input type="text" id="targetUrl" placeholder="Вставь ссылку на страницу с видео...">
+            <button class="btn-find" onclick="parseSite()">Найти</button>
+        </div>
+        <div id="loader" class="loader">Парсим сайт, подожди...</div>
+        
+        <div id="previewBox" class="preview-box">
+            <h2 style="font-size: 18px;">Предпросмотр:</h2>
+            <video id="previewVid" controls muted></video>
+            <button class="btn-add" onclick="confirmAdd()">Добавить в мою коллекцию</button>
+        </div>
     </div>
+
+    <h2>Моя библиотека</h2>
+    <div id="grid" class="video-grid"></div>
 </div>
 
-<h2>Моя коллекция</h2>
+<script>
+    // Инициализация данных из локального хранилища браузера
+    let library = JSON.parse(localStorage.getItem('jack_vault') || '[]');
+    let currentFoundUrl = "";
+
+    async function parseSite() {
+        const urlInput = document.getElementById('targetUrl');
+        const url = urlInput.value.trim();
+        const btn = document.querySelector('.btn-find');
+        const loader = document.getElementById('loader');
+        const box = document.getElementById('previewBox');
+        
+        if (!url) return;
+        
+        box.style.display = 'none';
+        loader.style.display = 'block';
+        btn.disabled = true;
+
+        try {
+            // Используем прокси Codetabs для обхода CORS
+            const proxyUrl = `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`;
+            const response = await fetch(proxyUrl);
+            
+            if (!response.ok) throw new Error("Прокси не отвечает или сайт заблокирован");
+            
+            const html = await response.text();
+            
+            // Ищем прямую ссылку на mp4 файл в атрибутах src, source или просто в тексте скриптов
+            const mp4Match = html.match(/(https?:\/\/[^"']+\.mp4[^"']*)/i);
+            
+            if (mp4Match && mp4Match[0]) {
+                currentFoundUrl = mp4Match[0].replace(/&amp;/g, '&'); // Фиксим амперсанды
+                showPreview(currentFoundUrl);
+            } else {
+                alert("Не удалось найти видео на этой странице. Попробуй другую.");
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Ошибка загрузки: " + e.message);
+        } finally {
+            loader.style.display = 'none';
+            btn.disabled = false;
+        }
+    }
+
+    function showPreview(url) {
+        const box = document.getElementById('previewBox');
+        const vid = document.getElementById('previewVid');
+        vid.src = url;
+        box.style.display = 'block';
+    }
+
+    function confirmAdd() {
+        if (!currentFoundUrl) return;
+        // Проверка на дубликаты
+        if (!library.includes(currentFoundUrl)) {
+            library.push(currentFoundUrl);
+            localStorage.setItem('jack_vault', JSON.stringify(library));
+        }
+        document.getElementById('previewBox').style.display = 'none';
+        document.getElementById('targetUrl').value = '';
+        render();
+    }
+
+    function removeVideo(index) {
+        if (confirm("Удалить это видео?")) {
+            library.splice(index, 1);
+            localStorage.setItem('jack_vault', JSON.stringify(library));
+            render();
+        }
+    }
+
+    function render() {
+        const grid = document.getElementById('grid');
+        if (library.length === 0) {
+            grid.innerHTML = '<p style="color: #555;">Тут пока пусто. Добавь что-нибудь через панель выше.</p>';
+            return;
+        }
+        
+        grid.innerHTML = library.map((url, i) => `
+            <div class="card">
+                <button class="del-btn" onclick="removeVideo(${i})">Удалить</button>
+                <video src="${url}" preload="metadata" onmouseover="this.play()" onmouseout="this.pause()" loop muted></video>
+                <div class="card-info" title="${url}">${url}</div>
+            </div>
+        `).join('');
+    }
+
+    // Отрисовка при загрузке страницы
+    render();
+</script>
+
+</body>
+</html>
 <div id="grid" class="video-grid"></div>
 
 <script>
