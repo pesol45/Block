@@ -21,7 +21,7 @@
             color: #e0e0e0;
         }
         .container {
-            max-width: 1400px;
+            max-width: 1500px;
             margin: 0 auto;
         }
         .header {
@@ -49,11 +49,115 @@
             color: #FFD700;
             box-shadow: 0 0 10px rgba(255, 140, 0, 0.5);
         }
+        /* ФИЛЬТРЫ */
+        .filters-panel {
+            background: rgba(20, 30, 45, 0.95);
+            border-radius: 28px;
+            padding: 20px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(255, 100, 0, 0.3);
+        }
+        .filters-title {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: #ffaa66;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+        .filter-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: flex-end;
+        }
+        .filter-group {
+            flex: 1;
+            min-width: 120px;
+        }
+        .filter-group label {
+            display: block;
+            font-size: 0.7rem;
+            margin-bottom: 5px;
+            color: #aaa;
+        }
+        .filter-group input, .filter-group select {
+            width: 100%;
+            padding: 8px 12px;
+            border-radius: 30px;
+            border: none;
+            background: #1e2a36;
+            color: white;
+            font-size: 0.85rem;
+        }
+        .filter-checkboxes {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+        .filter-checkboxes label {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.75rem;
+            color: #ddd;
+            cursor: pointer;
+        }
+        .clear-filters {
+            background: #8b2c2c;
+            padding: 8px 16px;
+            border-radius: 30px;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        .compare-bar {
+            background: rgba(0,0,0,0.6);
+            border-radius: 60px;
+            padding: 12px 20px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .compare-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .compare-btn {
+            background: #3a7ca5;
+            padding: 6px 12px;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            border: none;
+            color: white;
+        }
+        .compare-btn.selected {
+            background: #ff7b2c;
+            box-shadow: 0 0 5px orange;
+        }
+        .compare-view-btn {
+            background: #00aa55;
+            padding: 8px 20px;
+            border-radius: 40px;
+            border: none;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
         .cars-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
             gap: 24px;
-            margin-top: 20px;
+            margin-top: 10px;
         }
         .car-card {
             background: rgba(20, 30, 45, 0.9);
@@ -63,10 +167,20 @@
             box-shadow: 0 10px 25px rgba(0,0,0,0.5);
             border: 1px solid rgba(255, 100, 0, 0.3);
             transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
         }
         .car-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 20px 30px rgba(0,0,0,0.6);
+        }
+        .compare-checkbox {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            z-index: 10;
         }
         .car-img {
             width: 100%;
@@ -78,7 +192,7 @@
             border: 1px solid #ff8c42;
         }
         .car-name {
-            font-size: 1.8rem;
+            font-size: 1.6rem;
             font-weight: bold;
             display: flex;
             justify-content: space-between;
@@ -87,12 +201,24 @@
             padding-bottom: 8px;
             margin-bottom: 15px;
         }
+        .car-plate {
+            display: inline-block;
+            background: #1a1a2a;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-family: monospace;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            border: 1px solid #ffaa44;
+            color: #ffaa44;
+            margin-top: 5px;
+        }
         .specs {
             background: #00000055;
             border-radius: 20px;
             padding: 12px;
             margin: 10px 0;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
         .spec-item {
             display: flex;
@@ -106,7 +232,7 @@
         .price {
             color: #ffaa33;
             font-weight: bold;
-            font-size: 1.1rem;
+            font-size: 1rem;
         }
         .nitro-badge {
             display: inline-block;
@@ -115,19 +241,19 @@
             font-weight: bold;
             padding: 2px 8px;
             border-radius: 20px;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             margin-left: 8px;
         }
         .nitro-x2 { color: #44ff44; background: #1a3a1a; }
         .nitro-x5 { color: #ffaa44; background: #3a2a1a; }
-        .nitro-x10 { color: #ff4444; background: #3a1a1a; font-weight: bold; text-shadow: 0 0 3px red; }
+        .nitro-x10 { color: #ff4444; background: #3a1a1a; }
         .tune-tag {
             display: inline-block;
             background: #2c5a7a;
             color: white;
             padding: 2px 8px;
             border-radius: 20px;
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             margin: 2px;
         }
         .action-buttons {
@@ -135,35 +261,16 @@
             gap: 10px;
             margin-top: 15px;
         }
-        .edit-btn {
-            background: #3a7ca5;
-            border: none;
-            color: white;
-            font-weight: bold;
-            font-size: 0.9rem;
+        .edit-btn, .delete-btn {
+            flex: 1;
             padding: 10px;
             border-radius: 40px;
-            flex: 1;
-            cursor: pointer;
-            transition: 0.2s;
-            box-shadow: 0 3px 0 #1a4a6a;
-        }
-        .delete-btn {
-            background: #8b2c2c;
             border: none;
-            color: white;
             font-weight: bold;
-            font-size: 0.9rem;
-            padding: 10px;
-            border-radius: 40px;
-            flex: 1;
             cursor: pointer;
-            transition: 0.2s;
-            box-shadow: 0 3px 0 #4a1a1a;
         }
-        .edit-btn:active, .delete-btn:active {
-            transform: translateY(2px);
-        }
+        .edit-btn { background: #3a7ca5; color: white; }
+        .delete-btn { background: #8b2c2c; color: white; }
         .admin-panel {
             background: #10161fe6;
             border-radius: 32px;
@@ -180,61 +287,38 @@
             display: flex;
             gap: 12px;
             flex-wrap: wrap;
-            align-items: flex-start;
         }
         .form-group {
             flex: 1;
-            min-width: 150px;
+            min-width: 140px;
         }
         .form-group label {
-            display: block;
-            font-size: 0.75rem;
-            margin-bottom: 4px;
+            font-size: 0.7rem;
             color: #ffaa66;
+            display: block;
+            margin-bottom: 4px;
         }
         .admin-form input, .admin-form select, .admin-form textarea {
             width: 100%;
-            padding: 10px 15px;
-            border-radius: 40px;
+            padding: 8px 12px;
+            border-radius: 30px;
             border: none;
             background: #1e2a36;
             color: white;
-            font-size: 0.9rem;
-        }
-        .admin-form textarea {
-            border-radius: 20px;
-            resize: vertical;
-        }
-        .admin-form button {
-            background: #ff7b2c;
-            padding: 12px 24px;
-            border-radius: 40px;
-            border: none;
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
-            font-size: 1rem;
         }
         .checkbox-group {
             display: flex;
             flex-wrap: wrap;
             gap: 12px;
             background: #1e2a36;
-            padding: 10px 15px;
+            padding: 8px 12px;
             border-radius: 40px;
         }
         .checkbox-group label {
             display: flex;
             align-items: center;
             gap: 5px;
-            font-size: 0.85rem;
-            color: #ffaa66;
-            cursor: pointer;
-        }
-        .checkbox-group input {
-            width: 18px;
-            height: 18px;
-            cursor: pointer;
+            font-size: 0.8rem;
         }
         .empty-state {
             text-align: center;
@@ -246,11 +330,6 @@
             text-align: center;
             font-size: 0.7rem;
             opacity: 0.6;
-        }
-        .tunes-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
         }
         .modal-overlay {
             position: fixed;
@@ -274,23 +353,32 @@
             max-height: 80vh;
             overflow-y: auto;
         }
-        .modal-content h3 {
-            margin-bottom: 20px;
+        .compare-modal {
+            max-width: 90vw;
+            width: auto;
+            min-width: 320px;
+        }
+        .compare-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .compare-table th, .compare-table td {
+            padding: 10px;
+            border-bottom: 1px solid #ff8c4233;
+            text-align: left;
+            vertical-align: top;
+        }
+        .compare-table th {
             color: #ffaa66;
         }
-        .modal-content button {
-            background: #ff7b2c;
+        .close-btn {
+            background: #555;
             padding: 10px 20px;
             border-radius: 40px;
+            margin-top: 15px;
+            cursor: pointer;
             border: none;
             color: white;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 15px;
-            margin-right: 10px;
-        }
-        .modal-content .cancel-btn {
-            background: #555;
         }
     </style>
 </head>
@@ -301,43 +389,23 @@
         <div id="adminBadge" class="badge">👤 Режим: гость</div>
     </div>
 
+    <!-- Админ-панель -->
     <div id="adminZone" style="display: none;">
         <div class="admin-panel">
-            <h3>🔧 Админ-панель: добавить машину</h3>
+            <h3>🔧 Админ-панель</h3>
             <div class="admin-form">
                 <div class="form-row">
-                    <div class="form-group" style="flex:2;">
-                        <label>🏎️ Название машины</label>
-                        <input type="text" id="carName" placeholder="Например: Brabus 800, BMW M5, Mercedes AMG">
-                    </div>
-                    <div class="form-group">
-                        <label>📷 Ссылка на фото</label>
-                        <input type="text" id="carImage" placeholder="URL фото">
-                    </div>
+                    <div class="form-group" style="flex:2;"><input type="text" id="carName" placeholder="Название"></div>
+                    <div class="form-group"><input type="text" id="carImage" placeholder="URL фото"></div>
                 </div>
-                
                 <div class="form-row">
-                    <div class="form-group">
-                        <label>💰 Гос. цена</label>
-                        <input type="number" id="price" placeholder="Например: 1500000" step="1000">
-                    </div>
-                    <div class="form-group">
-                        <label>⚡ Разгон 0-100 (без нитро)</label>
-                        <input type="number" id="accelerationNoNitro" placeholder="сек" step="0.1">
-                    </div>
-                    <div class="form-group">
-                        <label>🚀 Разгон 0-100 (с нитро)</label>
-                        <input type="number" id="accelerationWithNitro" placeholder="сек" step="0.1">
-                    </div>
+                    <div class="form-group"><input type="number" id="price" placeholder="Цена"></div>
+                    <div class="form-group"><input type="number" id="accelerationNoNitro" placeholder="Разгон без нитро" step="0.1"></div>
+                    <div class="form-group"><input type="number" id="accelerationWithNitro" placeholder="Разгон с нитро" step="0.1"></div>
                 </div>
-
                 <div class="form-row">
+                    <div class="form-group"><input type="number" id="topSpeed" placeholder="Максималка"></div>
                     <div class="form-group">
-                        <label>📈 Максимальная скорость</label>
-                        <input type="number" id="topSpeed" placeholder="км/ч">
-                    </div>
-                    <div class="form-group">
-                        <label>💨 Нитро-буст</label>
                         <select id="nitroType">
                             <option value="none">❌ Без нитро</option>
                             <option value="x2">🔥 x2</option>
@@ -345,11 +413,22 @@
                             <option value="x10">⚡ x10</option>
                         </select>
                     </div>
+                    <div class="form-group">
+                        <select id="plateCountry">
+                            <option value="none">🇺🇳 Без номера</option>
+                            <option value="ua">🇺🇦 Украина</option>
+                            <option value="by">🇧🇾 Беларусь</option>
+                            <option value="ru">🇷🇺 Россия</option>
+                            <option value="kz">🇰🇿 Казахстан</option>
+                        </select>
+                    </div>
                 </div>
-
+                <div class="form-row">
+                    <div class="form-group"><input type="text" id="plateNumber" placeholder="Гос номер (например: А123ВС)"></div>
+                </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label>🔧 Прошивки ЭБУ (можно несколько)</label>
+                        <label>Прошивки</label>
                         <div class="checkbox-group">
                             <label><input type="checkbox" value="Спорт"> 🏁 Спорт</label>
                             <label><input type="checkbox" value="Спорт+"> 🔥 Спорт+</label>
@@ -358,27 +437,45 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="form-row">
-                    <div class="form-group" style="flex:2;">
-                        <label>📝 Дополнительные характеристики</label>
-                        <textarea id="otherSpecs" rows="2" placeholder="Двигатель, привод и т.д."></textarea>
-                    </div>
+                    <div class="form-group"><textarea id="otherSpecs" rows="2" placeholder="Доп. характеристики"></textarea></div>
                 </div>
-                
-                <button id="createCarBtn">➕ Добавить машину в автопарк</button>
+                <button id="createCarBtn">➕ Добавить машину</button>
             </div>
-            <div class="info-text">✅ Админ может добавлять, редактировать и удалять машины. Игроки только смотрят.</div>
         </div>
+    </div>
+
+    <!-- ФИЛЬТРЫ -->
+    <div class="filters-panel">
+        <div class="filters-title">
+            <span>🔍 Фильтры</span>
+            <button class="clear-filters" id="clearFilters">Сбросить все</button>
+        </div>
+        <div class="filter-row">
+            <div class="filter-group"><label>💰 Цена от</label><input type="number" id="filterPriceMin" placeholder="0"></div>
+            <div class="filter-group"><label>💰 Цена до</label><input type="number" id="filterPriceMax" placeholder="9999999"></div>
+            <div class="filter-group"><label>⚡ Разгон до</label><input type="number" id="filterAccelMax" placeholder="сек" step="0.1"></div>
+            <div class="filter-group"><label>🇺🇳 Страна номера</label><select id="filterCountry"><option value="all">Все</option><option value="ua">🇺🇦 Украина</option><option value="by">🇧🇾 Беларусь</option><option value="ru">🇷🇺 Россия</option><option value="kz">🇰🇿 Казахстан</option><option value="none">Без номера</option></select></div>
+        </div>
+        <div class="filter-row" style="margin-top:10px">
+            <div class="filter-group"><label>💨 Нитро</label><select id="filterNitro"><option value="all">Все</option><option value="none">Без нитро</option><option value="x2">x2</option><option value="x5">x5</option><option value="x10">x10</option></select></div>
+            <div class="filter-group"><label>🔧 Прошивки</label><select id="filterTune"><option value="all">Все</option><option value="Спорт">Спорт</option><option value="Спорт+">Спорт+</option><option value="Комфорт">Комфорт</option><option value="Дрифт">Дрифт</option></select></div>
+        </div>
+    </div>
+
+    <!-- Панель сравнения -->
+    <div class="compare-bar" id="compareBar" style="display: none;">
+        <div class="compare-buttons" id="compareButtons"></div>
+        <button class="compare-view-btn" id="compareViewBtn">⚖️ Сравнить выбранные</button>
     </div>
 
     <div id="carsContainer" class="cars-grid">
         <div class="empty-state">🏎️ Загрузка автопарка...</div>
     </div>
+    <footer>🔐 Админ: ?key=14881161 | Выбирай машины для сравнения ⚖️</footer>
 </div>
 
 <script>
-    // ---------- FIREBASE КОНФИГ ----------
     const firebaseConfig = {
         apiKey: "AIzaSyCaWv0A5OCgdAgUFn9lMzQ_tVaga0scpQA",
         authDomain: "site-5378a.firebaseapp.com",
@@ -387,302 +484,204 @@
         messagingSenderId: "1080576728275",
         appId: "1:1080576728275:web:efdb524baf64d8bd9ac826"
     };
-
-    let database;
-    let carsRef;
-    
+    let database, carsRef;
     try {
         const app = firebase.initializeApp(firebaseConfig);
         database = firebase.database();
         carsRef = database.ref('cars');
-        console.log("✅ Firebase подключен");
-    } catch (e) {
-        console.error("❌ Firebase ошибка:", e);
-    }
+    } catch(e) { console.error(e); }
 
     const ADMIN_KEY = "14881161";
     let isAdminMode = false;
     let allCars = [];
+    let selectedForCompare = new Set();
 
-    function formatPrice(price) {
-        if (!price) return '?';
-        return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " ₽";
+    // Форматирование
+    function formatPrice(p) { return p ? p.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " ₽" : "?"; }
+    function getCountryFlag(code) {
+        const flags = { ua: "🇺🇦", by: "🇧🇾", ru: "🇷🇺", kz: "🇰🇿" };
+        return flags[code] || "🇺🇳";
     }
+    function getNitroClass(t) { return t === 'x2' ? 'nitro-x2' : t === 'x5' ? 'nitro-x5' : t === 'x10' ? 'nitro-x10' : ''; }
+    function getNitroText(t) { return t === 'x2' ? '🔥 x2' : t === 'x5' ? '💥 x5' : t === 'x10' ? '⚡ x10' : '❌ Нет'; }
 
-    function showMessage(text, type = "error") {
-        const toast = document.createElement('div');
-        toast.style.cssText = `
-            position: fixed; bottom: 20px; right: 20px; background: ${type === 'success' ? '#00aa55' : '#ff4444'};
-            color: white; padding: 12px 20px; border-radius: 40px; font-size: 0.85rem;
-            z-index: 999; box-shadow: 0 4px 15px rgba(0,0,0,0.3); max-width: 350px;
-        `;
-        toast.textContent = text;
-        document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 4000);
+    function showMessage(t, type="error") {
+        const d = document.createElement('div');
+        d.style.cssText = `position:fixed;bottom:20px;right:20px;background:${type==='success'?'#00aa55':'#ff4444'};color:white;padding:10px 20px;border-radius:40px;z-index:999`;
+        d.textContent = t;
+        document.body.appendChild(d);
+        setTimeout(()=>d.remove(),3000);
     }
 
     function checkAdminAccess() {
         const urlParams = new URLSearchParams(window.location.search);
-        const key = urlParams.get('key');
-        if (key === ADMIN_KEY) {
+        if (urlParams.get('key') === ADMIN_KEY) {
             isAdminMode = true;
             document.getElementById('adminZone').style.display = 'block';
-            document.getElementById('adminBadge').innerHTML = '👑 АДМИН АВТОПАРКА 🏁';
+            document.getElementById('adminBadge').innerHTML = '👑 АДМИН';
             document.getElementById('adminBadge').classList.add('admin-mode');
         } else {
             isAdminMode = false;
-            document.getElementById('adminBadge').innerHTML = '👤 Режим: гость (только просмотр)';
-            document.getElementById('adminBadge').classList.remove('admin-mode');
             document.getElementById('adminZone').style.display = 'none';
+            document.getElementById('adminBadge').innerHTML = '👤 Гость';
         }
-        renderCars();
+        renderFilteredCars();
     }
 
-    function getNitroClass(type) {
-        if (type === 'x2') return 'nitro-x2';
-        if (type === 'x5') return 'nitro-x5';
-        if (type === 'x10') return 'nitro-x10';
-        return '';
-    }
-
-    function getNitroText(type) {
-        if (type === 'x2') return '🔥 x2';
-        if (type === 'x5') return '💥 x5';
-        if (type === 'x10') return '⚡ x10';
-        return '❌ Нет';
-    }
-
-    // Функция редактирования
-    function editCar(carId, carData) {
-        const tunesSet = new Set(carData.tunes || []);
-        
-        const modal = document.createElement('div');
-        modal.className = 'modal-overlay';
-        modal.innerHTML = `
-            <div class="modal-content">
-                <h3>✏️ Редактировать машину</h3>
-                <div class="admin-form">
-                    <input type="text" id="editCarName" value="${escapeHtml(carData.name)}" placeholder="Название">
-                    <input type="text" id="editCarImage" value="${escapeHtml(carData.imageUrl || '')}" placeholder="Ссылка на фото">
-                    <input type="number" id="editPrice" value="${carData.price || ''}" placeholder="Цена">
-                    <input type="number" id="editAccelerationNoNitro" value="${carData.accelerationNoNitro || ''}" step="0.1" placeholder="Разгон без нитро">
-                    <input type="number" id="editAccelerationWithNitro" value="${carData.accelerationWithNitro || ''}" step="0.1" placeholder="Разгон с нитро">
-                    <input type="number" id="editTopSpeed" value="${carData.topSpeed || ''}" placeholder="Максималка">
-                    <select id="editNitroType">
-                        <option value="none" ${carData.nitroType === 'none' ? 'selected' : ''}>❌ Без нитро</option>
-                        <option value="x2" ${carData.nitroType === 'x2' ? 'selected' : ''}>🔥 x2</option>
-                        <option value="x5" ${carData.nitroType === 'x5' ? 'selected' : ''}>💥 x5</option>
-                        <option value="x10" ${carData.nitroType === 'x10' ? 'selected' : ''}>⚡ x10</option>
-                    </select>
-                    <div class="checkbox-group">
-                        <label><input type="checkbox" value="Спорт" ${tunesSet.has('Спорт') ? 'checked' : ''}> 🏁 Спорт</label>
-                        <label><input type="checkbox" value="Спорт+" ${tunesSet.has('Спорт+') ? 'checked' : ''}> 🔥 Спорт+</label>
-                        <label><input type="checkbox" value="Комфорт" ${tunesSet.has('Комфорт') ? 'checked' : ''}> ☁️ Комфорт</label>
-                        <label><input type="checkbox" value="Дрифт" ${tunesSet.has('Дрифт') ? 'checked' : ''}> 💨 Дрифт</label>
-                    </div>
-                    <textarea id="editOtherSpecs" rows="2" placeholder="Доп. характеристики">${escapeHtml(carData.otherSpecs || '')}</textarea>
-                </div>
-                <div style="display: flex; gap: 10px; margin-top: 20px;">
-                    <button id="saveEditBtn">💾 Сохранить</button>
-                    <button id="cancelEditBtn" class="cancel-btn">❌ Отмена</button>
-                </div>
-            </div>
-        `;
-        document.body.appendChild(modal);
-        
-        document.getElementById('cancelEditBtn').addEventListener('click', () => modal.remove());
-        document.getElementById('saveEditBtn').addEventListener('click', () => {
-            const newTunes = [];
-            document.querySelectorAll('#editCarName ~ .checkbox-group input:checked').forEach(cb => {
-                newTunes.push(cb.value);
-            });
-            
-            const updatedCar = {
-                name: document.getElementById('editCarName').value.trim(),
-                imageUrl: document.getElementById('editCarImage').value.trim(),
-                price: parseInt(document.getElementById('editPrice').value) || null,
-                accelerationNoNitro: parseFloat(document.getElementById('editAccelerationNoNitro').value) || null,
-                accelerationWithNitro: parseFloat(document.getElementById('editAccelerationWithNitro').value) || null,
-                topSpeed: parseInt(document.getElementById('editTopSpeed').value) || null,
-                nitroType: document.getElementById('editNitroType').value,
-                tunes: newTunes,
-                otherSpecs: document.getElementById('editOtherSpecs').value.trim(),
-                updatedAt: firebase.database.ServerValue.TIMESTAMP
-            };
-            
-            if (!updatedCar.name) {
-                showMessage("❌ Введите название машины");
-                return;
+    // Фильтрация
+    function getFilteredCars() {
+        const priceMin = parseFloat(document.getElementById('filterPriceMin').value) || 0;
+        const priceMax = parseFloat(document.getElementById('filterPriceMax').value) || Infinity;
+        const accelMax = parseFloat(document.getElementById('filterAccelMax').value) || Infinity;
+        const country = document.getElementById('filterCountry').value;
+        const nitro = document.getElementById('filterNitro').value;
+        const tune = document.getElementById('filterTune').value;
+        return allCars.filter(c => {
+            if (c.price && (c.price < priceMin || c.price > priceMax)) return false;
+            const accel = c.accelerationNoNitro || 999;
+            if (accel > accelMax) return false;
+            if (country !== 'all') {
+                const carCountry = c.plateCountry || 'none';
+                if (country === 'none' && carCountry !== 'none') return false;
+                if (country !== 'none' && carCountry !== country) return false;
             }
-            
-            carsRef.child(carId).update(updatedCar)
-                .then(() => {
-                    showMessage(`✅ "${updatedCar.name}" обновлён!`, "success");
-                    modal.remove();
-                })
-                .catch(err => showMessage("❌ Ошибка: " + err.message));
+            if (nitro !== 'all' && (c.nitroType || 'none') !== nitro) return false;
+            if (tune !== 'all' && (!c.tunes || !c.tunes.includes(tune))) return false;
+            return true;
         });
     }
 
-    function renderCars() {
+    function renderFilteredCars() {
+        const filtered = getFilteredCars();
+        renderCars(filtered);
+    }
+
+    function renderCars(carsList) {
         const container = document.getElementById('carsContainer');
-        if (!container) return;
-        
-        if (!allCars.length) {
-            container.innerHTML = '<div class="empty-state">🏎️ Автопарк пуст. Админ может добавить тачки!</div>';
-            return;
-        }
-        
+        if (!carsList.length) { container.innerHTML = '<div class="empty-state">🏎️ Нет машин по фильтрам</div>'; return; }
         container.innerHTML = '';
-        allCars.forEach(car => {
-            const nitroClass = getNitroClass(car.nitroType);
-            
-            let tunesHtml = '';
-            if (car.tunes && car.tunes.length > 0) {
-                tunesHtml = `
-                    <div class="spec-item">
-                        <strong>🔧 Прошивки:</strong>
-                        <div class="tunes-list">
-                            ${car.tunes.map(t => `<span class="tune-tag">${escapeHtml(t)}</span>`).join('')}
-                        </div>
-                    </div>
-                `;
-            }
-            
+        carsList.forEach(car => {
+            const tuneHtml = car.tunes?.length ? `<div class="spec-item"><strong>🔧 Прошивки:</strong><div>${car.tunes.map(t=>`<span class="tune-tag">${escapeHtml(t)}</span>`).join('')}</div></div>` : '';
+            const plateHtml = (car.plateCountry && car.plateNumber && car.plateCountry !== 'none') ? 
+                `<div class="car-plate">${getCountryFlag(car.plateCountry)} ${escapeHtml(car.plateNumber)}</div>` : '';
             const card = document.createElement('div');
             card.className = 'car-card';
-            card.innerHTML = `
-                <img class="car-img" src="${escapeHtml(car.imageUrl || 'https://via.placeholder.com/400x200?text=No+Image')}" 
-                     onerror="this.src='https://via.placeholder.com/400x200?text=Фото+не+загружено'">
-                <div class="car-name">
-                    <span>${escapeHtml(car.name)}</span>
-                    ${car.nitroType !== 'none' ? `<span class="nitro-badge ${nitroClass}">${getNitroText(car.nitroType)}</span>` : ''}
-                </div>
+            if (isAdminMode) {
+                const cb = document.createElement('input');
+                cb.type = 'checkbox';
+                cb.className = 'compare-checkbox';
+                cb.checked = selectedForCompare.has(car.id);
+                cb.onchange = (e) => { if(e.target.checked) selectedForCompare.add(car.id); else selectedForCompare.delete(car.id); updateCompareBar(); };
+                card.appendChild(cb);
+            }
+            card.innerHTML += `
+                <img class="car-img" src="${escapeHtml(car.imageUrl || 'https://via.placeholder.com/400x200?text=No+Image')}" onerror="this.src='https://via.placeholder.com/400x200?text=Error'">
+                <div class="car-name"><span>${escapeHtml(car.name)}</span>${car.nitroType !== 'none' ? `<span class="nitro-badge ${getNitroClass(car.nitroType)}">${getNitroText(car.nitroType)}</span>` : ''}</div>
+                ${plateHtml}
                 <div class="specs">
-                    <div class="spec-item">
-                        <strong>💰 Гос. цена:</strong>
-                        <span class="price">${formatPrice(car.price)}</span>
-                    </div>
-                    <div class="spec-item">
-                        <strong>🏎️ Разгон 0-100:</strong>
-                        <span>без нитро: ${car.accelerationNoNitro ?? '?'} сек | с нитро: ${car.accelerationWithNitro ?? '?'} сек</span>
-                    </div>
-                    <div class="spec-item">
-                        <strong>📈 Максимальная скорость:</strong>
-                        <span>${car.topSpeed ?? '?'} км/ч</span>
-                    </div>
-                    ${car.nitroType !== 'none' ? `<div class="spec-item">
-                        <strong>💨 Нитро-буст:</strong>
-                        <span class="${nitroClass}">${getNitroText(car.nitroType)}</span>
-                    </div>` : ''}
-                    ${tunesHtml}
-                    ${car.otherSpecs ? `<div class="spec-item">
-                        <strong>🔧 Характеристики:</strong><br>${escapeHtml(car.otherSpecs)}
-                    </div>` : ''}
+                    <div class="spec-item"><strong>💰 Цена:</strong><span class="price">${formatPrice(car.price)}</span></div>
+                    <div class="spec-item"><strong>🏎️ Разгон 0-100:</strong><span>без нитро: ${car.accelerationNoNitro ?? '?'} сек | с нитро: ${car.accelerationWithNitro ?? '?'} сек</span></div>
+                    <div class="spec-item"><strong>📈 Максималка:</strong><span>${car.topSpeed ?? '?'} км/ч</span></div>
+                    ${car.nitroType !== 'none' ? `<div class="spec-item"><strong>💨 Нитро:</strong><span class="${getNitroClass(car.nitroType)}">${getNitroText(car.nitroType)}</span></div>` : ''}
+                    ${tuneHtml}
+                    ${car.otherSpecs ? `<div class="spec-item"><strong>📝 Характеристики:</strong><br>${escapeHtml(car.otherSpecs)}</div>` : ''}
                 </div>
-                ${isAdminMode ? `
-                    <div class="action-buttons">
-                        <button class="edit-btn" data-id="${car.id}">✏️ Редактировать</button>
-                        <button class="delete-btn" data-id="${car.id}">🗑 Удалить</button>
-                    </div>
-                ` : ''}
+                ${isAdminMode ? `<div class="action-buttons"><button class="edit-btn" data-id="${car.id}">✏️ Ред.</button><button class="delete-btn" data-id="${car.id}">🗑 Удал.</button></div>` : ''}
             `;
             container.appendChild(card);
         });
-        
         if (isAdminMode) {
-            document.querySelectorAll('.edit-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const id = btn.getAttribute('data-id');
-                    const car = allCars.find(c => c.id === id);
-                    if (car) editCar(id, car);
-                });
-            });
-            document.querySelectorAll('.delete-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const id = btn.getAttribute('data-id');
-                    if (confirm('Удалить машину навсегда?')) {
-                        carsRef.child(id).remove()
-                            .then(() => showMessage("✅ Машина удалена", "success"))
-                            .catch(err => showMessage("❌ Ошибка: " + err.message));
-                    }
-                });
-            });
+            document.querySelectorAll('.edit-btn').forEach(btn => btn.addEventListener('click', e => { const id = btn.getAttribute('data-id'); const car = allCars.find(c=>c.id===id); if(car) editCar(id,car); }));
+            document.querySelectorAll('.delete-btn').forEach(btn => btn.addEventListener('click', e => { const id = btn.getAttribute('data-id'); if(confirm('Удалить?')) carsRef.child(id).remove(); }));
+        }
+        updateCompareBar();
+    }
+
+    function updateCompareBar() {
+        const bar = document.getElementById('compareBar');
+        const container = document.getElementById('compareButtons');
+        if(!isAdminMode || selectedForCompare.size === 0) { bar.style.display = 'none'; return; }
+        bar.style.display = 'flex';
+        container.innerHTML = '';
+        let idx=1;
+        for(let id of selectedForCompare) {
+            const car = allCars.find(c=>c.id===id);
+            if(car) {
+                const btn = document.createElement('button');
+                btn.className = 'compare-btn';
+                btn.textContent = `${idx}. ${car.name.substring(0,20)} ✖`;
+                btn.onclick = () => { selectedForCompare.delete(id); updateCompareBar(); renderFilteredCars(); };
+                container.appendChild(btn);
+                idx++;
+            } else { selectedForCompare.delete(id); }
         }
     }
 
-    function createCar() {
-        if (!isAdminMode) { alert("Только админ!"); return; }
-        if (!carsRef) { showMessage("❌ База не подключена"); return; }
-        
-        const name = document.getElementById('carName').value.trim();
-        if (!name) { showMessage("❌ Введите название машины"); return; }
-        
-        const tunes = [];
-        document.querySelectorAll('.checkbox-group input:checked').forEach(cb => {
-            tunes.push(cb.value);
+    function compareSelected() {
+        const ids = Array.from(selectedForCompare);
+        const carsCompare = ids.map(id=>allCars.find(c=>c.id===id)).filter(c=>c);
+        if(carsCompare.length < 2) { showMessage("Выбери минимум 2 машины"); return; }
+        let html = `<table class="compare-table"><tr><th>Характеристика</th>${carsCompare.map(c=>`<th>${escapeHtml(c.name)}</th>`).join('')}</tr>`;
+        const attrs = [
+            {name:"💰 Цена", val:c=>formatPrice(c.price)},
+            {name:"⚡ Разгон 0-100 (без нитро)", val:c=>c.accelerationNoNitro??'?'},
+            {name:"🚀 Разгон 0-100 (с нитро)", val:c=>c.accelerationWithNitro??'?'},
+            {name:"📈 Максималка", val:c=>c.topSpeed??'?'},
+            {name:"💨 Нитро", val:c=>getNitroText(c.nitroType)},
+            {name:"🔧 Прошивки", val:c=>c.tunes?.join(', ')||'Нет'},
+            {name:"Гос номер", val:c=>c.plateNumber?`${getCountryFlag(c.plateCountry)} ${c.plateNumber}`:'Нет'}
+        ];
+        attrs.forEach(attr => {
+            html += `<tr><td>${attr.name}</td>${carsCompare.map(c=>`<td>${attr.val(c)}</td>`).join('')}</tr>`;
         });
-        
-        const newCar = {
-            name: name,
-            imageUrl: document.getElementById('carImage').value.trim(),
-            price: parseInt(document.getElementById('price').value) || null,
-            accelerationNoNitro: parseFloat(document.getElementById('accelerationNoNitro').value) || null,
-            accelerationWithNitro: parseFloat(document.getElementById('accelerationWithNitro').value) || null,
-            topSpeed: parseInt(document.getElementById('topSpeed').value) || null,
-            nitroType: document.getElementById('nitroType').value,
-            tunes: tunes,
-            otherSpecs: document.getElementById('otherSpecs').value.trim(),
-            createdAt: firebase.database.ServerValue.TIMESTAMP
+        html += `</table><button class="close-btn" id="closeCompareModal">Закрыть</button>`;
+        const modal = document.createElement('div'); modal.className = 'modal-overlay';
+        modal.innerHTML = `<div class="modal-content compare-modal">${html}</div>`;
+        document.body.appendChild(modal);
+        document.getElementById('closeCompareModal').onclick = () => modal.remove();
+    }
+
+    function editCar(id, data) {
+        const tunesSet = new Set(data.tunes||[]);
+        const modalDiv = document.createElement('div'); modalDiv.className = 'modal-overlay';
+        modalDiv.innerHTML = `<div class="modal-content"><h3>✏️ Редакт</h3>
+            <div class="admin-form"><input id="editName" value="${escapeHtml(data.name)}" placeholder="Название"><input id="editImg" value="${escapeHtml(data.imageUrl||'')}" placeholder="Фото URL">
+            <input id="editPrice" type="number" value="${data.price||''}" placeholder="Цена"><input id="editAccNo" type="number" step="0.1" value="${data.accelerationNoNitro||''}" placeholder="Разгон без нитро">
+            <input id="editAccWith" type="number" step="0.1" value="${data.accelerationWithNitro||''}" placeholder="Разгон с нитро"><input id="editTop" type="number" value="${data.topSpeed||''}" placeholder="Максималка">
+            <select id="editNitro"><option value="none">Без нитро</option><option value="x2" ${data.nitroType==='x2'?'selected':''}>x2</option><option value="x5" ${data.nitroType==='x5'?'selected':''}>x5</option><option value="x10" ${data.nitroType==='x10'?'selected':''}>x10</option></select>
+            <select id="editCountry"><option value="none">Без номера</option><option value="ua" ${data.plateCountry==='ua'?'selected':''}>🇺🇦 Украина</option><option value="by" ${data.plateCountry==='by'?'selected':''}>🇧🇾 Беларусь</option><option value="ru" ${data.plateCountry==='ru'?'selected':''}>🇷🇺 Россия</option><option value="kz" ${data.plateCountry==='kz'?'selected':''}>🇰🇿 Казахстан</option></select>
+            <input id="editPlate" value="${escapeHtml(data.plateNumber||'')}" placeholder="Гос номер">
+            <div class="checkbox-group"><label><input type="checkbox" value="Спорт" ${tunesSet.has('Спорт')?'checked':''}> Спорт</label><label><input type="checkbox" value="Спорт+" ${tunesSet.has('Спорт+')?'checked':''}> Спорт+</label><label><input type="checkbox" value="Комфорт" ${tunesSet.has('Комфорт')?'checked':''}> Комфорт</label><label><input type="checkbox" value="Дрифт" ${tunesSet.has('Дрифт')?'checked':''}> Дрифт</label></div>
+            <textarea id="editOther">${escapeHtml(data.otherSpecs||'')}</textarea>
+            <button id="saveEdit">💾 Сохранить</button><button id="cancelEdit" class="close-btn">Отмена</button></div></div>`;
+        document.body.appendChild(modalDiv);
+        document.getElementById('saveEdit').onclick = () => {
+            const newTunes = Array.from(document.querySelectorAll('#editName ~ .checkbox-group input:checked')).map(cb=>cb.value);
+            const updated = { name: document.getElementById('editName').value.trim(), imageUrl: document.getElementById('editImg').value.trim(), price: parseInt(document.getElementById('editPrice').value)||null, accelerationNoNitro: parseFloat(document.getElementById('editAccNo').value)||null, accelerationWithNitro: parseFloat(document.getElementById('editAccWith').value)||null, topSpeed: parseInt(document.getElementById('editTop').value)||null, nitroType: document.getElementById('editNitro').value, plateCountry: document.getElementById('editCountry').value, plateNumber: document.getElementById('editPlate').value.trim(), tunes: newTunes, otherSpecs: document.getElementById('editOther').value.trim() };
+            if(!updated.name) { showMessage("Введите название"); return; }
+            carsRef.child(id).update(updated).then(()=>{ showMessage("✅ Обновлено","success"); modalDiv.remove(); }).catch(e=>showMessage(e.message));
         };
-        
-        carsRef.push(newCar)
-            .then(() => {
-                showMessage(`✅ "${name}" добавлен!`, "success");
-                document.getElementById('carName').value = '';
-                document.getElementById('carImage').value = '';
-                document.getElementById('price').value = '';
-                document.getElementById('accelerationNoNitro').value = '';
-                document.getElementById('accelerationWithNitro').value = '';
-                document.getElementById('topSpeed').value = '';
-                document.getElementById('nitroType').value = 'none';
-                document.querySelectorAll('.checkbox-group input').forEach(cb => cb.checked = false);
-                document.getElementById('otherSpecs').value = '';
-            })
-            .catch(err => showMessage("❌ Ошибка: " + err.message));
+        document.getElementById('cancelEdit').onclick = () => modalDiv.remove();
     }
 
-    function subscribeCars() {
-        if (!carsRef) return;
-        carsRef.on('value', (snapshot) => {
-            const data = snapshot.val();
-            const list = [];
-            if (data) {
-                for (let key in data) {
-                    let car = { id: key, ...data[key] };
-                    if (!car.tunes) car.tunes = [];
-                    list.push(car);
-                }
-                list.reverse();
-            }
-            allCars = list;
-            renderCars();
-        });
+    function createCar() {
+        if(!isAdminMode) return;
+        const tunes = Array.from(document.querySelectorAll('#adminZone .checkbox-group input:checked')).map(cb=>cb.value);
+        const newCar = { name: document.getElementById('carName').value.trim(), imageUrl: document.getElementById('carImage').value.trim(), price: parseInt(document.getElementById('price').value)||null, accelerationNoNitro: parseFloat(document.getElementById('accelerationNoNitro').value)||null, accelerationWithNitro: parseFloat(document.getElementById('accelerationWithNitro').value)||null, topSpeed: parseInt(document.getElementById('topSpeed').value)||null, nitroType: document.getElementById('nitroType').value, plateCountry: document.getElementById('plateCountry').value, plateNumber: document.getElementById('plateNumber').value.trim(), tunes, otherSpecs: document.getElementById('otherSpecs').value.trim(), createdAt: firebase.database.ServerValue.TIMESTAMP };
+        if(!newCar.name) { showMessage("Введите название"); return; }
+        carsRef.push(newCar).then(() => { showMessage("✅ Добавлено","success"); document.getElementById('carName').value=''; document.getElementById('carImage').value=''; document.getElementById('price').value=''; document.getElementById('accelerationNoNitro').value=''; document.getElementById('accelerationWithNitro').value=''; document.getElementById('topSpeed').value=''; document.getElementById('plateNumber').value=''; document.querySelectorAll('#adminZone .checkbox-group input').forEach(cb=>cb.checked=false); document.getElementById('otherSpecs').value=''; });
     }
 
-    function escapeHtml(str) {
-        if (!str) return '';
-        return String(str).replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
-    }
+    function subscribeCars() { if(carsRef) carsRef.on('value', snap => { const d=snap.val(); const list=[]; for(let k in d) list.push({id:k, ...d[k], tunes: d[k].tunes||[]}); list.reverse(); allCars=list; renderFilteredCars(); }); }
 
-    function init() {
-        checkAdminAccess();
-        subscribeCars();
-        const btn = document.getElementById('createCarBtn');
-        if (btn) btn.addEventListener('click', createCar);
-    }
-    
-    init();
+    function escapeHtml(s) { if(!s) return ''; return String(s).replace(/[&<>]/g, m=>m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'); }
+
+    document.getElementById('clearFilters')?.addEventListener('click',()=>{ document.getElementById('filterPriceMin').value=''; document.getElementById('filterPriceMax').value=''; document.getElementById('filterAccelMax').value=''; document.getElementById('filterCountry').value='all'; document.getElementById('filterNitro').value='all'; document.getElementById('filterTune').value='all'; renderFilteredCars(); });
+    ['filterPriceMin','filterPriceMax','filterAccelMax','filterCountry','filterNitro','filterTune'].forEach(id=>document.getElementById(id)?.addEventListener('input',()=>renderFilteredCars()));
+    document.getElementById('compareViewBtn')?.addEventListener('click', compareSelected);
+    document.getElementById('createCarBtn')?.addEventListener('click', createCar);
+    subscribeCars();
+    checkAdminAccess();
 </script>
 </body>
 </html>
