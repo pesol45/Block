@@ -98,14 +98,6 @@
             gap: 10px;
             align-items: center;
         }
-        .filter-checkboxes label {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            font-size: 0.75rem;
-            color: #ddd;
-            cursor: pointer;
-        }
         .clear-filters {
             background: #8b2c2c;
             padding: 8px 16px;
@@ -115,6 +107,7 @@
             cursor: pointer;
             font-size: 0.8rem;
         }
+        /* Панель сравнения для ВСЕХ */
         .compare-bar {
             background: rgba(0,0,0,0.6);
             border-radius: 60px;
@@ -173,6 +166,7 @@
             transform: translateY(-5px);
             box-shadow: 0 20px 30px rgba(0,0,0,0.6);
         }
+        /* Чекбокс для сравнения - для ВСЕХ */
         .compare-checkbox {
             position: absolute;
             top: 15px;
@@ -380,6 +374,10 @@
             border: none;
             color: white;
         }
+        .compare-header {
+            background: #ff7b2c;
+            color: black;
+        }
     </style>
 </head>
 <body>
@@ -389,7 +387,7 @@
         <div id="adminBadge" class="badge">👤 Режим: гость</div>
     </div>
 
-    <!-- Админ-панель -->
+    <!-- Админ-панель (только для админа) -->
     <div id="adminZone" style="display: none;">
         <div class="admin-panel">
             <h3>🔧 Админ-панель</h3>
@@ -445,7 +443,7 @@
         </div>
     </div>
 
-    <!-- ФИЛЬТРЫ -->
+    <!-- ФИЛЬТРЫ (для всех) -->
     <div class="filters-panel">
         <div class="filters-title">
             <span>🔍 Фильтры</span>
@@ -463,7 +461,7 @@
         </div>
     </div>
 
-    <!-- Панель сравнения -->
+    <!-- Панель сравнения (для ВСЕХ) -->
     <div class="compare-bar" id="compareBar" style="display: none;">
         <div class="compare-buttons" id="compareButtons"></div>
         <button class="compare-view-btn" id="compareViewBtn">⚖️ Сравнить выбранные</button>
@@ -472,7 +470,7 @@
     <div id="carsContainer" class="cars-grid">
         <div class="empty-state">🏎️ Загрузка автопарка...</div>
     </div>
-    <footer>🔐 Админ: ?key=14881161 | Выбирай машины для сравнения ⚖️</footer>
+    <footer>🔐 Админ: ?key=14881161 | Выбирай машины для сравнения (до 3) ⚖️</footer>
 </div>
 
 <script>
@@ -489,18 +487,18 @@
         const app = firebase.initializeApp(firebaseConfig);
         database = firebase.database();
         carsRef = database.ref('cars');
+        console.log("✅ Firebase подключен");
     } catch(e) { console.error(e); }
 
     const ADMIN_KEY = "14881161";
     let isAdminMode = false;
     let allCars = [];
-    let selectedForCompare = new Set();
+    let selectedForCompare = new Set(); // для ВСЕХ пользователей
 
-    // Форматирование
     function formatPrice(p) { return p ? p.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " ₽" : "?"; }
     function getCountryFlag(code) {
         const flags = { ua: "🇺🇦", by: "🇧🇾", ru: "🇷🇺", kz: "🇰🇿" };
-        return flags[code] || "🇺🇳";
+        return flags[code] || "🌍";
     }
     function getNitroClass(t) { return t === 'x2' ? 'nitro-x2' : t === 'x5' ? 'nitro-x5' : t === 'x10' ? 'nitro-x10' : ''; }
     function getNitroText(t) { return t === 'x2' ? '🔥 x2' : t === 'x5' ? '💥 x5' : t === 'x10' ? '⚡ x10' : '❌ Нет'; }
@@ -528,7 +526,6 @@
         renderFilteredCars();
     }
 
-    // Фильтрация
     function getFilteredCars() {
         const priceMin = parseFloat(document.getElementById('filterPriceMin').value) || 0;
         const priceMax = parseFloat(document.getElementById('filterPriceMax').value) || Infinity;
@@ -564,16 +561,31 @@
             const tuneHtml = car.tunes?.length ? `<div class="spec-item"><strong>🔧 Прошивки:</strong><div>${car.tunes.map(t=>`<span class="tune-tag">${escapeHtml(t)}</span>`).join('')}</div></div>` : '';
             const plateHtml = (car.plateCountry && car.plateNumber && car.plateCountry !== 'none') ? 
                 `<div class="car-plate">${getCountryFlag(car.plateCountry)} ${escapeHtml(car.plateNumber)}</div>` : '';
+            
             const card = document.createElement('div');
             card.className = 'car-card';
-            if (isAdminMode) {
-                const cb = document.createElement('input');
-                cb.type = 'checkbox';
-                cb.className = 'compare-checkbox';
-                cb.checked = selectedForCompare.has(car.id);
-                cb.onchange = (e) => { if(e.target.checked) selectedForCompare.add(car.id); else selectedForCompare.delete(car.id); updateCompareBar(); };
-                card.appendChild(cb);
-            }
+            
+            // Чекбокс для сравнения — для ВСЕХ пользователей!
+            const cb = document.createElement('input');
+            cb.type = 'checkbox';
+            cb.className = 'compare-checkbox';
+            cb.checked = selectedForCompare.has(car.id);
+            cb.onchange = (e) => { 
+                if(e.target.checked) {
+                    if(selectedForCompare.size >= 3) {
+                        showMessage("⚠️ Можно сравнить не больше 3 машин за раз");
+                        e.target.checked = false;
+                        return;
+                    }
+                    selectedForCompare.add(car.id);
+                } else { 
+                    selectedForCompare.delete(car.id); 
+                }
+                updateCompareBar();
+                renderFilteredCars(); // перерисовка для обновления чекбоксов
+            };
+            card.appendChild(cb);
+            
             card.innerHTML += `
                 <img class="car-img" src="${escapeHtml(car.imageUrl || 'https://via.placeholder.com/400x200?text=No+Image')}" onerror="this.src='https://via.placeholder.com/400x200?text=Error'">
                 <div class="car-name"><span>${escapeHtml(car.name)}</span>${car.nitroType !== 'none' ? `<span class="nitro-badge ${getNitroClass(car.nitroType)}">${getNitroText(car.nitroType)}</span>` : ''}</div>
@@ -590,6 +602,7 @@
             `;
             container.appendChild(card);
         });
+        
         if (isAdminMode) {
             document.querySelectorAll('.edit-btn').forEach(btn => btn.addEventListener('click', e => { const id = btn.getAttribute('data-id'); const car = allCars.find(c=>c.id===id); if(car) editCar(id,car); }));
             document.querySelectorAll('.delete-btn').forEach(btn => btn.addEventListener('click', e => { const id = btn.getAttribute('data-id'); if(confirm('Удалить?')) carsRef.child(id).remove(); }));
@@ -600,10 +613,10 @@
     function updateCompareBar() {
         const bar = document.getElementById('compareBar');
         const container = document.getElementById('compareButtons');
-        if(!isAdminMode || selectedForCompare.size === 0) { bar.style.display = 'none'; return; }
+        if(selectedForCompare.size === 0) { bar.style.display = 'none'; return; }
         bar.style.display = 'flex';
         container.innerHTML = '';
-        let idx=1;
+        let idx = 1;
         for(let id of selectedForCompare) {
             const car = allCars.find(c=>c.id===id);
             if(car) {
@@ -620,23 +633,34 @@
     function compareSelected() {
         const ids = Array.from(selectedForCompare);
         const carsCompare = ids.map(id=>allCars.find(c=>c.id===id)).filter(c=>c);
-        if(carsCompare.length < 2) { showMessage("Выбери минимум 2 машины"); return; }
-        let html = `<table class="compare-table"><tr><th>Характеристика</th>${carsCompare.map(c=>`<th>${escapeHtml(c.name)}</th>`).join('')}</tr>`;
+        if(carsCompare.length < 2) { showMessage("⚠️ Выбери минимум 2 машины для сравнения"); return; }
+        
+        let html = `<table class="compare-table">
+            <tr class="compare-header"><th>📊 Характеристика</th>${carsCompare.map(c=>`<th>${escapeHtml(c.name)}</th>`).join('')}</tr>`;
+        
         const attrs = [
             {name:"💰 Цена", val:c=>formatPrice(c.price)},
-            {name:"⚡ Разгон 0-100 (без нитро)", val:c=>c.accelerationNoNitro??'?'},
-            {name:"🚀 Разгон 0-100 (с нитро)", val:c=>c.accelerationWithNitro??'?'},
-            {name:"📈 Максималка", val:c=>c.topSpeed??'?'},
-            {name:"💨 Нитро", val:c=>getNitroText(c.nitroType)},
-            {name:"🔧 Прошивки", val:c=>c.tunes?.join(', ')||'Нет'},
-            {name:"Гос номер", val:c=>c.plateNumber?`${getCountryFlag(c.plateCountry)} ${c.plateNumber}`:'Нет'}
+            {name:"⚡ Разгон 0-100 (без нитро)", val:c=>c.accelerationNoNitro ? c.accelerationNoNitro + ' сек' : '?'},
+            {name:"🚀 Разгон 0-100 (с нитро)", val:c=>c.accelerationWithNitro ? c.accelerationWithNitro + ' сек' : '?'},
+            {name:"📈 Максимальная скорость", val:c=>c.topSpeed ? c.topSpeed + ' км/ч' : '?'},
+            {name:"💨 Нитро-буст", val:c=>getNitroText(c.nitroType)},
+            {name:"🔧 Прошивки ЭБУ", val:c=>c.tunes?.length ? c.tunes.join(', ') : '❌ Нет'},
+            {name:"🏷️ Гос. номер", val:c=>c.plateNumber ? `${getCountryFlag(c.plateCountry)} ${c.plateNumber}` : '❌ Нет'},
+            {name:"📝 Доп. характеристики", val:c=>c.otherSpecs || '—'}
         ];
+        
         attrs.forEach(attr => {
-            html += `<tr><td>${attr.name}</td>${carsCompare.map(c=>`<td>${attr.val(c)}</td>`).join('')}</tr>`;
+            html += `<tr>
+                <td style="background:#1a2a3a; font-weight:bold;">${attr.name}</td>
+                ${carsCompare.map(c => `<td>${attr.val(c)}</td>`).join('')}
+            </tr>`;
         });
-        html += `</table><button class="close-btn" id="closeCompareModal">Закрыть</button>`;
-        const modal = document.createElement('div'); modal.className = 'modal-overlay';
-        modal.innerHTML = `<div class="modal-content compare-modal">${html}</div>`;
+        
+        html += `</table><button class="close-btn" id="closeCompareModal">✖️ Закрыть</button>`;
+        
+        const modal = document.createElement('div'); 
+        modal.className = 'modal-overlay';
+        modal.innerHTML = `<div class="modal-content compare-modal"><h3 style="margin-bottom:15px;">⚖️ Сравнение машин</h3>${html}</div>`;
         document.body.appendChild(modal);
         document.getElementById('closeCompareModal').onclick = () => modal.remove();
     }
@@ -644,22 +668,56 @@
     function editCar(id, data) {
         const tunesSet = new Set(data.tunes||[]);
         const modalDiv = document.createElement('div'); modalDiv.className = 'modal-overlay';
-        modalDiv.innerHTML = `<div class="modal-content"><h3>✏️ Редакт</h3>
-            <div class="admin-form"><input id="editName" value="${escapeHtml(data.name)}" placeholder="Название"><input id="editImg" value="${escapeHtml(data.imageUrl||'')}" placeholder="Фото URL">
-            <input id="editPrice" type="number" value="${data.price||''}" placeholder="Цена"><input id="editAccNo" type="number" step="0.1" value="${data.accelerationNoNitro||''}" placeholder="Разгон без нитро">
-            <input id="editAccWith" type="number" step="0.1" value="${data.accelerationWithNitro||''}" placeholder="Разгон с нитро"><input id="editTop" type="number" value="${data.topSpeed||''}" placeholder="Максималка">
-            <select id="editNitro"><option value="none">Без нитро</option><option value="x2" ${data.nitroType==='x2'?'selected':''}>x2</option><option value="x5" ${data.nitroType==='x5'?'selected':''}>x5</option><option value="x10" ${data.nitroType==='x10'?'selected':''}>x10</option></select>
-            <select id="editCountry"><option value="none">Без номера</option><option value="ua" ${data.plateCountry==='ua'?'selected':''}>🇺🇦 Украина</option><option value="by" ${data.plateCountry==='by'?'selected':''}>🇧🇾 Беларусь</option><option value="ru" ${data.plateCountry==='ru'?'selected':''}>🇷🇺 Россия</option><option value="kz" ${data.plateCountry==='kz'?'selected':''}>🇰🇿 Казахстан</option></select>
-            <input id="editPlate" value="${escapeHtml(data.plateNumber||'')}" placeholder="Гос номер">
-            <div class="checkbox-group"><label><input type="checkbox" value="Спорт" ${tunesSet.has('Спорт')?'checked':''}> Спорт</label><label><input type="checkbox" value="Спорт+" ${tunesSet.has('Спорт+')?'checked':''}> Спорт+</label><label><input type="checkbox" value="Комфорт" ${tunesSet.has('Комфорт')?'checked':''}> Комфорт</label><label><input type="checkbox" value="Дрифт" ${tunesSet.has('Дрифт')?'checked':''}> Дрифт</label></div>
-            <textarea id="editOther">${escapeHtml(data.otherSpecs||'')}</textarea>
-            <button id="saveEdit">💾 Сохранить</button><button id="cancelEdit" class="close-btn">Отмена</button></div></div>`;
+        modalDiv.innerHTML = `<div class="modal-content"><h3>✏️ Редактировать</h3>
+            <div class="admin-form">
+                <input id="editName" value="${escapeHtml(data.name)}" placeholder="Название">
+                <input id="editImg" value="${escapeHtml(data.imageUrl||'')}" placeholder="Фото URL">
+                <input id="editPrice" type="number" value="${data.price||''}" placeholder="Цена">
+                <input id="editAccNo" type="number" step="0.1" value="${data.accelerationNoNitro||''}" placeholder="Разгон без нитро">
+                <input id="editAccWith" type="number" step="0.1" value="${data.accelerationWithNitro||''}" placeholder="Разгон с нитро">
+                <input id="editTop" type="number" value="${data.topSpeed||''}" placeholder="Максималка">
+                <select id="editNitro">
+                    <option value="none" ${data.nitroType==='none'?'selected':''}>❌ Без нитро</option>
+                    <option value="x2" ${data.nitroType==='x2'?'selected':''}>🔥 x2</option>
+                    <option value="x5" ${data.nitroType==='x5'?'selected':''}>💥 x5</option>
+                    <option value="x10" ${data.nitroType==='x10'?'selected':''}>⚡ x10</option>
+                </select>
+                <select id="editCountry">
+                    <option value="none" ${data.plateCountry==='none'||!data.plateCountry?'selected':''}>🌍 Без номера</option>
+                    <option value="ua" ${data.plateCountry==='ua'?'selected':''}>🇺🇦 Украина</option>
+                    <option value="by" ${data.plateCountry==='by'?'selected':''}>🇧🇾 Беларусь</option>
+                    <option value="ru" ${data.plateCountry==='ru'?'selected':''}>🇷🇺 Россия</option>
+                    <option value="kz" ${data.plateCountry==='kz'?'selected':''}>🇰🇿 Казахстан</option>
+                </select>
+                <input id="editPlate" value="${escapeHtml(data.plateNumber||'')}" placeholder="Гос номер">
+                <div class="checkbox-group">
+                    <label><input type="checkbox" value="Спорт" ${tunesSet.has('Спорт')?'checked':''}> 🏁 Спорт</label>
+                    <label><input type="checkbox" value="Спорт+" ${tunesSet.has('Спорт+')?'checked':''}> 🔥 Спорт+</label>
+                    <label><input type="checkbox" value="Комфорт" ${tunesSet.has('Комфорт')?'checked':''}> ☁️ Комфорт</label>
+                    <label><input type="checkbox" value="Дрифт" ${tunesSet.has('Дрифт')?'checked':''}> 💨 Дрифт</label>
+                </div>
+                <textarea id="editOther" rows="2" placeholder="Доп. характеристики">${escapeHtml(data.otherSpecs||'')}</textarea>
+                <button id="saveEdit">💾 Сохранить</button>
+                <button id="cancelEdit" class="close-btn">Отмена</button>
+            </div></div>`;
         document.body.appendChild(modalDiv);
         document.getElementById('saveEdit').onclick = () => {
             const newTunes = Array.from(document.querySelectorAll('#editName ~ .checkbox-group input:checked')).map(cb=>cb.value);
-            const updated = { name: document.getElementById('editName').value.trim(), imageUrl: document.getElementById('editImg').value.trim(), price: parseInt(document.getElementById('editPrice').value)||null, accelerationNoNitro: parseFloat(document.getElementById('editAccNo').value)||null, accelerationWithNitro: parseFloat(document.getElementById('editAccWith').value)||null, topSpeed: parseInt(document.getElementById('editTop').value)||null, nitroType: document.getElementById('editNitro').value, plateCountry: document.getElementById('editCountry').value, plateNumber: document.getElementById('editPlate').value.trim(), tunes: newTunes, otherSpecs: document.getElementById('editOther').value.trim() };
-            if(!updated.name) { showMessage("Введите название"); return; }
-            carsRef.child(id).update(updated).then(()=>{ showMessage("✅ Обновлено","success"); modalDiv.remove(); }).catch(e=>showMessage(e.message));
+            const updated = { 
+                name: document.getElementById('editName').value.trim(), 
+                imageUrl: document.getElementById('editImg').value.trim(), 
+                price: parseInt(document.getElementById('editPrice').value)||null, 
+                accelerationNoNitro: parseFloat(document.getElementById('editAccNo').value)||null, 
+                accelerationWithNitro: parseFloat(document.getElementById('editAccWith').value)||null, 
+                topSpeed: parseInt(document.getElementById('editTop').value)||null, 
+                nitroType: document.getElementById('editNitro').value, 
+                plateCountry: document.getElementById('editCountry').value, 
+                plateNumber: document.getElementById('editPlate').value.trim(), 
+                tunes: newTunes, 
+                otherSpecs: document.getElementById('editOther').value.trim() 
+            };
+            if(!updated.name) { showMessage("❌ Введите название"); return; }
+            carsRef.child(id).update(updated).then(()=>{ showMessage("✅ Обновлено","success"); modalDiv.remove(); renderFilteredCars(); }).catch(e=>showMessage(e.message));
         };
         document.getElementById('cancelEdit').onclick = () => modalDiv.remove();
     }
@@ -667,19 +725,62 @@
     function createCar() {
         if(!isAdminMode) return;
         const tunes = Array.from(document.querySelectorAll('#adminZone .checkbox-group input:checked')).map(cb=>cb.value);
-        const newCar = { name: document.getElementById('carName').value.trim(), imageUrl: document.getElementById('carImage').value.trim(), price: parseInt(document.getElementById('price').value)||null, accelerationNoNitro: parseFloat(document.getElementById('accelerationNoNitro').value)||null, accelerationWithNitro: parseFloat(document.getElementById('accelerationWithNitro').value)||null, topSpeed: parseInt(document.getElementById('topSpeed').value)||null, nitroType: document.getElementById('nitroType').value, plateCountry: document.getElementById('plateCountry').value, plateNumber: document.getElementById('plateNumber').value.trim(), tunes, otherSpecs: document.getElementById('otherSpecs').value.trim(), createdAt: firebase.database.ServerValue.TIMESTAMP };
-        if(!newCar.name) { showMessage("Введите название"); return; }
-        carsRef.push(newCar).then(() => { showMessage("✅ Добавлено","success"); document.getElementById('carName').value=''; document.getElementById('carImage').value=''; document.getElementById('price').value=''; document.getElementById('accelerationNoNitro').value=''; document.getElementById('accelerationWithNitro').value=''; document.getElementById('topSpeed').value=''; document.getElementById('plateNumber').value=''; document.querySelectorAll('#adminZone .checkbox-group input').forEach(cb=>cb.checked=false); document.getElementById('otherSpecs').value=''; });
+        const newCar = { 
+            name: document.getElementById('carName').value.trim(), 
+            imageUrl: document.getElementById('carImage').value.trim(), 
+            price: parseInt(document.getElementById('price').value)||null, 
+            accelerationNoNitro: parseFloat(document.getElementById('accelerationNoNitro').value)||null, 
+            accelerationWithNitro: parseFloat(document.getElementById('accelerationWithNitro').value)||null, 
+            topSpeed: parseInt(document.getElementById('topSpeed').value)||null, 
+            nitroType: document.getElementById('nitroType').value, 
+            plateCountry: document.getElementById('plateCountry').value, 
+            plateNumber: document.getElementById('plateNumber').value.trim(), 
+            tunes, 
+            otherSpecs: document.getElementById('otherSpecs').value.trim(), 
+            createdAt: firebase.database.ServerValue.TIMESTAMP 
+        };
+        if(!newCar.name) { showMessage("❌ Введите название"); return; }
+        carsRef.push(newCar).then(() => { 
+            showMessage("✅ Машина добавлена","success"); 
+            document.getElementById('carName').value=''; 
+            document.getElementById('carImage').value=''; 
+            document.getElementById('price').value=''; 
+            document.getElementById('accelerationNoNitro').value=''; 
+            document.getElementById('accelerationWithNitro').value=''; 
+            document.getElementById('topSpeed').value=''; 
+            document.getElementById('plateNumber').value=''; 
+            document.querySelectorAll('#adminZone .checkbox-group input').forEach(cb=>cb.checked=false); 
+            document.getElementById('otherSpecs').value=''; 
+        }).catch(e=>showMessage(e.message));
     }
 
-    function subscribeCars() { if(carsRef) carsRef.on('value', snap => { const d=snap.val(); const list=[]; for(let k in d) list.push({id:k, ...d[k], tunes: d[k].tunes||[]}); list.reverse(); allCars=list; renderFilteredCars(); }); }
+    function subscribeCars() { 
+        if(carsRef) carsRef.on('value', snap => { 
+            const d=snap.val(); 
+            const list=[]; 
+            for(let k in d) list.push({id:k, ...d[k], tunes: d[k].tunes||[]}); 
+            list.reverse(); 
+            allCars=list; 
+            renderFilteredCars(); 
+        }); 
+    }
 
     function escapeHtml(s) { if(!s) return ''; return String(s).replace(/[&<>]/g, m=>m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'); }
 
-    document.getElementById('clearFilters')?.addEventListener('click',()=>{ document.getElementById('filterPriceMin').value=''; document.getElementById('filterPriceMax').value=''; document.getElementById('filterAccelMax').value=''; document.getElementById('filterCountry').value='all'; document.getElementById('filterNitro').value='all'; document.getElementById('filterTune').value='all'; renderFilteredCars(); });
+    // События
+    document.getElementById('clearFilters')?.addEventListener('click',()=>{ 
+        document.getElementById('filterPriceMin').value=''; 
+        document.getElementById('filterPriceMax').value=''; 
+        document.getElementById('filterAccelMax').value=''; 
+        document.getElementById('filterCountry').value='all'; 
+        document.getElementById('filterNitro').value='all'; 
+        document.getElementById('filterTune').value='all'; 
+        renderFilteredCars(); 
+    });
     ['filterPriceMin','filterPriceMax','filterAccelMax','filterCountry','filterNitro','filterTune'].forEach(id=>document.getElementById(id)?.addEventListener('input',()=>renderFilteredCars()));
     document.getElementById('compareViewBtn')?.addEventListener('click', compareSelected);
     document.getElementById('createCarBtn')?.addEventListener('click', createCar);
+    
     subscribeCars();
     checkAdminAccess();
 </script>
