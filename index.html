@@ -155,56 +155,13 @@
             resize: vertical;
         }
         .admin-form button {
-            background: #3a7ca5;
+            background: #ff7b2c;
             padding: 10px 20px;
             border-radius: 40px;
             border: none;
             color: white;
             font-weight: bold;
             cursor: pointer;
-        }
-        .login-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.95);
-            backdrop-filter: blur(8px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-        }
-        .login-card {
-            background: #1e2a2a;
-            padding: 35px;
-            border-radius: 48px;
-            text-align: center;
-            width: 340px;
-        }
-        .login-card input {
-            width: 100%;
-            padding: 12px;
-            margin: 20px 0;
-            border-radius: 40px;
-            border: none;
-            text-align: center;
-            font-size: 1.2rem;
-        }
-        .login-card button {
-            background: #ff7b2c;
-            padding: 12px;
-            width: 100%;
-            border-radius: 40px;
-            font-weight: bold;
-            border: none;
-            cursor: pointer;
-        }
-        .info-text {
-            font-size: 0.8rem;
-            color: #aaa;
-            margin-top: 15px;
         }
         .empty-state {
             text-align: center;
@@ -216,14 +173,6 @@
             text-align: center;
             font-size: 0.7rem;
             opacity: 0.6;
-        }
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(255, 100, 0, 0.4); }
-            70% { box-shadow: 0 0 0 10px rgba(255, 100, 0, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(255, 100, 0, 0); }
-        }
-        .admin-panel {
-            animation: pulse 2s infinite;
         }
     </style>
 </head>
@@ -257,7 +206,7 @@
     <div id="carsContainer" class="cars-grid">
         <div class="empty-state">🏎️ Загрузка автопарка...</div>
     </div>
-    <footer>🔥 Админ-доступ по ссылке /?admin | Фото машин для Black Russia</footer>
+    <footer>🔐 Админ: добавь ?key=14881161 к ссылке</footer>
 </div>
 
 <script>
@@ -275,121 +224,22 @@
     const database = firebase.database();
     const carsRef = database.ref('cars');
 
-    // ---------- НОВЫЙ TELEGRAM БОТ ----------
-    const BOT_TOKEN = "8417193861:AAH9cKzlhvANzmIAYEYZqgj_fEvBkHUAM7g";
-    const ADMIN_CHAT_ID = "1209403544";
-
+    // ---------- АДМИН ПО ССЫЛКЕ С ПАРОЛЕМ ----------
+    const ADMIN_KEY = "14881161";  // Твой пароль
+    
     let isAdminMode = false;
     let allCars = [];
-    let currentTempPassword = null;
 
-    // Отправка 4-значного кода в Telegram
-    async function sendPasswordToTelegram(password) {
-        const message = `🔐 *Вход в админ-панель | Автопарк Black Russia*\n\nВаш код для входа: \`${password}\`\n\nВведите его на сайте https://pesol45.github.io/Block/?admin`;
-        const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
-        try {
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    chat_id: ADMIN_CHAT_ID, 
-                    text: message, 
-                    parse_mode: 'Markdown' 
-                })
-            });
-            const data = await response.json();
-            console.log("Telegram ответ:", data);
-            return data.ok;
-        } catch(e) { 
-            console.error("Ошибка отправки в Telegram:", e);
-            return false; 
-        }
-    }
-
-    // Генерация 4-значного кода
-    function generateTempPassword() {
-        return Math.floor(1000 + Math.random() * 9000).toString();
-    }
-
-    // Модальное окно входа с 4 цифрами
-    function showAdminLoginModal() {
-        const oldModal = document.getElementById('adminLoginModal');
-        if (oldModal) oldModal.remove();
-        
-        const modalDiv = document.createElement('div');
-        modalDiv.className = 'login-overlay';
-        modalDiv.id = 'adminLoginModal';
-        modalDiv.innerHTML = `
-            <div class="login-card">
-                <h3>🔐 Админ-панель автопарка</h3>
-                <p>4-значный код отправлен в Telegram</p>
-                <input type="password" id="adminPassInput" placeholder="Введите 4-значный код" maxlength="4" autocomplete="off">
-                <button id="submitAdminPass">Подтвердить</button>
-                <button id="resendPasswordBtn" style="background:#555; margin-top:10px;">🔄 Отправить код повторно</button>
-                <div class="info-text">Код приходит в Telegram @${ADMIN_CHAT_ID}</div>
-            </div>
-        `;
-        document.body.appendChild(modalDiv);
-        
-        document.getElementById('submitAdminPass').addEventListener('click', () => {
-            const entered = document.getElementById('adminPassInput').value;
-            if (entered === currentTempPassword) {
-                localStorage.setItem('admin_authenticated', 'true');
-                localStorage.setItem('admin_login_time', Date.now().toString());
-                window.location.href = window.location.pathname + '?admin';
-            } else {
-                alert("❌ Неверный код! Попробуйте ещё раз.");
-                document.getElementById('adminPassInput').value = '';
-            }
-        });
-        
-        document.getElementById('resendPasswordBtn').addEventListener('click', async () => {
-            const newPass = generateTempPassword();
-            currentTempPassword = newPass;
-            const sent = await sendPasswordToTelegram(newPass);
-            if (sent) {
-                alert("✅ Новый 4-значный код отправлен в Telegram!");
-            } else {
-                alert("❌ Не удалось отправить код. Проверьте интернет.");
-            }
-        });
-    }
-
-    // Запуск входа
-    async function initiateAdminLogin() {
-        const newPassword = generateTempPassword();
-        currentTempPassword = newPassword;
-        const sent = await sendPasswordToTelegram(newPassword);
-        if (!sent) {
-            alert("⚠️ Не удалось отправить код в Telegram. Но вы можете использовать тестовый код: " + newPassword);
-        }
-        showAdminLoginModal();
-    }
-
-    // Проверка доступа
+    // Проверяем параметр key в URL
     function checkAdminAccess() {
         const urlParams = new URLSearchParams(window.location.search);
-        const hasAdminParam = urlParams.has('admin');
-        const alreadyAuth = localStorage.getItem('admin_authenticated') === 'true';
+        const key = urlParams.get('key');
         
-        let authValid = false;
-        if (alreadyAuth) {
-            const loginTime = localStorage.getItem('admin_login_time');
-            if (loginTime && (Date.now() - parseInt(loginTime)) < 24 * 3600000) {
-                authValid = true;
-            } else {
-                localStorage.removeItem('admin_authenticated');
-                localStorage.removeItem('admin_login_time');
-            }
-        }
-        
-        if (hasAdminParam && authValid) {
+        if (key === ADMIN_KEY) {
             isAdminMode = true;
             document.getElementById('adminZone').style.display = 'block';
             document.getElementById('adminBadge').innerHTML = '👑 АДМИН АВТОПАРКА 🏁';
             document.getElementById('adminBadge').classList.add('admin-mode');
-        } else if (hasAdminParam && !authValid) {
-            initiateAdminLogin();
         } else {
             isAdminMode = false;
             document.getElementById('adminBadge').innerHTML = '👤 Режим: гость (только просмотр)';
