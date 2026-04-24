@@ -118,13 +118,18 @@
             font-size: 0.75rem;
             margin-left: 8px;
         }
-        .nitro-x2 { color: #44ff44; }
-        .nitro-x5 { color: #ffaa44; }
-        .nitro-x10 { color: #ff4444; font-weight: bold; text-shadow: 0 0 5px red; }
-        .tune-sport { color: #44aaff; }
-        .tune-drift { color: #ffaa44; }
-        .tune-sportplus { color: #ff44ff; }
-        .tune-comfort { color: #44ffaa; }
+        .nitro-x2 { color: #44ff44; background: #1a3a1a; }
+        .nitro-x5 { color: #ffaa44; background: #3a2a1a; }
+        .nitro-x10 { color: #ff4444; background: #3a1a1a; font-weight: bold; text-shadow: 0 0 3px red; }
+        .tune-tag {
+            display: inline-block;
+            background: #2c5a7a;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            margin: 2px;
+        }
         .delete-btn {
             background: #8b2c2c;
             border: none;
@@ -158,7 +163,7 @@
             display: flex;
             gap: 12px;
             flex-wrap: wrap;
-            align-items: center;
+            align-items: flex-start;
         }
         .form-group {
             flex: 1;
@@ -193,6 +198,27 @@
             cursor: pointer;
             font-size: 1rem;
         }
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            background: #1e2a36;
+            padding: 10px 15px;
+            border-radius: 40px;
+        }
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.85rem;
+            color: #ffaa66;
+            cursor: pointer;
+        }
+        .checkbox-group input {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
         .empty-state {
             text-align: center;
             padding: 60px;
@@ -203,6 +229,11 @@
             text-align: center;
             font-size: 0.7rem;
             opacity: 0.6;
+        }
+        .tunes-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
         }
     </style>
 </head>
@@ -252,40 +283,44 @@
                         <label>💨 Нитро-буст</label>
                         <select id="nitroType">
                             <option value="none">❌ Без нитро</option>
-                            <option value="x2">🔥 x2 (ускорение x2)</option>
-                            <option value="x5">💥 x5 (ускорение x5)</option>
-                            <option value="x10">⚡ x10 (ускорение x10)</option>
+                            <option value="x2">🔥 x2</option>
+                            <option value="x5">💥 x5</option>
+                            <option value="x10">⚡ x10</option>
                         </select>
                     </div>
+                </div>
+
+                <div class="form-row">
                     <div class="form-group">
-                        <label>🔧 Прошивка ЭБУ</label>
-                        <select id="tuneType">
-                            <option value="none">❌ Сток</option>
-                            <option value="sport">🏁 Спорт +50 км/ч</option>
-                            <option value="drift">💨 Дрифт +30 км/ч</option>
-                            <option value="sportplus">🔥 Спорт+ +80 км/ч</option>
-                            <option value="comfort">☁️ Комфорт +20 км/ч</option>
-                        </select>
+                        <label>🔧 Прошивки ЭБУ (можно несколько)</label>
+                        <div class="checkbox-group">
+                            <label><input type="checkbox" value="Спорт"> 🏁 Спорт</label>
+                            <label><input type="checkbox" value="Дрифт"> 💨 Дрифт</label>
+                            <label><input type="checkbox" value="Спорт+"> 🔥 Спорт+</label>
+                            <label><input type="checkbox" value="Комфорт"> ☁️ Комфорт</label>
+                            <label><input type="checkbox" value="Трек"> 🏎️ Трек</label>
+                            <label><input type="checkbox" value="Эко"> 🌿 Эко</label>
+                        </div>
                     </div>
                 </div>
 
                 <div class="form-row">
                     <div class="form-group" style="flex:2;">
                         <label>📝 Дополнительные характеристики</label>
-                        <textarea id="otherSpecs" rows="2" placeholder="Двигатель, привод, и т.д."></textarea>
+                        <textarea id="otherSpecs" rows="2" placeholder="Двигатель, привод и т.д."></textarea>
                     </div>
                 </div>
                 
                 <button id="createCarBtn">➕ Добавить машину в автопарк</button>
             </div>
-            <div class="info-text">✅ Админ может добавлять и удалять любые машины. Игроки только смотрят ТТХ.</div>
+            <div class="info-text">✅ Админ добавляет/удаляет машины. Игроки только смотрят.</div>
         </div>
     </div>
 
     <div id="carsContainer" class="cars-grid">
         <div class="empty-state">🏎️ Загрузка автопарка...</div>
     </div>
-    <footer>🔐 Админ: добавь ?key=14881161 к ссылке | Нитро x2/x5/x10 + прошивки</footer>
+    <footer>🔐 Админ: добавь ?key=14881161 к ссылке | Нитро x2/x5/x10 + прошивки (несколько)</footer>
 </div>
 
 <script>
@@ -363,39 +398,6 @@
         return '❌ Нет';
     }
 
-    function getTuneText(type) {
-        const tunes = {
-            'sport': '🏁 Спорт (+50 км/ч)',
-            'drift': '💨 Дрифт (+30 км/ч)',
-            'sportplus': '🔥 Спорт+ (+80 км/ч)',
-            'comfort': '☁️ Комфорт (+20 км/ч)',
-            'none': '❌ Сток'
-        };
-        return tunes[type] || tunes.none;
-    }
-
-    function getTuneClass(type) {
-        const classes = {
-            'sport': 'tune-sport',
-            'drift': 'tune-drift',
-            'sportplus': 'tune-sportplus',
-            'comfort': 'tune-comfort'
-        };
-        return classes[type] || '';
-    }
-
-    function getFinalTopSpeed(baseSpeed, tuneType) {
-        if (!baseSpeed) return baseSpeed;
-        const bonuses = {
-            'sport': 50,
-            'drift': 30,
-            'sportplus': 80,
-            'comfort': 20,
-            'none': 0
-        };
-        return baseSpeed + (bonuses[tuneType] || 0);
-    }
-
     function renderCars() {
         const container = document.getElementById('carsContainer');
         if (!container) return;
@@ -407,9 +409,20 @@
         
         container.innerHTML = '';
         allCars.forEach(car => {
-            const finalSpeed = getFinalTopSpeed(car.topSpeed, car.tuneType);
             const nitroClass = getNitroClass(car.nitroType);
-            const tuneClass = getTuneClass(car.tuneType);
+            
+            // Прошивки - массив
+            let tunesHtml = '';
+            if (car.tunes && car.tunes.length > 0) {
+                tunesHtml = `
+                    <div class="spec-item">
+                        <strong>🔧 Прошивки:</strong>
+                        <div class="tunes-list">
+                            ${car.tunes.map(t => `<span class="tune-tag">${escapeHtml(t)}</span>`).join('')}
+                        </div>
+                    </div>
+                `;
+            }
             
             const card = document.createElement('div');
             card.className = 'car-card';
@@ -430,15 +443,14 @@
                         <span>без нитро: ${car.accelerationNoNitro ?? '?'} сек | с нитро: ${car.accelerationWithNitro ?? '?'} сек</span>
                     </div>
                     <div class="spec-item">
-                        <strong>📈 Максималка:</strong>
-                        <span>база: ${car.topSpeed ?? '?'} км/ч 
-                        ${car.tuneType !== 'none' ? `<span class="${tuneClass}">→ ${finalSpeed} км/ч (${getTuneText(car.tuneType)})</span>` : ''}
-                        </span>
+                        <strong>📈 Максимальная скорость:</strong>
+                        <span>${car.topSpeed ?? '?'} км/ч</span>
                     </div>
                     ${car.nitroType !== 'none' ? `<div class="spec-item">
                         <strong>💨 Нитро-буст:</strong>
                         <span class="${nitroClass}">${getNitroText(car.nitroType)}</span>
                     </div>` : ''}
+                    ${tunesHtml}
                     ${car.otherSpecs ? `<div class="spec-item">
                         <strong>🔧 Характеристики:</strong><br>${escapeHtml(car.otherSpecs)}
                     </div>` : ''}
@@ -469,6 +481,13 @@
         const name = document.getElementById('carName').value.trim();
         if (!name) { showMessage("❌ Введите название машины"); return; }
         
+        // Собираем выбранные прошивки
+        const tunes = [];
+        const tuneCheckboxes = document.querySelectorAll('.checkbox-group input:checked');
+        tuneCheckboxes.forEach(cb => {
+            tunes.push(cb.value);
+        });
+        
         const newCar = {
             name: name,
             imageUrl: document.getElementById('carImage').value.trim(),
@@ -477,7 +496,7 @@
             accelerationWithNitro: parseFloat(document.getElementById('accelerationWithNitro').value) || null,
             topSpeed: parseInt(document.getElementById('topSpeed').value) || null,
             nitroType: document.getElementById('nitroType').value,
-            tuneType: document.getElementById('tuneType').value,
+            tunes: tunes,
             otherSpecs: document.getElementById('otherSpecs').value.trim(),
             createdAt: firebase.database.ServerValue.TIMESTAMP
         };
@@ -492,7 +511,7 @@
                 document.getElementById('accelerationWithNitro').value = '';
                 document.getElementById('topSpeed').value = '';
                 document.getElementById('nitroType').value = 'none';
-                document.getElementById('tuneType').value = 'none';
+                document.querySelectorAll('.checkbox-group input').forEach(cb => cb.checked = false);
                 document.getElementById('otherSpecs').value = '';
             })
             .catch(err => showMessage("❌ Ошибка: " + err.message));
@@ -505,7 +524,10 @@
             const list = [];
             if (data) {
                 for (let key in data) {
-                    list.push({ id: key, ...data[key] });
+                    let car = { id: key, ...data[key] };
+                    // Убедимся что tunes это массив
+                    if (!car.tunes) car.tunes = [];
+                    list.push(car);
                 }
                 list.reverse();
             }
