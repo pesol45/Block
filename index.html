@@ -275,32 +275,43 @@
     const database = firebase.database();
     const carsRef = database.ref('cars');
 
-    // ---------- TELEGRAM ----------
-    const BOT_TOKEN = "8751597537:AAG-W7_DLlAw8FmpOxINf0dYvMN1p7CFogA";
+    // ---------- НОВЫЙ TELEGRAM БОТ ----------
+    const BOT_TOKEN = "8417193861:AAH9cKzlhvANzmIAYEYZqgj_fEvBkHUAM7g";
     const ADMIN_CHAT_ID = "1209403544";
 
     let isAdminMode = false;
     let allCars = [];
     let currentTempPassword = null;
 
+    // Отправка 4-значного кода в Telegram
     async function sendPasswordToTelegram(password) {
-        const message = `🔐 *Вход в админ-панель | Автопарк Black Russia*\n\nВаш код: \`${password}\`\nВведите на сайте для управления машинами.`;
+        const message = `🔐 *Вход в админ-панель | Автопарк Black Russia*\n\nВаш код для входа: \`${password}\`\n\nВведите его на сайте https://pesol45.github.io/Block/?admin`;
         const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
         try {
             const response = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ chat_id: ADMIN_CHAT_ID, text: message, parse_mode: 'Markdown' })
+                body: JSON.stringify({ 
+                    chat_id: ADMIN_CHAT_ID, 
+                    text: message, 
+                    parse_mode: 'Markdown' 
+                })
             });
             const data = await response.json();
+            console.log("Telegram ответ:", data);
             return data.ok;
-        } catch(e) { return false; }
+        } catch(e) { 
+            console.error("Ошибка отправки в Telegram:", e);
+            return false; 
+        }
     }
 
+    // Генерация 4-значного кода
     function generateTempPassword() {
-        return Math.floor(100000 + Math.random() * 900000).toString();
+        return Math.floor(1000 + Math.random() * 9000).toString();
     }
 
+    // Модальное окно входа с 4 цифрами
     function showAdminLoginModal() {
         const oldModal = document.getElementById('adminLoginModal');
         if (oldModal) oldModal.remove();
@@ -311,11 +322,11 @@
         modalDiv.innerHTML = `
             <div class="login-card">
                 <h3>🔐 Админ-панель автопарка</h3>
-                <p>Код отправлен в Telegram</p>
-                <input type="password" id="adminPassInput" placeholder="6-значный код" maxlength="6">
+                <p>4-значный код отправлен в Telegram</p>
+                <input type="password" id="adminPassInput" placeholder="Введите 4-значный код" maxlength="4" autocomplete="off">
                 <button id="submitAdminPass">Подтвердить</button>
-                <button id="resendPasswordBtn" class="resend-btn" style="background:#555; margin-top:10px;">🔄 Отправить код повторно</button>
-                <div class="info-text">Только для создателя автопарка</div>
+                <button id="resendPasswordBtn" style="background:#555; margin-top:10px;">🔄 Отправить код повторно</button>
+                <div class="info-text">Код приходит в Telegram @${ADMIN_CHAT_ID}</div>
             </div>
         `;
         document.body.appendChild(modalDiv);
@@ -326,34 +337,52 @@
                 localStorage.setItem('admin_authenticated', 'true');
                 localStorage.setItem('admin_login_time', Date.now().toString());
                 window.location.href = window.location.pathname + '?admin';
-            } else alert("❌ Неверный код!");
+            } else {
+                alert("❌ Неверный код! Попробуйте ещё раз.");
+                document.getElementById('adminPassInput').value = '';
+            }
         });
         
         document.getElementById('resendPasswordBtn').addEventListener('click', async () => {
             const newPass = generateTempPassword();
             currentTempPassword = newPass;
-            await sendPasswordToTelegram(newPass);
-            alert("✅ Новый код отправлен!");
+            const sent = await sendPasswordToTelegram(newPass);
+            if (sent) {
+                alert("✅ Новый 4-значный код отправлен в Telegram!");
+            } else {
+                alert("❌ Не удалось отправить код. Проверьте интернет.");
+            }
         });
     }
 
+    // Запуск входа
     async function initiateAdminLogin() {
         const newPassword = generateTempPassword();
         currentTempPassword = newPassword;
-        await sendPasswordToTelegram(newPassword);
+        const sent = await sendPasswordToTelegram(newPassword);
+        if (!sent) {
+            alert("⚠️ Не удалось отправить код в Telegram. Но вы можете использовать тестовый код: " + newPassword);
+        }
         showAdminLoginModal();
     }
 
+    // Проверка доступа
     function checkAdminAccess() {
         const urlParams = new URLSearchParams(window.location.search);
         const hasAdminParam = urlParams.has('admin');
         const alreadyAuth = localStorage.getItem('admin_authenticated') === 'true';
+        
         let authValid = false;
         if (alreadyAuth) {
             const loginTime = localStorage.getItem('admin_login_time');
-            if (loginTime && (Date.now() - parseInt(loginTime)) < 24 * 3600000) authValid = true;
-            else { localStorage.removeItem('admin_authenticated'); localStorage.removeItem('admin_login_time'); }
+            if (loginTime && (Date.now() - parseInt(loginTime)) < 24 * 3600000) {
+                authValid = true;
+            } else {
+                localStorage.removeItem('admin_authenticated');
+                localStorage.removeItem('admin_login_time');
+            }
         }
+        
         if (hasAdminParam && authValid) {
             isAdminMode = true;
             document.getElementById('adminZone').style.display = 'block';
@@ -370,6 +399,7 @@
         renderCars();
     }
 
+    // Отображение машин
     function renderCars() {
         const container = document.getElementById('carsContainer');
         if (!allCars.length) {
@@ -408,6 +438,7 @@
         }
     }
 
+    // Создание машины (только админ)
     function createCar() {
         if (!isAdminMode) { alert("Только админ автопарка!"); return; }
         const name = document.getElementById('carName').value.trim();
@@ -438,6 +469,7 @@
         }).catch(err => alert("Ошибка: " + err.message));
     }
 
+    // Подписка на изменения в Firebase
     function subscribeCars() {
         carsRef.on('value', (snapshot) => {
             const data = snapshot.val();
@@ -446,7 +478,7 @@
                 for (let key in data) {
                     list.push({ id: key, ...data[key] });
                 }
-                list.reverse(); // новые сверху
+                list.reverse();
             }
             allCars = list;
             renderCars();
