@@ -1,1 +1,485 @@
-Хуй
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Мой автопарк | Black Russia</title>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: system-ui, 'Segoe UI', Roboto, sans-serif; }
+        body { background: linear-gradient(145deg, #0a0f1a 0%, #0c121c 100%); min-height: 100vh; padding: 20px; color: #e0e0e0; }
+        .container { max-width: 1500px; margin: 0 auto; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .header h1 { font-size: 2.5rem; background: linear-gradient(135deg, #ff3b3b, #ff8c00); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .badge { display: inline-block; background: #2c3e2f; padding: 5px 12px; border-radius: 40px; font-size: 0.8rem; margin-top: 10px; }
+        .badge.admin-mode { background: #8B4513; color: #FFD700; box-shadow: 0 0 10px rgba(255, 140, 0, 0.5); }
+        
+        /* ФИЛЬТРЫ - ТОЛЬКО ДЛЯ ПОЛЬЗОВАТЕЛЕЙ */
+        .filters-panel { background: rgba(20, 30, 45, 0.95); border-radius: 28px; padding: 20px; margin-bottom: 25px; border: 1px solid rgba(255, 100, 0, 0.3); }
+        .filters-title { font-size: 1.2rem; margin-bottom: 15px; color: #ffaa66; display: flex; justify-content: space-between; flex-wrap: wrap; }
+        .filter-row { display: flex; flex-wrap: wrap; gap: 15px; }
+        .filter-group { flex: 1; min-width: 120px; }
+        .filter-group label { display: block; font-size: 0.7rem; margin-bottom: 5px; color: #aaa; }
+        .filter-group input, .filter-group select { width: 100%; padding: 8px 12px; border-radius: 30px; border: none; background: #1e2a36; color: white; }
+        .clear-filters { background: #8b2c2c; padding: 8px 16px; border-radius: 30px; border: none; color: white; cursor: pointer; }
+        
+        /* ПАНЕЛЬ СРАВНЕНИЯ - ДЛЯ ВСЕХ ПОЛЬЗОВАТЕЛЕЙ */
+        .compare-bar { background: rgba(0,0,0,0.7); border-radius: 60px; padding: 12px 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+        .compare-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
+        .compare-btn { background: #3a7ca5; padding: 6px 12px; border-radius: 30px; font-size: 0.8rem; cursor: pointer; border: none; color: white; }
+        .compare-view-btn { background: #00aa55; padding: 8px 20px; border-radius: 40px; border: none; color: white; font-weight: bold; cursor: pointer; }
+        
+        .cars-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 24px; margin-top: 10px; }
+        .car-card { background: rgba(20, 30, 45, 0.9); backdrop-filter: blur(4px); border-radius: 28px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); border: 1px solid rgba(255, 100, 0, 0.3); position: relative; }
+        .compare-checkbox { position: absolute; top: 15px; left: 15px; width: 22px; height: 22px; cursor: pointer; z-index: 10; }
+        .car-img { width: 100%; height: 180px; object-fit: cover; border-radius: 20px; background: #1a1f2a; margin-bottom: 15px; border: 1px solid #ff8c42; }
+        .car-name { font-size: 1.6rem; font-weight: bold; display: flex; justify-content: space-between; border-bottom: 2px solid #ff5e00; padding-bottom: 8px; margin-bottom: 15px; }
+        .car-plate { background: #1a1a2a; padding: 4px 10px; border-radius: 12px; font-family: monospace; font-size: 0.8rem; border: 1px solid #ffaa44; color: #ffaa44; margin-top: 5px; display: inline-block; }
+        .specs { background: #00000055; border-radius: 20px; padding: 12px; margin: 10px 0; }
+        .spec-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #ff8c4233; }
+        .price { color: #ffaa33; font-weight: bold; }
+        .nitro-badge { background: #ff6600; color: #000; font-weight: bold; padding: 2px 8px; border-radius: 20px; font-size: 0.7rem; margin-left: 8px; }
+        .nitro-x2 { background: #1a3a1a; color: #44ff44; }
+        .nitro-x5 { background: #3a2a1a; color: #ffaa44; }
+        .nitro-x10 { background: #3a1a1a; color: #ff4444; }
+        .tune-tag { background: #2c5a7a; color: white; padding: 2px 8px; border-radius: 20px; font-size: 0.65rem; margin: 2px; display: inline-block; }
+        .action-buttons { display: flex; gap: 10px; margin-top: 15px; }
+        .edit-btn, .delete-btn { flex: 1; padding: 10px; border-radius: 40px; border: none; font-weight: bold; cursor: pointer; }
+        .edit-btn { background: #3a7ca5; color: white; }
+        .delete-btn { background: #8b2c2c; color: white; }
+        
+        /* АДМИН ПАНЕЛЬ */
+        .admin-panel { background: #10161fe6; border-radius: 32px; padding: 20px; margin-bottom: 30px; border: 2px solid #ff7b2c; }
+        .admin-form { display: flex; flex-direction: column; gap: 12px; }
+        .form-row { display: flex; gap: 12px; flex-wrap: wrap; }
+        .form-group { flex: 1; min-width: 140px; }
+        .form-group label { font-size: 0.7rem; color: #ffaa66; display: block; margin-bottom: 4px; }
+        .admin-form input, .admin-form select, .admin-form textarea { width: 100%; padding: 8px 12px; border-radius: 30px; border: none; background: #1e2a36; color: white; }
+        .checkbox-group { display: flex; flex-wrap: wrap; gap: 12px; background: #1e2a36; padding: 8px 12px; border-radius: 40px; }
+        .checkbox-group label { display: flex; align-items: center; gap: 5px; font-size: 0.8rem; }
+        .admin-form button { background: #ff7b2c; padding: 10px; border-radius: 40px; border: none; color: white; font-weight: bold; cursor: pointer; }
+        
+        .empty-state { text-align: center; padding: 60px; color: #aaa; }
+        footer { margin-top: 40px; text-align: center; font-size: 0.7rem; opacity: 0.6; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+        .modal-content { background: #1a2a2a; padding: 25px; border-radius: 32px; width: 90%; max-width: 500px; max-height: 80vh; overflow-y: auto; }
+        .compare-modal { max-width: 90vw; width: auto; min-width: 320px; }
+        .compare-table { width: 100%; border-collapse: collapse; }
+        .compare-table th, .compare-table td { padding: 10px; border-bottom: 1px solid #ff8c4233; text-align: left; vertical-align: top; }
+        .compare-table th { background: #ff7b2c; color: black; }
+        .close-btn { background: #555; padding: 10px 20px; border-radius: 40px; margin-top: 15px; cursor: pointer; border: none; color: white; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>🏁 Мой автопарк | BLACK RUSSIA 🏎️</h1>
+        <div id="adminBadge" class="badge">👤 Гость</div>
+    </div>
+
+    <!-- АДМИН ПАНЕЛЬ (видна только админу) -->
+    <div id="adminZone" style="display: none;">
+        <div class="admin-panel">
+            <h3>🔧 Админ-панель</h3>
+            <div class="admin-form">
+                <div class="form-row">
+                    <div class="form-group" style="flex:2;"><input type="text" id="carName" placeholder="Название машины"></div>
+                    <div class="form-group"><input type="text" id="carImage" placeholder="URL фото"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><input type="number" id="price" placeholder="Цена"></div>
+                    <div class="form-group"><input type="number" id="accelerationNoNitro" placeholder="Разгон без нитро" step="0.1"></div>
+                    <div class="form-group"><input type="number" id="accelerationWithNitro" placeholder="Разгон с нитро" step="0.1"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><input type="number" id="topSpeed" placeholder="Максималка"></div>
+                    <div class="form-group">
+                        <select id="nitroType">
+                            <option value="none">❌ Без нитро</option>
+                            <option value="x2">🔥 x2</option>
+                            <option value="x5">💥 x5</option>
+                            <option value="x10">⚡ x10</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <select id="plateCountry">
+                            <option value="none">🌍 Без номера</option>
+                            <option value="ua">🇺🇦 Украина</option>
+                            <option value="by">🇧🇾 Беларусь</option>
+                            <option value="ru">🇷🇺 Россия</option>
+                            <option value="kz">🇰🇿 Казахстан</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><input type="text" id="plateNumber" placeholder="Гос номер (A123BC)"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Прошивки</label>
+                        <div class="checkbox-group">
+                            <label><input type="checkbox" value="Спорт"> 🏁 Спорт</label>
+                            <label><input type="checkbox" value="Спорт+"> 🔥 Спорт+</label>
+                            <label><input type="checkbox" value="Комфорт"> ☁️ Комфорт</label>
+                            <label><input type="checkbox" value="Дрифт"> 💨 Дрифт</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><textarea id="otherSpecs" rows="2" placeholder="Доп. характеристики (двигатель, привод и т.д.)"></textarea></div>
+                </div>
+                <button id="createCarBtn">➕ Добавить машину</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ФИЛЬТРЫ (только для обычных пользователей, админ их не видит) -->
+    <div id="filtersPanel" class="filters-panel">
+        <div class="filters-title">
+            <span>🔍 Фильтры</span>
+            <button class="clear-filters" id="clearFilters">Сбросить</button>
+        </div>
+        <div class="filter-row">
+            <div class="filter-group"><label>💰 Цена от</label><input type="number" id="filterPriceMin" placeholder="0"></div>
+            <div class="filter-group"><label>💰 Цена до</label><input type="number" id="filterPriceMax" placeholder="9999999"></div>
+            <div class="filter-group"><label>⚡ Разгон до (сек)</label><input type="number" id="filterAccelMax" placeholder="сек" step="0.1"></div>
+            <div class="filter-group"><label>🌍 Страна номера</label><select id="filterCountry"><option value="all">Все</option><option value="ua">🇺🇦 Украина</option><option value="by">🇧🇾 Беларусь</option><option value="ru">🇷🇺 Россия</option><option value="kz">🇰🇿 Казахстан</option></select></div>
+        </div>
+        <div class="filter-row" style="margin-top:10px">
+            <div class="filter-group"><label>💨 Нитро</label><select id="filterNitro"><option value="all">Все</option><option value="none">Без нитро</option><option value="x2">x2</option><option value="x5">x5</option><option value="x10">x10</option></select></div>
+            <div class="filter-group"><label>🔧 Прошивка</label><select id="filterTune"><option value="all">Все</option><option value="Спорт">Спорт</option><option value="Спорт+">Спорт+</option><option value="Комфорт">Комфорт</option><option value="Дрифт">Дрифт</option></select></div>
+        </div>
+    </div>
+
+    <!-- ПАНЕЛЬ СРАВНЕНИЯ (для всех пользователей) -->
+    <div class="compare-bar" id="compareBar" style="display: none;">
+        <div class="compare-buttons" id="compareButtons"></div>
+        <button class="compare-view-btn" id="compareViewBtn">⚖️ Сравнить</button>
+    </div>
+
+    <div id="carsContainer" class="cars-grid">
+        <div class="empty-state">🏎️ Загрузка...</div>
+    </div>
+    <footer>🔐 Админ: ?key=14881161 | Выбери до 3 машин для сравнения</footer>
+</div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyCaWv0A5OCgdAgUFn9lMzQ_tVaga0scpQA",
+        authDomain: "site-5378a.firebaseapp.com",
+        projectId: "site-5378a",
+        storageBucket: "site-5378a.firebasestorage.app",
+        messagingSenderId: "1080576728275",
+        appId: "1:1080576728275:web:efdb524baf64d8bd9ac826"
+    };
+
+    let database, carsRef;
+    try {
+        const app = firebase.initializeApp(firebaseConfig);
+        database = firebase.database();
+        carsRef = database.ref('cars');
+    } catch(e) { console.error(e); }
+
+    const ADMIN_KEY = "14881161";
+    let isAdminMode = false;
+    let allCars = [];
+    let selectedForCompare = new Set();
+
+    // Вспомогательные функции
+    function formatPrice(p) { return p ? p.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " ₽" : "?"; }
+    function getCountryFlag(code) { const f = { ua:"🇺🇦", by:"🇧🇾", ru:"🇷🇺", kz:"🇰🇿" }; return f[code] || "🌍"; }
+    function getNitroClass(t) { return t === 'x2' ? 'nitro-x2' : t === 'x5' ? 'nitro-x5' : t === 'x10' ? 'nitro-x10' : ''; }
+    function getNitroText(t) { return t === 'x2' ? '🔥 x2' : t === 'x5' ? '💥 x5' : t === 'x10' ? '⚡ x10' : '❌ Нет'; }
+    function escapeHtml(s) { if(!s) return ''; return String(s).replace(/[&<>]/g, m=>m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'); }
+    function showMessage(t, type="error") { 
+        let d = document.createElement('div'); 
+        d.style.cssText = `position:fixed;bottom:20px;right:20px;background:${type==='success'?'#00aa55':'#ff4444'};color:white;padding:10px 20px;border-radius:40px;z-index:9999`; 
+        d.textContent = t; 
+        document.body.appendChild(d); 
+        setTimeout(()=>d.remove(),3000); 
+    }
+
+    // Проверка админа
+    function checkAdminAccess() {
+        let urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('key') === ADMIN_KEY) {
+            isAdminMode = true;
+            document.getElementById('adminZone').style.display = 'block';
+            document.getElementById('adminBadge').innerHTML = '👑 АДМИН';
+            document.getElementById('adminBadge').classList.add('admin-mode');
+            // Админу не нужны фильтры и сравнение
+            document.getElementById('filtersPanel').style.display = 'none';
+            document.getElementById('compareBar').style.display = 'none';
+        } else {
+            isAdminMode = false;
+            document.getElementById('adminZone').style.display = 'none';
+            document.getElementById('adminBadge').innerHTML = '👤 Гость';
+            document.getElementById('filtersPanel').style.display = 'block';
+        }
+        renderFilteredCars();
+    }
+
+    // Фильтрация машин
+    function getFilteredCars() {
+        if (isAdminMode) return allCars;
+        let priceMin = parseFloat(document.getElementById('filterPriceMin').value) || 0;
+        let priceMax = parseFloat(document.getElementById('filterPriceMax').value) || Infinity;
+        let accelMax = parseFloat(document.getElementById('filterAccelMax').value) || Infinity;
+        let country = document.getElementById('filterCountry').value;
+        let nitro = document.getElementById('filterNitro').value;
+        let tune = document.getElementById('filterTune').value;
+        return allCars.filter(c => {
+            if (c.price && (c.price < priceMin || c.price > priceMax)) return false;
+            let accel = c.accelerationNoNitro || 999;
+            if (accel > accelMax) return false;
+            if (country !== 'all') {
+                let carCountry = c.plateCountry || 'none';
+                if (country === 'none' && carCountry !== 'none') return false;
+                if (country !== 'none' && carCountry !== country) return false;
+            }
+            if (nitro !== 'all' && (c.nitroType || 'none') !== nitro) return false;
+            if (tune !== 'all' && (!c.tunes || !c.tunes.includes(tune))) return false;
+            return true;
+        });
+    }
+
+    function renderFilteredCars() {
+        let filtered = getFilteredCars();
+        renderCars(filtered);
+    }
+
+    // Отрисовка машин
+    function renderCars(carsList) {
+        let container = document.getElementById('carsContainer');
+        if (!carsList.length) { container.innerHTML = '<div class="empty-state">🏎️ Нет машин</div>'; return; }
+        container.innerHTML = '';
+        carsList.forEach(car => {
+            let tuneHtml = car.tunes?.length ? `<div class="spec-item"><strong>🔧 Прошивки:</strong><div>${car.tunes.map(t=>`<span class="tune-tag">${escapeHtml(t)}</span>`).join('')}</div></div>` : '';
+            let plateHtml = (car.plateCountry && car.plateNumber && car.plateCountry !== 'none') ? `<div class="car-plate">${getCountryFlag(car.plateCountry)} ${escapeHtml(car.plateNumber)}</div>` : '';
+            
+            let card = document.createElement('div');
+            card.className = 'car-card';
+            
+            // Чекбокс для сравнения - ТОЛЬКО ДЛЯ НЕ-АДМИНОВ
+            if (!isAdminMode) {
+                let cb = document.createElement('input');
+                cb.type = 'checkbox';
+                cb.className = 'compare-checkbox';
+                cb.checked = selectedForCompare.has(car.id);
+                cb.onchange = (e) => {
+                    if (e.target.checked) {
+                        if (selectedForCompare.size >= 3) {
+                            showMessage("⚠️ Можно сравнить не больше 3 машин");
+                            e.target.checked = false;
+                            return;
+                        }
+                        selectedForCompare.add(car.id);
+                    } else {
+                        selectedForCompare.delete(car.id);
+                    }
+                    updateCompareBar();
+                    renderFilteredCars();
+                };
+                card.appendChild(cb);
+            }
+            
+            card.innerHTML += `
+                <img class="car-img" src="${escapeHtml(car.imageUrl || 'https://via.placeholder.com/400x200?text=No+Image')}" onerror="this.src='https://via.placeholder.com/400x200?text=Error'">
+                <div class="car-name">
+                    <span>${escapeHtml(car.name)}</span>
+                    ${car.nitroType !== 'none' ? `<span class="nitro-badge ${getNitroClass(car.nitroType)}">${getNitroText(car.nitroType)}</span>` : ''}
+                </div>
+                ${plateHtml}
+                <div class="specs">
+                    <div class="spec-item"><strong>💰 Цена:</strong><span class="price">${formatPrice(car.price)}</span></div>
+                    <div class="spec-item"><strong>🏎️ Разгон 0-100:</strong><span>без нитро: ${car.accelerationNoNitro ?? '?'} сек | с нитро: ${car.accelerationWithNitro ?? '?'} сек</span></div>
+                    <div class="spec-item"><strong>📈 Максималка:</strong><span>${car.topSpeed ?? '?'} км/ч</span></div>
+                    ${car.nitroType !== 'none' ? `<div class="spec-item"><strong>💨 Нитро:</strong><span class="${getNitroClass(car.nitroType)}">${getNitroText(car.nitroType)}</span></div>` : ''}
+                    ${tuneHtml}
+                    ${car.otherSpecs ? `<div class="spec-item"><strong>📝 Характеристики:</strong><br>${escapeHtml(car.otherSpecs)}</div>` : ''}
+                </div>
+                ${isAdminMode ? `<div class="action-buttons"><button class="edit-btn" data-id="${car.id}">✏️ Ред.</button><button class="delete-btn" data-id="${car.id}">🗑 Удал.</button></div>` : ''}
+            `;
+            container.appendChild(card);
+        });
+        
+        if (isAdminMode) {
+            document.querySelectorAll('.edit-btn').forEach(btn => btn.addEventListener('click', () => { let id = btn.getAttribute('data-id'); let car = allCars.find(c=>c.id===id); if(car) editCar(id,car); }));
+            document.querySelectorAll('.delete-btn').forEach(btn => btn.addEventListener('click', () => { let id = btn.getAttribute('data-id'); if(confirm('Удалить?')) carsRef.child(id).remove(); }));
+        }
+        if (!isAdminMode) updateCompareBar();
+    }
+
+    // Обновление панели сравнения (только для пользователей)
+    function updateCompareBar() {
+        let bar = document.getElementById('compareBar');
+        let container = document.getElementById('compareButtons');
+        if (selectedForCompare.size === 0) { bar.style.display = 'none'; return; }
+        bar.style.display = 'flex';
+        container.innerHTML = '';
+        let idx = 1;
+        for (let id of selectedForCompare) {
+            let car = allCars.find(c=>c.id===id);
+            if (car) {
+                let btn = document.createElement('button');
+                btn.className = 'compare-btn';
+                btn.textContent = `${idx}. ${car.name.substring(0,20)} ✖`;
+                btn.onclick = () => { selectedForCompare.delete(id); updateCompareBar(); renderFilteredCars(); };
+                container.appendChild(btn);
+                idx++;
+            } else { selectedForCompare.delete(id); }
+        }
+    }
+
+    // Сравнение машин
+    function compareSelected() {
+        let ids = Array.from(selectedForCompare);
+        let carsCompare = ids.map(id=>allCars.find(c=>c.id===id)).filter(c=>c);
+        if (carsCompare.length < 2) { showMessage("⚠️ Выбери минимум 2 машины"); return; }
+        
+        let html = `<table class="compare-table"><tr><th>📊 Характеристика</th>${carsCompare.map(c=>`<th>${escapeHtml(c.name)}</th>`).join('')}</tr>`;
+        let attrs = [
+            {name:"💰 Цена", val:c=>formatPrice(c.price)},
+            {name:"⚡ Разгон 0-100 (без нитро)", val:c=>c.accelerationNoNitro ? c.accelerationNoNitro + ' сек' : '?'},
+            {name:"🚀 Разгон 0-100 (с нитро)", val:c=>c.accelerationWithNitro ? c.accelerationWithNitro + ' сек' : '?'},
+            {name:"📈 Максималка", val:c=>c.topSpeed ? c.topSpeed + ' км/ч' : '?'},
+            {name:"💨 Нитро", val:c=>getNitroText(c.nitroType)},
+            {name:"🔧 Прошивки", val:c=>c.tunes?.length ? c.tunes.join(', ') : '❌ Нет'},
+            {name:"🏷️ Гос номер", val:c=>c.plateNumber ? `${getCountryFlag(c.plateCountry)} ${c.plateNumber}` : '❌ Нет'}
+        ];
+        attrs.forEach(attr => {
+            html += `<tr><td style="background:#1a2a3a; font-weight:bold;">${attr.name}</td>${carsCompare.map(c=>`<td>${attr.val(c)}</td>`).join('')}</tr>`;
+        });
+        html += `</table><button class="close-btn" id="closeCompareModal">✖️ Закрыть</button>`;
+        
+        let modal = document.createElement('div'); 
+        modal.className = 'modal-overlay';
+        modal.innerHTML = `<div class="modal-content compare-modal"><h3 style="margin-bottom:15px;">⚖️ Сравнение машин</h3>${html}</div>`;
+        document.body.appendChild(modal);
+        document.getElementById('closeCompareModal').onclick = () => modal.remove();
+    }
+
+    // Редактирование (только для админа)
+    function editCar(id, data) {
+        let tunesSet = new Set(data.tunes||[]);
+        let modalDiv = document.createElement('div'); 
+        modalDiv.className = 'modal-overlay';
+        modalDiv.innerHTML = `<div class="modal-content"><h3>✏️ Редактировать</h3>
+            <div class="admin-form">
+                <input id="editName" value="${escapeHtml(data.name)}" placeholder="Название">
+                <input id="editImg" value="${escapeHtml(data.imageUrl||'')}" placeholder="Фото URL">
+                <input id="editPrice" type="number" value="${data.price||''}" placeholder="Цена">
+                <input id="editAccNo" type="number" step="0.1" value="${data.accelerationNoNitro||''}" placeholder="Разгон без нитро">
+                <input id="editAccWith" type="number" step="0.1" value="${data.accelerationWithNitro||''}" placeholder="Разгон с нитро">
+                <input id="editTop" type="number" value="${data.topSpeed||''}" placeholder="Максималка">
+                <select id="editNitro">
+                    <option value="none" ${data.nitroType==='none'?'selected':''}>❌ Без нитро</option>
+                    <option value="x2" ${data.nitroType==='x2'?'selected':''}>🔥 x2</option>
+                    <option value="x5" ${data.nitroType==='x5'?'selected':''}>💥 x5</option>
+                    <option value="x10" ${data.nitroType==='x10'?'selected':''}>⚡ x10</option>
+                </select>
+                <select id="editCountry">
+                    <option value="none" ${data.plateCountry==='none'||!data.plateCountry?'selected':''}>🌍 Без номера</option>
+                    <option value="ua" ${data.plateCountry==='ua'?'selected':''}>🇺🇦 Украина</option>
+                    <option value="by" ${data.plateCountry==='by'?'selected':''}>🇧🇾 Беларусь</option>
+                    <option value="ru" ${data.plateCountry==='ru'?'selected':''}>🇷🇺 Россия</option>
+                    <option value="kz" ${data.plateCountry==='kz'?'selected':''}>🇰🇿 Казахстан</option>
+                </select>
+                <input id="editPlate" value="${escapeHtml(data.plateNumber||'')}" placeholder="Гос номер">
+                <div class="checkbox-group">
+                    <label><input type="checkbox" value="Спорт" ${tunesSet.has('Спорт')?'checked':''}> 🏁 Спорт</label>
+                    <label><input type="checkbox" value="Спорт+" ${tunesSet.has('Спорт+')?'checked':''}> 🔥 Спорт+</label>
+                    <label><input type="checkbox" value="Комфорт" ${tunesSet.has('Комфорт')?'checked':''}> ☁️ Комфорт</label>
+                    <label><input type="checkbox" value="Дрифт" ${tunesSet.has('Дрифт')?'checked':''}> 💨 Дрифт</label>
+                </div>
+                <textarea id="editOther" rows="2">${escapeHtml(data.otherSpecs||'')}</textarea>
+                <button id="saveEdit">💾 Сохранить</button>
+                <button id="cancelEdit" class="close-btn">Отмена</button>
+            </div></div>`;
+        document.body.appendChild(modalDiv);
+        document.getElementById('saveEdit').onclick = () => {
+            let newTunes = Array.from(document.querySelectorAll('#editName ~ .checkbox-group input:checked')).map(cb=>cb.value);
+            let updated = { 
+                name: document.getElementById('editName').value.trim(), 
+                imageUrl: document.getElementById('editImg').value.trim(), 
+                price: parseInt(document.getElementById('editPrice').value)||null, 
+                accelerationNoNitro: parseFloat(document.getElementById('editAccNo').value)||null, 
+                accelerationWithNitro: parseFloat(document.getElementById('editAccWith').value)||null, 
+                topSpeed: parseInt(document.getElementById('editTop').value)||null, 
+                nitroType: document.getElementById('editNitro').value, 
+                plateCountry: document.getElementById('editCountry').value, 
+                plateNumber: document.getElementById('editPlate').value.trim(), 
+                tunes: newTunes, 
+                otherSpecs: document.getElementById('editOther').value.trim() 
+            };
+            if(!updated.name) { showMessage("❌ Введите название"); return; }
+            carsRef.child(id).update(updated).then(()=>{ showMessage("✅ Обновлено","success"); modalDiv.remove(); renderFilteredCars(); }).catch(e=>showMessage(e.message));
+        };
+        document.getElementById('cancelEdit').onclick = () => modalDiv.remove();
+    }
+
+    // Создание машины (только админ)
+    function createCar() {
+        if(!isAdminMode) return;
+        let tunes = Array.from(document.querySelectorAll('#adminZone .checkbox-group input:checked')).map(cb=>cb.value);
+        let newCar = { 
+            name: document.getElementById('carName').value.trim(), 
+            imageUrl: document.getElementById('carImage').value.trim(), 
+            price: parseInt(document.getElementById('price').value)||null, 
+            accelerationNoNitro: parseFloat(document.getElementById('accelerationNoNitro').value)||null, 
+            accelerationWithNitro: parseFloat(document.getElementById('accelerationWithNitro').value)||null, 
+            topSpeed: parseInt(document.getElementById('topSpeed').value)||null, 
+            nitroType: document.getElementById('nitroType').value, 
+            plateCountry: document.getElementById('plateCountry').value, 
+            plateNumber: document.getElementById('plateNumber').value.trim(), 
+            tunes, 
+            otherSpecs: document.getElementById('otherSpecs').value.trim(), 
+            createdAt: firebase.database.ServerValue.TIMESTAMP 
+        };
+        if(!newCar.name) { showMessage("❌ Введите название"); return; }
+        carsRef.push(newCar).then(() => { 
+            showMessage("✅ Машина добавлена","success"); 
+            document.getElementById('carName').value=''; 
+            document.getElementById('carImage').value=''; 
+            document.getElementById('price').value=''; 
+            document.getElementById('accelerationNoNitro').value=''; 
+            document.getElementById('accelerationWithNitro').value=''; 
+            document.getElementById('topSpeed').value=''; 
+            document.getElementById('plateNumber').value=''; 
+            document.querySelectorAll('#adminZone .checkbox-group input').forEach(cb=>cb.checked=false); 
+            document.getElementById('otherSpecs').value=''; 
+        }).catch(e=>showMessage(e.message));
+    }
+
+    // Подписка на Firebase
+    function subscribeCars() { 
+        if(carsRef) carsRef.on('value', snap => { 
+            let d = snap.val(); 
+            let list = []; 
+            for(let k in d) list.push({id:k, ...d[k], tunes: d[k].tunes||[]}); 
+            list.reverse(); 
+            allCars = list; 
+            renderFilteredCars(); 
+        }); 
+    }
+
+    // События
+    document.getElementById('clearFilters')?.addEventListener('click',()=>{ 
+        document.getElementById('filterPriceMin').value=''; 
+        document.getElementById('filterPriceMax').value=''; 
+        document.getElementById('filterAccelMax').value=''; 
+        document.getElementById('filterCountry').value='all'; 
+        document.getElementById('filterNitro').value='all'; 
+        document.getElementById('filterTune').value='all'; 
+        renderFilteredCars(); 
+    });
+    ['filterPriceMin','filterPriceMax','filterAccelMax','filterCountry','filterNitro','filterTune'].forEach(id=>document.getElementById(id)?.addEventListener('input',()=>renderFilteredCars()));
+    document.getElementById('compareViewBtn')?.addEventListener('click', compareSelected);
+    document.getElementById('createCarBtn')?.addEventListener('click', createCar);
+    
+    subscribeCars();
+    checkAdminAccess();
+</script>
+</body>
+  </html>
