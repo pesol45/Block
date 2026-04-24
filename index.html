@@ -51,7 +51,7 @@
         }
         .cars-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
             gap: 24px;
             margin-top: 20px;
         }
@@ -92,20 +92,34 @@
             border-radius: 20px;
             padding: 12px;
             margin: 10px 0;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
         }
         .spec-item {
             display: flex;
             justify-content: space-between;
-            padding: 6px 0;
+            padding: 8px 0;
             border-bottom: 1px solid #ff8c4233;
         }
-        .nitro-yes {
-            color: #ffaa33;
-            font-weight: bold;
+        .spec-item:last-child {
+            border-bottom: none;
         }
-        .nitro-no {
-            color: #a0a0a0;
+        .nitro-badge {
+            display: inline-block;
+            background: #ff6600;
+            color: #000;
+            font-weight: bold;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            margin-left: 8px;
+        }
+        .tune-badge {
+            display: inline-block;
+            background: #2c5a7a;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 0.7rem;
         }
         .delete-btn {
             background: #8b2c2c;
@@ -140,9 +154,20 @@
             display: flex;
             gap: 12px;
             flex-wrap: wrap;
+            align-items: center;
         }
-        .admin-form input, .admin-form textarea {
+        .form-group {
             flex: 1;
+            min-width: 150px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 0.75rem;
+            margin-bottom: 4px;
+            color: #ffaa66;
+        }
+        .admin-form input, .admin-form select, .admin-form textarea {
+            width: 100%;
             padding: 10px 15px;
             border-radius: 40px;
             border: none;
@@ -156,12 +181,13 @@
         }
         .admin-form button {
             background: #ff7b2c;
-            padding: 10px 20px;
+            padding: 12px 24px;
             border-radius: 40px;
             border: none;
             color: white;
             font-weight: bold;
             cursor: pointer;
+            font-size: 1rem;
         }
         .empty-state {
             text-align: center;
@@ -174,21 +200,31 @@
             font-size: 0.7rem;
             opacity: 0.6;
         }
-        .error-toast {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: #ff4444;
-            color: white;
-            padding: 12px 20px;
-            border-radius: 40px;
-            font-size: 0.85rem;
-            z-index: 999;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            max-width: 350px;
+        .nitro-x2 { color: #44ff44; }
+        .nitro-x5 { color: #ffaa44; }
+        .nitro-x10 { color: #ff4444; font-weight: bold; text-shadow: 0 0 5px red; }
+        .tune-sport { color: #44aaff; }
+        .tune-drift { color: #ffaa44; }
+        .tune-sportplus { color: #ff44ff; }
+        .tune-comfort { color: #44ffaa; }
+        .accordion {
+            background: rgba(0,0,0,0.5);
+            border-radius: 16px;
+            margin-top: 10px;
+            overflow: hidden;
         }
-        .success-toast {
-            background: #00aa55;
+        .accordion-header {
+            padding: 8px 12px;
+            cursor: pointer;
+            background: rgba(0,0,0,0.5);
+            font-size: 0.8rem;
+            text-align: center;
+            color: #ffaa66;
+        }
+        .accordion-content {
+            padding: 10px;
+            display: none;
+            background: rgba(0,0,0,0.3);
         }
     </style>
 </head>
@@ -203,16 +239,61 @@
         <div class="admin-panel">
             <h3>🔧 Админ-панель: добавить машину</h3>
             <div class="admin-form">
-                <input type="text" id="carName" placeholder="Название (например: Brabus 800)">
-                <input type="text" id="carImage" placeholder="Ссылка на фото машины (URL)">
                 <div class="form-row">
-                    <input type="number" id="acceleration" placeholder="Разгон 0-100 км/ч (сек)" step="0.1">
-                    <input type="number" id="topSpeed" placeholder="Максималка (км/ч)">
+                    <div class="form-group" style="flex:2;">
+                        <label>🏎️ Название машины</label>
+                        <input type="text" id="carName" placeholder="Например: Brabus 800, BMW M5, Mercedes AMG">
+                    </div>
+                    <div class="form-group">
+                        <label>📷 Ссылка на фото</label>
+                        <input type="text" id="carImage" placeholder="URL фото">
+                    </div>
                 </div>
+                
                 <div class="form-row">
-                    <label style="color:#ffaa33;"><input type="checkbox" id="hasNitro"> 🚀 Есть нитро</label>
+                    <div class="form-group">
+                        <label>⚡ Разгон 0-100 (без нитро)</label>
+                        <input type="number" id="accelerationNoNitro" placeholder="сек" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label>🚀 Разгон 0-100 (с нитро)</label>
+                        <input type="number" id="accelerationWithNitro" placeholder="сек" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label>📈 Максимальная скорость</label>
+                        <input type="number" id="topSpeed" placeholder="км/ч">
+                    </div>
                 </div>
-                <textarea id="otherSpecs" rows="2" placeholder="Доп. характеристики: привод, двигатель, цена и т.д."></textarea>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>💨 Нитро-буст</label>
+                        <select id="nitroType">
+                            <option value="none">❌ Без нитро</option>
+                            <option value="x2">🔥 x2 (ускорение x2)</option>
+                            <option value="x5">💥 x5 (ускорение x5)</option>
+                            <option value="x10">⚡ x10 (ускорение x10)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>🔧 Прошивка ЭБУ</label>
+                        <select id="tuneType">
+                            <option value="none">❌ Сток</option>
+                            <option value="sport">🏁 Спорт +50 км/ч</option>
+                            <option value="drift">💨 Дрифт +30 км/ч, дрифт режим</option>
+                            <option value="sportplus">🔥 Спорт+ +80 км/ч</option>
+                            <option value="comfort">☁️ Комфорт +20 км/ч, мягкая подвеска</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group" style="flex:2;">
+                        <label>📝 Дополнительные характеристики</label>
+                        <textarea id="otherSpecs" rows="2" placeholder="Двигатель, привод, цена и т.д."></textarea>
+                    </div>
+                </div>
+                
                 <button id="createCarBtn">➕ Добавить машину в автопарк</button>
             </div>
             <div class="info-text">✅ Админ может добавлять и удалять любые машины. Игроки только смотрят ТТХ.</div>
@@ -222,7 +303,7 @@
     <div id="carsContainer" class="cars-grid">
         <div class="empty-state">🏎️ Загрузка автопарка...</div>
     </div>
-    <footer>🔐 Админ: добавь ?key=14881161 к ссылке</footer>
+    <footer>🔐 Админ: добавь ?key=14881161 к ссылке | Нитро x2/x5/x10 + прошивки</footer>
 </div>
 
 <script>
@@ -236,7 +317,6 @@
         appId: "1:1080576728275:web:efdb524baf64d8bd9ac826"
     };
 
-    // Инициализация Firebase
     let database;
     let carsRef;
     
@@ -244,59 +324,106 @@
         const app = firebase.initializeApp(firebaseConfig);
         database = firebase.database();
         carsRef = database.ref('cars');
-        console.log("✅ Firebase подключен успешно");
+        console.log("✅ Firebase подключен");
     } catch (e) {
-        console.error("❌ Ошибка подключения Firebase:", e);
-        showMessage("Ошибка подключения к базе данных: " + e.message, "error");
+        console.error("❌ Firebase ошибка:", e);
     }
 
-    // ---------- АДМИН ПО ССЫЛКЕ С ПАРОЛЕМ ----------
     const ADMIN_KEY = "14881161";
-    
     let isAdminMode = false;
     let allCars = [];
 
-    // Функция для показа сообщений
     function showMessage(text, type = "error") {
         const toast = document.createElement('div');
-        toast.className = `error-toast ${type === 'success' ? 'success-toast' : ''}`;
+        toast.style.cssText = `
+            position: fixed; bottom: 20px; right: 20px; background: ${type === 'success' ? '#00aa55' : '#ff4444'};
+            color: white; padding: 12px 20px; border-radius: 40px; font-size: 0.85rem;
+            z-index: 999; box-shadow: 0 4px 15px rgba(0,0,0,0.3); max-width: 350px;
+        `;
         toast.textContent = text;
         document.body.appendChild(toast);
         setTimeout(() => toast.remove(), 4000);
     }
 
-    // Проверяем параметр key в URL
     function checkAdminAccess() {
         const urlParams = new URLSearchParams(window.location.search);
         const key = urlParams.get('key');
-        
         if (key === ADMIN_KEY) {
             isAdminMode = true;
             document.getElementById('adminZone').style.display = 'block';
             document.getElementById('adminBadge').innerHTML = '👑 АДМИН АВТОПАРКА 🏁';
             document.getElementById('adminBadge').classList.add('admin-mode');
-            console.log("✅ Админ-режим активирован");
         } else {
             isAdminMode = false;
             document.getElementById('adminBadge').innerHTML = '👤 Режим: гость (только просмотр)';
             document.getElementById('adminBadge').classList.remove('admin-mode');
             document.getElementById('adminZone').style.display = 'none';
-            console.log("👤 Обычный режим");
         }
         renderCars();
     }
 
-    // Отображение машин
+    function getNitroClass(type) {
+        if (type === 'x2') return 'nitro-x2';
+        if (type === 'x5') return 'nitro-x5';
+        if (type === 'x10') return 'nitro-x10';
+        return '';
+    }
+
+    function getNitroText(type) {
+        if (type === 'x2') return '🔥 x2';
+        if (type === 'x5') return '💥 x5';
+        if (type === 'x10') return '⚡ x10';
+        return '❌ Нет';
+    }
+
+    function getTuneText(type) {
+        const tunes = {
+            'sport': '🏁 Спорт (+50 км/ч)',
+            'drift': '💨 Дрифт (+30 км/ч)',
+            'sportplus': '🔥 Спорт+ (+80 км/ч)',
+            'comfort': '☁️ Комфорт (+20 км/ч)',
+            'none': '❌ Сток'
+        };
+        return tunes[type] || tunes.none;
+    }
+
+    function getTuneClass(type) {
+        const classes = {
+            'sport': 'tune-sport',
+            'drift': 'tune-drift',
+            'sportplus': 'tune-sportplus',
+            'comfort': 'tune-comfort'
+        };
+        return classes[type] || '';
+    }
+
+    function getFinalTopSpeed(baseSpeed, tuneType) {
+        if (!baseSpeed) return baseSpeed;
+        const bonuses = {
+            'sport': 50,
+            'drift': 30,
+            'sportplus': 80,
+            'comfort': 20,
+            'none': 0
+        };
+        return baseSpeed + (bonuses[tuneType] || 0);
+    }
+
     function renderCars() {
         const container = document.getElementById('carsContainer');
         if (!container) return;
         
         if (!allCars.length) {
-            container.innerHTML = '<div class="empty-state">🏎️ Автопарк пуст. Админ может добавить тачки Black Russia!</div>';
+            container.innerHTML = '<div class="empty-state">🏎️ Автопарк пуст. Админ может добавить тачки!</div>';
             return;
         }
+        
         container.innerHTML = '';
         allCars.forEach(car => {
+            const finalSpeed = getFinalTopSpeed(car.topSpeed, car.tuneType);
+            const nitroClass = getNitroClass(car.nitroType);
+            const tuneClass = getTuneClass(car.tuneType);
+            
             const card = document.createElement('div');
             card.className = 'car-card';
             card.innerHTML = `
@@ -304,15 +431,28 @@
                      onerror="this.src='https://via.placeholder.com/400x200?text=Фото+не+загружено'">
                 <div class="car-name">
                     <span>${escapeHtml(car.name)}</span>
-                    ${car.hasNitro ? '<span style="font-size:1.2rem;">🚀</span>' : ''}
+                    ${car.nitroType !== 'none' ? `<span class="nitro-badge ${nitroClass}">${getNitroText(car.nitroType)}</span>` : ''}
                 </div>
                 <div class="specs">
-                    <div class="spec-item"><strong>🏎️ Разгон 0-100 км/ч:</strong> ${car.acceleration ?? '?'} сек</div>
-                    <div class="spec-item"><strong>📈 Максимальная скорость:</strong> ${car.topSpeed ?? '?'} км/ч</div>
-                    <div class="spec-item"><strong>⚡ Нитро:</strong> ${car.hasNitro ? '<span class="nitro-yes">✅ Есть</span>' : '<span class="nitro-no">❌ Нет</span>'}</div>
-                    ${car.otherSpecs ? `<div class="spec-item"><strong>🔧 Характеристики:</strong><br>${escapeHtml(car.otherSpecs)}</div>` : ''}
+                    <div class="spec-item">
+                        <strong>🏎️ Разгон 0-100:</strong>
+                        <span>без нитро: ${car.accelerationNoNitro ?? '?'} сек | с нитро: ${car.accelerationWithNitro ?? '?'} сек</span>
+                    </div>
+                    <div class="spec-item">
+                        <strong>📈 Максималка:</strong>
+                        <span>база: ${car.topSpeed ?? '?'} км/ч 
+                        ${car.tuneType !== 'none' ? `<span class="${tuneClass}">→ ${finalSpeed} км/ч (${getTuneText(car.tuneType)})</span>` : ''}
+                        </span>
+                    </div>
+                    ${car.nitroType !== 'none' ? `<div class="spec-item">
+                        <strong>💨 Нитро-буст:</strong>
+                        <span class="${nitroClass}">${getNitroText(car.nitroType)}</span>
+                    </div>` : ''}
+                    ${car.otherSpecs ? `<div class="spec-item">
+                        <strong>🔧 Характеристики:</strong><br>${escapeHtml(car.otherSpecs)}
+                    </div>` : ''}
                 </div>
-                ${isAdminMode ? `<button class="delete-btn" data-id="${car.id}">🗑 Удалить машину из автопарка</button>` : ''}
+                ${isAdminMode ? `<button class="delete-btn" data-id="${car.id}">🗑 Удалить машину</button>` : ''}
             `;
             container.appendChild(card);
         });
@@ -324,76 +464,49 @@
                     if (confirm('Удалить машину навсегда?')) {
                         carsRef.child(id).remove()
                             .then(() => showMessage("✅ Машина удалена", "success"))
-                            .catch(err => showMessage("❌ Ошибка удаления: " + err.message));
+                            .catch(err => showMessage("❌ Ошибка: " + err.message));
                     }
                 });
             });
         }
     }
 
-    // Создание машины (только админ)
     function createCar() {
-        console.log("🔧 createCar вызвана");
-        
-        if (!isAdminMode) { 
-            alert("Только админ автопарка!"); 
-            return; 
-        }
-        
-        if (!carsRef) {
-            showMessage("❌ База данных не подключена. Проверьте Firebase.", "error");
-            return;
-        }
+        if (!isAdminMode) { alert("Только админ!"); return; }
+        if (!carsRef) { showMessage("❌ База не подключена"); return; }
         
         const name = document.getElementById('carName').value.trim();
-        const imageUrl = document.getElementById('carImage').value.trim();
-        const acceleration = parseFloat(document.getElementById('acceleration').value);
-        const topSpeed = parseInt(document.getElementById('topSpeed').value);
-        const hasNitro = document.getElementById('hasNitro').checked;
-        const otherSpecs = document.getElementById('otherSpecs').value.trim();
-        
-        if (!name) { 
-            showMessage("❌ Введите название машины", "error");
-            return; 
-        }
-        
-        console.log("📝 Создаём машину:", name);
+        if (!name) { showMessage("❌ Введите название машины"); return; }
         
         const newCar = {
             name: name,
-            imageUrl: imageUrl || '',
-            acceleration: isNaN(acceleration) ? null : acceleration,
-            topSpeed: isNaN(topSpeed) ? null : topSpeed,
-            hasNitro: hasNitro,
-            otherSpecs: otherSpecs || '',
+            imageUrl: document.getElementById('carImage').value.trim(),
+            accelerationNoNitro: parseFloat(document.getElementById('accelerationNoNitro').value) || null,
+            accelerationWithNitro: parseFloat(document.getElementById('accelerationWithNitro').value) || null,
+            topSpeed: parseInt(document.getElementById('topSpeed').value) || null,
+            nitroType: document.getElementById('nitroType').value,
+            tuneType: document.getElementById('tuneType').value,
+            otherSpecs: document.getElementById('otherSpecs').value.trim(),
             createdAt: firebase.database.ServerValue.TIMESTAMP
         };
         
         carsRef.push(newCar)
             .then(() => {
-                console.log("✅ Машина успешно добавлена:", name);
-                showMessage(`✅ Машина "${name}" добавлена в автопарк!`, "success");
-                // Очищаем поля
+                showMessage(`✅ "${name}" добавлен!`, "success");
                 document.getElementById('carName').value = '';
                 document.getElementById('carImage').value = '';
-                document.getElementById('acceleration').value = '';
+                document.getElementById('accelerationNoNitro').value = '';
+                document.getElementById('accelerationWithNitro').value = '';
                 document.getElementById('topSpeed').value = '';
-                document.getElementById('hasNitro').checked = false;
+                document.getElementById('nitroType').value = 'none';
+                document.getElementById('tuneType').value = 'none';
                 document.getElementById('otherSpecs').value = '';
             })
-            .catch(err => {
-                console.error("❌ Ошибка добавления:", err);
-                showMessage("❌ Ошибка: " + err.message, "error");
-            });
+            .catch(err => showMessage("❌ Ошибка: " + err.message));
     }
 
-    // Подписка на изменения в Firebase
     function subscribeCars() {
-        if (!carsRef) {
-            console.error("❌ carsRef не определён");
-            return;
-        }
-        
+        if (!carsRef) return;
         carsRef.on('value', (snapshot) => {
             const data = snapshot.val();
             const list = [];
@@ -404,50 +517,23 @@
                 list.reverse();
             }
             allCars = list;
-            console.log(`📦 Загружено ${allCars.length} машин`);
             renderCars();
-        }, (error) => {
-            console.error("❌ Ошибка загрузки данных:", error);
-            showMessage("Ошибка загрузки из Firebase: " + error.message, "error");
         });
     }
 
     function escapeHtml(str) {
         if (!str) return '';
-        return String(str).replace(/[&<>]/g, function(m) {
-            if (m === '&') return '&amp;';
-            if (m === '<') return '&lt;';
-            if (m === '>') return '&gt;';
-            return m;
-        });
+        return String(str).replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
     }
 
     function init() {
-        console.log("🚀 Инициализация приложения...");
         checkAdminAccess();
-        
-        if (carsRef) {
-            subscribeCars();
-        }
-        
-        const createBtn = document.getElementById('createCarBtn');
-        if (createBtn) {
-            // Убираем старые обработчики и вешаем новый
-            const newBtn = createBtn.cloneNode(true);
-            createBtn.parentNode.replaceChild(newBtn, createBtn);
-            newBtn.addEventListener('click', createCar);
-            console.log("✅ Кнопка создания привязана");
-        } else {
-            console.error("❌ Кнопка createCarBtn не найдена");
-        }
+        subscribeCars();
+        const btn = document.getElementById('createCarBtn');
+        if (btn) btn.addEventListener('click', createCar);
     }
     
-    // Запускаем когда DOM загружен
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
-    } else {
-        init();
-    }
+    init();
 </script>
 </body>
 </html>
