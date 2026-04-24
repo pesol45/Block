@@ -174,6 +174,22 @@
             font-size: 0.7rem;
             opacity: 0.6;
         }
+        .error-toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #ff4444;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 40px;
+            font-size: 0.85rem;
+            z-index: 999;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            max-width: 350px;
+        }
+        .success-toast {
+            background: #00aa55;
+        }
     </style>
 </head>
 <body>
@@ -220,15 +236,34 @@
         appId: "1:1080576728275:web:efdb524baf64d8bd9ac826"
     };
 
-    const app = firebase.initializeApp(firebaseConfig);
-    const database = firebase.database();
-    const carsRef = database.ref('cars');
+    // Инициализация Firebase
+    let database;
+    let carsRef;
+    
+    try {
+        const app = firebase.initializeApp(firebaseConfig);
+        database = firebase.database();
+        carsRef = database.ref('cars');
+        console.log("✅ Firebase подключен успешно");
+    } catch (e) {
+        console.error("❌ Ошибка подключения Firebase:", e);
+        showMessage("Ошибка подключения к базе данных: " + e.message, "error");
+    }
 
     // ---------- АДМИН ПО ССЫЛКЕ С ПАРОЛЕМ ----------
-    const ADMIN_KEY = "14881161";  // Твой пароль
+    const ADMIN_KEY = "14881161";
     
     let isAdminMode = false;
     let allCars = [];
+
+    // Функция для показа сообщений
+    function showMessage(text, type = "error") {
+        const toast = document.createElement('div');
+        toast.className = `error-toast ${type === 'success' ? 'success-toast' : ''}`;
+        toast.textContent = text;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 4000);
+    }
 
     // Проверяем параметр key в URL
     function checkAdminAccess() {
@@ -240,11 +275,13 @@
             document.getElementById('adminZone').style.display = 'block';
             document.getElementById('adminBadge').innerHTML = '👑 АДМИН АВТОПАРКА 🏁';
             document.getElementById('adminBadge').classList.add('admin-mode');
+            console.log("✅ Админ-режим активирован");
         } else {
             isAdminMode = false;
             document.getElementById('adminBadge').innerHTML = '👤 Режим: гость (только просмотр)';
             document.getElementById('adminBadge').classList.remove('admin-mode');
             document.getElementById('adminZone').style.display = 'none';
+            console.log("👤 Обычный режим");
         }
         renderCars();
     }
@@ -252,6 +289,8 @@
     // Отображение машин
     function renderCars() {
         const container = document.getElementById('carsContainer');
+        if (!container) return;
+        
         if (!allCars.length) {
             container.innerHTML = '<div class="empty-state">🏎️ Автопарк пуст. Админ может добавить тачки Black Russia!</div>';
             return;
@@ -282,7 +321,11 @@
             document.querySelectorAll('.delete-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     const id = btn.getAttribute('data-id');
-                    if (confirm('Удалить машину навсегда?')) carsRef.child(id).remove();
+                    if (confirm('Удалить машину навсегда?')) {
+                        carsRef.child(id).remove()
+                            .then(() => showMessage("✅ Машина удалена", "success"))
+                            .catch(err => showMessage("❌ Ошибка удаления: " + err.message));
+                    }
                 });
             });
         }
@@ -290,7 +333,18 @@
 
     // Создание машины (только админ)
     function createCar() {
-        if (!isAdminMode) { alert("Только админ автопарка!"); return; }
+        console.log("🔧 createCar вызвана");
+        
+        if (!isAdminMode) { 
+            alert("Только админ автопарка!"); 
+            return; 
+        }
+        
+        if (!carsRef) {
+            showMessage("❌ База данных не подключена. Проверьте Firebase.", "error");
+            return;
+        }
+        
         const name = document.getElementById('carName').value.trim();
         const imageUrl = document.getElementById('carImage').value.trim();
         const acceleration = parseFloat(document.getElementById('acceleration').value);
@@ -298,7 +352,12 @@
         const hasNitro = document.getElementById('hasNitro').checked;
         const otherSpecs = document.getElementById('otherSpecs').value.trim();
         
-        if (!name) { alert("Введите название машины"); return; }
+        if (!name) { 
+            showMessage("❌ Введите название машины", "error");
+            return; 
+        }
+        
+        console.log("📝 Создаём машину:", name);
         
         const newCar = {
             name: name,
@@ -309,18 +368,32 @@
             otherSpecs: otherSpecs || '',
             createdAt: firebase.database.ServerValue.TIMESTAMP
         };
-        carsRef.push(newCar).then(() => {
-            document.getElementById('carName').value = '';
-            document.getElementById('carImage').value = '';
-            document.getElementById('acceleration').value = '';
-            document.getElementById('topSpeed').value = '';
-            document.getElementById('hasNitro').checked = false;
-            document.getElementById('otherSpecs').value = '';
-        }).catch(err => alert("Ошибка: " + err.message));
+        
+        carsRef.push(newCar)
+            .then(() => {
+                console.log("✅ Машина успешно добавлена:", name);
+                showMessage(`✅ Машина "${name}" добавлена в автопарк!`, "success");
+                // Очищаем поля
+                document.getElementById('carName').value = '';
+                document.getElementById('carImage').value = '';
+                document.getElementById('acceleration').value = '';
+                document.getElementById('topSpeed').value = '';
+                document.getElementById('hasNitro').checked = false;
+                document.getElementById('otherSpecs').value = '';
+            })
+            .catch(err => {
+                console.error("❌ Ошибка добавления:", err);
+                showMessage("❌ Ошибка: " + err.message, "error");
+            });
     }
 
     // Подписка на изменения в Firebase
     function subscribeCars() {
+        if (!carsRef) {
+            console.error("❌ carsRef не определён");
+            return;
+        }
+        
         carsRef.on('value', (snapshot) => {
             const data = snapshot.val();
             const list = [];
@@ -331,7 +404,11 @@
                 list.reverse();
             }
             allCars = list;
+            console.log(`📦 Загружено ${allCars.length} машин`);
             renderCars();
+        }, (error) => {
+            console.error("❌ Ошибка загрузки данных:", error);
+            showMessage("Ошибка загрузки из Firebase: " + error.message, "error");
         });
     }
 
@@ -346,13 +423,31 @@
     }
 
     function init() {
-        subscribeCars();
+        console.log("🚀 Инициализация приложения...");
         checkAdminAccess();
+        
+        if (carsRef) {
+            subscribeCars();
+        }
+        
         const createBtn = document.getElementById('createCarBtn');
-        if (createBtn) createBtn.addEventListener('click', createCar);
+        if (createBtn) {
+            // Убираем старые обработчики и вешаем новый
+            const newBtn = createBtn.cloneNode(true);
+            createBtn.parentNode.replaceChild(newBtn, createBtn);
+            newBtn.addEventListener('click', createCar);
+            console.log("✅ Кнопка создания привязана");
+        } else {
+            console.error("❌ Кнопка createCarBtn не найдена");
+        }
     }
     
-    init();
+    // Запускаем когда DOM загружен
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
 </script>
 </body>
 </html>
