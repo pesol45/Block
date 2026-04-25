@@ -19,13 +19,16 @@
         .car-card { background: rgba(20, 30, 45, 0.9); backdrop-filter: blur(4px); border-radius: 28px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); border: 1px solid rgba(255, 100, 0, 0.3); transition: transform 0.2s; }
         .car-card:hover { transform: translateY(-5px); }
         
-        /* СЛАЙДЕР ГАЛЕРЕИ (как на Ozon/WB) */
-        .gallery-container { position: relative; width: 100%; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; display: flex; border-radius: 20px; margin-bottom: 15px; scrollbar-width: thin; }
-        .gallery-container::-webkit-scrollbar { height: 5px; }
-        .gallery-container::-webkit-scrollbar-track { background: #1a1a2a; border-radius: 10px; }
-        .gallery-container::-webkit-scrollbar-thumb { background: #ff8c42; border-radius: 10px; }
-        .gallery-img { scroll-snap-align: start; flex-shrink: 0; width: 100%; height: 220px; object-fit: cover; background: #1a1f2a; border: 1px solid #ff8c42; }
-        .gallery-counter { position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.7); padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; pointer-events: none; z-index: 5; }
+        /* ГАЛЕРЕЯ С ТОЧКАМИ */
+        .gallery-wrapper { position: relative; margin-bottom: 15px; }
+        .gallery-container { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scroll-behavior: smooth; border-radius: 20px; scrollbar-width: none; }
+        .gallery-container::-webkit-scrollbar { display: none; }
+        .gallery-img { scroll-snap-align: start; flex-shrink: 0; width: 100%; height: 220px; object-fit: cover; background: #1a1f2a; border: 1px solid #ff8c42; border-radius: 20px; }
+        .gallery-dots { display: flex; justify-content: center; gap: 10px; margin-top: 10px; }
+        .dot { width: 10px; height: 10px; border-radius: 50%; background: #555; cursor: pointer; transition: 0.2s; }
+        .dot.active { background: white; transform: scale(1.2); }
+        .gallery-counter { position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.6); padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; pointer-events: none; z-index: 5; }
+        
         .add-photo-btn { margin-top: 8px; background: #3a7ca5; border: none; color: white; padding: 6px 12px; border-radius: 40px; font-size: 0.7rem; cursor: pointer; width: 100%; }
         
         .car-name { font-size: 1.6rem; font-weight: bold; display: flex; justify-content: space-between; border-bottom: 2px solid #ff5e00; padding-bottom: 8px; margin-bottom: 15px; }
@@ -57,6 +60,8 @@
         footer { margin-top: 20px; text-align: center; font-size: 0.7rem; opacity: 0.6; padding-bottom: 20px; }
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 2000; }
         .modal-content { background: #1a2a2a; padding: 25px; border-radius: 32px; width: 90%; max-width: 500px; max-height: 80vh; overflow-y: auto; }
+        .error-border { border: 1px solid #ff4444 !important; background: #3a1a1a !important; }
+        .info-text { font-size: 0.7rem; color: #aaa; margin-top: 5px; }
     </style>
 </head>
 <body>
@@ -73,7 +78,7 @@
             <div class="admin-form">
                 <div class="form-row">
                     <div class="form-group" style="flex:2;"><input type="text" id="carName" placeholder="Название машины"></div>
-                    <div class="form-group"><input type="text" id="carImage" placeholder="URL фото (можно несколько через |)"></div>
+                    <div class="form-group"><input type="text" id="carImage" placeholder="Фото (ссылки через |)"></div>
                 </div>
                 <div class="form-row">
                     <div class="form-group"><input type="number" id="price" placeholder="Цена"></div>
@@ -90,18 +95,21 @@
                             <option value="x10">⚡ x10</option>
                         </select>
                     </div>
+                </div>
+                <div class="form-row">
                     <div class="form-group">
                         <select id="plateCountry">
                             <option value="none">🌍 Без номера</option>
+                            <option value="ru">🇷🇺 Россия</option>
                             <option value="ua">🇺🇦 Украина</option>
                             <option value="by">🇧🇾 Беларусь</option>
-                            <option value="ru">🇷🇺 Россия</option>
                             <option value="kz">🇰🇿 Казахстан</option>
                         </select>
                     </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group"><input type="text" id="plateNumber" placeholder="Гос номер"></div>
+                    <div class="form-group" style="flex:2;">
+                        <input type="text" id="plateNumber" placeholder="Гос номер">
+                        <div class="info-text" id="plateHint">Формат: А123ВС 116</div>
+                    </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
@@ -118,7 +126,6 @@
                     <div class="form-group"><textarea id="otherSpecs" rows="2" placeholder="Доп. характеристики"></textarea></div>
                 </div>
                 <button id="createCarBtn">➕ Добавить машину</button>
-                <div class="info-text" style="font-size:0.7rem; color:#aaa;">📸 Фото: несколько ссылок через | (вертикальная черта)</div>
             </div>
         </div>
     </div>
@@ -126,7 +133,7 @@
     <div id="carsContainer" class="cars-grid">
         <div class="empty-state">🏎️ Загрузка...</div>
     </div>
-    <footer>🔐 Админ: ?key=14881161 | Листай фото в карточке</footer>
+    <footer>🔐 Админ: ?key=14881161 | Листай фото, точки показывают текущее фото</footer>
 </div>
 
 <script>
@@ -150,11 +157,49 @@
     let isAdminMode = false;
     let allCars = [];
 
-    function formatPrice(p) { return p ? p.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " ₽" : "?"; }
+    // ГОСТ валидация номеров
+    function validatePlateNumber(country, number) {
+        if (!number || country === 'none') return true;
+        const clean = number.toUpperCase().replace(/\s/g, '');
+        
+        if (country === 'ru') {
+            // Русский ГОСТ: Буква 3 цифры 2 буквы | регион (2-3 цифры)
+            const ruPattern = /^[АВЕКМНОРСТУХABEKMHOPCTYX]{1}\d{3}[АВЕКМНОРСТУХABEKMHOPCTYX]{2}\d{2,3}$/i;
+            return ruPattern.test(clean);
+        }
+        else if (country === 'ua') {
+            // Украинский: AA 1234 BB или AA 1234 BB регион (2 цифры)
+            const uaPattern = /^[A-Z]{2}\d{4}[A-Z]{2}\d{2}$/i;
+            return uaPattern.test(clean);
+        }
+        else if (country === 'by') {
+            // Белорусский: 1234 AB-7 или A 1234 BC-7
+            const byPattern = /^[A-Z]{0,2}\d{4}[A-Z]{2}\d{1,2}$/i;
+            return byPattern.test(clean) || clean.length >= 5;
+        }
+        else if (country === 'kz') {
+            // Казахстанский: 123 ABC 01 или ABC 123
+            const kzPattern = /^[A-Z]{3}\d{3}$|^\d{3}[A-Z]{3}$/i;
+            return kzPattern.test(clean);
+        }
+        return true;
+    }
+
+    function formatPlateForDisplay(country, number) {
+        if (!number || country === 'none') return number;
+        const clean = number.toUpperCase();
+        if (country === 'ru' && clean.length >= 6) {
+            return `${clean.substring(0,1)}${clean.substring(1,4)}${clean.substring(4,6)} ${clean.substring(6)}`;
+        }
+        return clean;
+    }
+
     function getCountryFlag(code) { const f = { ua:"🇺🇦", by:"🇧🇾", ru:"🇷🇺", kz:"🇰🇿" }; return f[code] || "🌍"; }
     function getNitroClass(t) { return t === 'x2' ? 'nitro-x2' : t === 'x5' ? 'nitro-x5' : t === 'x10' ? 'nitro-x10' : ''; }
     function getNitroText(t) { return t === 'x2' ? '🔥 x2' : t === 'x5' ? '💥 x5' : t === 'x10' ? '⚡ x10' : '❌ Нет'; }
+    function formatPrice(p) { return p ? p.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " ₽" : "?"; }
     function escapeHtml(s) { if(!s) return ''; return String(s).replace(/[&<>]/g, m=>m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'); }
+    
     function showMessage(t, type="error") { 
         let d = document.createElement('div'); 
         d.style.cssText = `position:fixed;bottom:80px;right:20px;background:${type==='success'?'#00aa55':'#ff4444'};color:white;padding:10px 20px;border-radius:40px;z-index:9999`; 
@@ -178,7 +223,6 @@
         renderCars();
     }
 
-    // Получение массива фото (если несколько через |)
     function getImageUrls(imageField) {
         if (!imageField) return ['https://via.placeholder.com/400x200?text=No+Image'];
         if (imageField.includes('|')) {
@@ -187,24 +231,60 @@
         return [imageField];
     }
 
+    // Инициализация галереи с точками
+    function initGallery(cardId, containerId) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        
+        const dotsContainer = container.parentElement?.querySelector('.gallery-dots');
+        if (!dotsContainer) return;
+        
+        const updateActiveDot = () => {
+            const scrollLeft = container.scrollLeft;
+            const scrollWidth = container.scrollWidth;
+            const clientWidth = container.clientWidth;
+            const activeIndex = Math.round((scrollLeft / (scrollWidth - clientWidth)) * (dotsContainer.children.length - 1)) || 0;
+            
+            Array.from(dotsContainer.children).forEach((dot, idx) => {
+                if (idx === activeIndex) dot.classList.add('active');
+                else dot.classList.remove('active');
+            });
+        };
+        
+        container.addEventListener('scroll', updateActiveDot);
+        setTimeout(updateActiveDot, 100);
+        
+        Array.from(dotsContainer.children).forEach((dot, idx) => {
+            dot.addEventListener('click', () => {
+                const scrollAmount = (container.scrollWidth / dotsContainer.children.length) * idx;
+                container.scrollTo({ left: scrollAmount, behavior: 'smooth' });
+            });
+        });
+    }
+
     function renderCars() {
         let container = document.getElementById('carsContainer');
         if (!allCars.length) { container.innerHTML = '<div class="empty-state">🏎️ Нет машин</div>'; return; }
         container.innerHTML = '';
+        
         allCars.forEach(car => {
             let imageUrls = getImageUrls(car.imageUrl);
             let tuneHtml = car.tunes?.length ? `<div class="spec-item"><strong>🔧 Прошивки:</strong><div>${car.tunes.map(t=>`<span class="tune-tag">${escapeHtml(t)}</span>`).join('')}</div></div>` : '';
-            let plateHtml = (car.plateCountry && car.plateNumber && car.plateCountry !== 'none') ? `<div class="car-plate">${getCountryFlag(car.plateCountry)} ${escapeHtml(car.plateNumber)}</div>` : '';
             
-            // ГАЛЕРЕЯ (скролл фото)
-            let galleryHtml = `
-                <div class="gallery-container" id="gallery-${car.id}">
-                    ${imageUrls.map((url, idx) => `<img class="gallery-img" src="${escapeHtml(url)}" onerror="this.src='https://via.placeholder.com/400x200?text=Error'" loading="lazy">`).join('')}
-                    <div class="gallery-counter">📸 ${imageUrls.length} фото</div>
-                </div>
-            `;
+            let displayPlate = '';
+            if (car.plateCountry && car.plateNumber && car.plateCountry !== 'none') {
+                let formatted = formatPlateForDisplay(car.plateCountry, car.plateNumber);
+                displayPlate = `<div class="car-plate">${getCountryFlag(car.plateCountry)} ${escapeHtml(formatted)}</div>`;
+            }
             
-            // Кнопка добавления фото только для админа
+            let dotsHtml = '';
+            if (imageUrls.length > 1) {
+                dotsHtml = `<div class="gallery-dots">${imageUrls.map((_, idx) => `<div class="dot ${idx === 0 ? 'active' : ''}" data-idx="${idx}"></div>`).join('')}</div>`;
+            }
+            
+            let galleryId = `gallery-${car.id}-${Date.now()}`;
+            let wrapperId = `wrapper-${car.id}-${Date.now()}`;
+            
             let addPhotoBtn = '';
             if (isAdminMode) {
                 addPhotoBtn = `<button class="add-photo-btn" data-id="${car.id}" data-current="${escapeHtml(car.imageUrl || '')}">➕ Добавить фото</button>`;
@@ -213,13 +293,19 @@
             let card = document.createElement('div');
             card.className = 'car-card';
             card.innerHTML = `
-                ${galleryHtml}
+                <div class="gallery-wrapper" id="${wrapperId}">
+                    <div class="gallery-container" id="${galleryId}">
+                        ${imageUrls.map((url, idx) => `<img class="gallery-img" src="${escapeHtml(url)}" onerror="this.src='https://via.placeholder.com/400x200?text=Error'" loading="lazy" data-index="${idx}">`).join('')}
+                    </div>
+                    ${dotsHtml}
+                    <div class="gallery-counter">📸 ${imageUrls.length}</div>
+                </div>
                 ${addPhotoBtn}
                 <div class="car-name">
                     <span>${escapeHtml(car.name)}</span>
                     ${car.nitroType !== 'none' ? `<span class="nitro-badge ${getNitroClass(car.nitroType)}">${getNitroText(car.nitroType)}</span>` : ''}
                 </div>
-                ${plateHtml}
+                ${displayPlate}
                 <div class="specs">
                     <div class="spec-item"><strong>💰 Цена:</strong><span class="price">${formatPrice(car.price)}</span></div>
                     <div class="spec-item"><strong>🏎️ Разгон 0-100:</strong><span>без нитро: ${car.accelerationNoNitro ?? '?'} сек | с нитро: ${car.accelerationWithNitro ?? '?'} сек</span></div>
@@ -231,6 +317,9 @@
                 ${isAdminMode ? `<div class="action-buttons"><button class="edit-btn" data-id="${car.id}">✏️ Ред.</button><button class="delete-btn" data-id="${car.id}">🗑 Удал.</button></div>` : ''}
             `;
             container.appendChild(card);
+            
+            // Инициализируем галерею после добавления в DOM
+            setTimeout(() => initGallery(car.id, galleryId), 50);
         });
         
         if (isAdminMode) {
@@ -255,7 +344,7 @@
         modalDiv.innerHTML = `<div class="modal-content"><h3>✏️ Редактировать</h3>
             <div class="admin-form">
                 <input id="editName" value="${escapeHtml(data.name)}" placeholder="Название">
-                <input id="editImg" value="${escapeHtml(data.imageUrl||'')}" placeholder="Фото URL (несколько через |)">
+                <input id="editImg" value="${escapeHtml(data.imageUrl||'')}" placeholder="Фото (через |)">
                 <input id="editPrice" type="number" value="${data.price||''}" placeholder="Цена">
                 <input id="editAccNo" type="number" step="0.1" value="${data.accelerationNoNitro||''}" placeholder="Разгон без нитро">
                 <input id="editAccWith" type="number" step="0.1" value="${data.accelerationWithNitro||''}" placeholder="Разгон с нитро">
@@ -268,9 +357,9 @@
                 </select>
                 <select id="editCountry">
                     <option value="none" ${data.plateCountry==='none'||!data.plateCountry?'selected':''}>🌍 Без номера</option>
+                    <option value="ru" ${data.plateCountry==='ru'?'selected':''}>🇷🇺 Россия</option>
                     <option value="ua" ${data.plateCountry==='ua'?'selected':''}>🇺🇦 Украина</option>
                     <option value="by" ${data.plateCountry==='by'?'selected':''}>🇧🇾 Беларусь</option>
-                    <option value="ru" ${data.plateCountry==='ru'?'selected':''}>🇷🇺 Россия</option>
                     <option value="kz" ${data.plateCountry==='kz'?'selected':''}>🇰🇿 Казахстан</option>
                 </select>
                 <input id="editPlate" value="${escapeHtml(data.plateNumber||'')}" placeholder="Гос номер">
@@ -285,7 +374,33 @@
                 <button id="cancelEdit" class="close-btn">Отмена</button>
             </div></div>`;
         document.body.appendChild(modalDiv);
+        
+        // Валидация номера при редактировании
+        let countrySelect = document.getElementById('editCountry');
+        let plateInput = document.getElementById('editPlate');
+        
+        function validateAndHighlight() {
+            let country = countrySelect.value;
+            let plate = plateInput.value;
+            if (!validatePlateNumber(country, plate)) {
+                plateInput.classList.add('error-border');
+                return false;
+            }
+            plateInput.classList.remove('error-border');
+            return true;
+        }
+        
+        countrySelect.addEventListener('change', validateAndHighlight);
+        plateInput.addEventListener('input', validateAndHighlight);
+        
         document.getElementById('saveEdit').onclick = () => {
+            let country = countrySelect.value;
+            let plate = plateInput.value.trim();
+            if (!validatePlateNumber(country, plate)) {
+                showMessage(`❌ Неверный формат номера для выбранной страны!`);
+                return;
+            }
+            
             let newTunes = Array.from(document.querySelectorAll('#editName ~ .checkbox-group input:checked')).map(cb=>cb.value);
             let updated = { 
                 name: document.getElementById('editName').value.trim(), 
@@ -295,8 +410,8 @@
                 accelerationWithNitro: parseFloat(document.getElementById('editAccWith').value)||null, 
                 topSpeed: parseInt(document.getElementById('editTop').value)||null, 
                 nitroType: document.getElementById('editNitro').value, 
-                plateCountry: document.getElementById('editCountry').value, 
-                plateNumber: document.getElementById('editPlate').value.trim(), 
+                plateCountry: country, 
+                plateNumber: plate, 
                 tunes: newTunes, 
                 otherSpecs: document.getElementById('editOther').value.trim() 
             };
@@ -308,6 +423,17 @@
 
     function createCar() {
         if(!isAdminMode) return;
+        
+        let country = document.getElementById('plateCountry').value;
+        let plate = document.getElementById('plateNumber').value.trim();
+        
+        if (!validatePlateNumber(country, plate)) {
+            showMessage(`❌ Неверный формат номера для выбранной страны!`);
+            document.getElementById('plateNumber').classList.add('error-border');
+            return;
+        }
+        document.getElementById('plateNumber').classList.remove('error-border');
+        
         let tunes = Array.from(document.querySelectorAll('#adminZone .checkbox-group input:checked')).map(cb=>cb.value);
         let newCar = { 
             name: document.getElementById('carName').value.trim(), 
@@ -317,8 +443,8 @@
             accelerationWithNitro: parseFloat(document.getElementById('accelerationWithNitro').value)||null, 
             topSpeed: parseInt(document.getElementById('topSpeed').value)||null, 
             nitroType: document.getElementById('nitroType').value, 
-            plateCountry: document.getElementById('plateCountry').value, 
-            plateNumber: document.getElementById('plateNumber').value.trim(), 
+            plateCountry: country, 
+            plateNumber: plate, 
             tunes, 
             otherSpecs: document.getElementById('otherSpecs').value.trim(), 
             createdAt: firebase.database.ServerValue.TIMESTAMP 
@@ -338,6 +464,20 @@
         }).catch(e=>showMessage(e.message));
     }
 
+    // Подсказка формата при смене страны
+    function updatePlateHint() {
+        let country = document.getElementById('plateCountry').value;
+        let hint = document.getElementById('plateHint');
+        let hints = {
+            ru: '🇷🇺 Формат: А123ВС 116 (буква → 3 цифры → 2 буквы → регион)',
+            ua: '🇺🇦 Формат: AA1234BB или AA1234BB 12',
+            by: '🇧🇾 Формат: 1234 AB-7 или A1234BC',
+            kz: '🇰🇿 Формат: ABC123 или 123ABC',
+            none: '🌍 Без номера'
+        };
+        if (hint) hint.textContent = hints[country] || 'Введите гос номер';
+    }
+
     function subscribeCars() { 
         if(carsRef) carsRef.on('value', snap => { 
             let d = snap.val(); 
@@ -350,9 +490,14 @@
     }
 
     document.getElementById('createCarBtn')?.addEventListener('click', createCar);
+    document.getElementById('plateCountry')?.addEventListener('change', updatePlateHint);
+    document.getElementById('plateNumber')?.addEventListener('input', () => {
+        document.getElementById('plateNumber')?.classList.remove('error-border');
+    });
     
     subscribeCars();
     checkAdminAccess();
+    updatePlateHint();
 </script>
 </body>
 </html>
