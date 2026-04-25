@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Мой автопарк | Black Russia</title>
+    <title>Black Russia | Автопарк</title>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
     <style>
@@ -11,86 +11,136 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', 'Poppins', system-ui, -apple-system, sans-serif;
+            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
         }
 
         body {
-            background: radial-gradient(circle at 10% 20%, #0a0f1a, #03060c);
+            background: #000000;
             min-height: 100vh;
-            padding: 24px 20px;
-            color: #f0f3f8;
+            padding: 20px;
+            color: #ffffff;
+            position: relative;
+        }
+
+        /* Анимированное зернистое поле */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 20% 40%, rgba(10, 10, 15, 0.6), #000000);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIj48ZmlsdGVyIGlkPSJmIj48ZmVUdXJidWxlbmNlIHR5cGU9ImZyYWN0YWxOb2lzZSIgYmFzZUZyZXF1ZW5jeT0iLjciIG51bU9jdGF2ZXM9IjMiLz48L2ZpbHRlcj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWx0ZXI9InVybCgjZikiIG9wYWNpdHk9IjAuMDMiLz48L3N2Zz4=');
+            background-repeat: repeat;
+            opacity: 0.15;
+            pointer-events: none;
+            z-index: 0;
         }
 
         .container {
             max-width: 1500px;
             margin: 0 auto;
+            position: relative;
+            z-index: 2;
         }
 
-        /* Шапка */
+        /* ГЛОССИ ШАПКА */
         .header {
             text-align: center;
-            margin-bottom: 40px;
+            margin-bottom: 50px;
+            position: relative;
         }
 
         .header h1 {
-            font-size: 2.6rem;
-            background: linear-gradient(135deg, #ffd89b, #ff7b2c);
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #ffffff 0%, #aaaaaa 40%, #444444 100%);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
-            letter-spacing: -0.5px;
-            text-shadow: 0 2px 10px rgba(255, 100, 0, 0.3);
+            letter-spacing: -1px;
+            text-shadow: 0 0 30px rgba(255,255,255,0.15);
         }
 
         .badge {
             display: inline-block;
-            background: rgba(44, 62, 47, 0.7);
-            backdrop-filter: blur(8px);
-            padding: 6px 16px;
+            background: rgba(10, 10, 15, 0.7);
+            backdrop-filter: blur(20px);
+            padding: 6px 20px;
             border-radius: 60px;
-            font-size: 0.8rem;
-            margin-top: 12px;
-            border: 1px solid rgba(255, 140, 66, 0.4);
+            font-size: 0.75rem;
+            margin-top: 15px;
+            border: 1px solid rgba(255,255,255,0.12);
+            color: #aaa;
+            font-weight: 500;
         }
 
         .badge.admin-mode {
-            background: #8B4513cc;
-            color: #FFE0A3;
-            box-shadow: 0 0 12px rgba(255, 100, 0, 0.6);
-            border-color: #ffaa44;
+            background: rgba(0, 0, 0, 0.85);
+            border-color: #ffaa33;
+            color: #ffcc77;
+            box-shadow: 0 0 20px rgba(255, 170, 51, 0.3);
         }
 
-        /* Сетка карточек */
+        /* СЕТКА */
         .cars-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
-            gap: 28px;
-            margin: 20px 0 30px;
+            gap: 32px;
+            margin: 30px 0 40px;
         }
 
-        /* КАРТОЧКА — БЛЕСТЯЩИЙ ДИЗАЙН */
+        /* КАРТОЧКА — ЖИДКОЕ СТЕКЛО + ХРОМ */
         .car-card {
-            background: rgba(15, 25, 35, 0.75);
-            backdrop-filter: blur(12px);
-            border-radius: 36px;
-            padding: 22px;
-            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 120, 40, 0.25);
-            transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            background: rgba(6, 8, 12, 0.65);
+            backdrop-filter: blur(16px);
+            border-radius: 48px;
+            padding: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255,255,255,0.05);
+            transition: all 0.35s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Эффект жидкого стекла (глянцевый блик) */
+        .car-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -60%;
+            width: 180%;
+            height: 180%;
+            background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0) 70%);
+            transform: rotate(25deg);
+            pointer-events: none;
+            transition: opacity 0.5s;
         }
 
         .car-card:hover {
-            transform: translateY(-6px);
-            border-color: rgba(255, 120, 40, 0.6);
-            box-shadow: 0 25px 40px -12px black;
-            background: rgba(20, 32, 45, 0.85);
+            transform: translateY(-8px);
+            border-color: rgba(255, 170, 51, 0.5);
+            box-shadow: 0 30px 50px -15px black, inset 0 1px 1px rgba(255,255,255,0.1);
+            background: rgba(8, 12, 18, 0.8);
         }
 
-        /* ГАЛЕРЕЯ — ТОЛЬКО ТОЧКИ */
+        /* ГАЛЕРЕЯ */
         .gallery-wrapper {
             position: relative;
             margin-bottom: 12px;
-            border-radius: 28px;
+            border-radius: 32px;
             overflow: hidden;
         }
 
@@ -113,95 +163,74 @@
             width: 100%;
             height: 220px;
             object-fit: cover;
-            background: #0f151f;
-            border-radius: 24px;
-            transition: transform 0.2s;
+            background: #05080c;
+            border-radius: 28px;
+            transition: all 0.2s;
         }
 
-        /* ТОЧКИ (красивые, светящиеся) */
+        /* ТОЧКИ — СТИЛЬНЫЕ, ХРОМ */
         .gallery-dots {
             display: flex;
             justify-content: center;
             gap: 12px;
-            margin-top: 14px;
+            margin-top: 16px;
             margin-bottom: 6px;
         }
 
         .dot {
-            width: 8px;
-            height: 8px;
+            width: 7px;
+            height: 7px;
             border-radius: 50%;
-            background: rgba(220, 220, 255, 0.35);
-            transition: all 0.2s ease;
+            background: rgba(150, 150, 170, 0.5);
+            transition: all 0.25s ease;
             cursor: pointer;
-            box-shadow: 0 0 2px rgba(0,0,0,0.3);
         }
 
         .dot.active {
-            background: #ffaa44;
-            width: 24px;
+            background: #ffbb44;
+            width: 28px;
             border-radius: 20px;
-            box-shadow: 0 0 8px #ffaa66;
+            box-shadow: 0 0 10px #ffaa44;
         }
 
-        /* Кнопка добавления фото (админ) */
-        .add-photo-btn {
-            background: rgba(58, 124, 165, 0.8);
-            border: 1px solid #5fa5cc;
-            color: white;
-            padding: 8px 12px;
-            border-radius: 60px;
-            font-size: 0.7rem;
-            font-weight: 600;
-            cursor: pointer;
-            width: 100%;
-            margin: 10px 0 5px;
-            backdrop-filter: blur(4px);
-            transition: 0.2s;
-        }
-
-        .add-photo-btn:hover {
-            background: #3a7ca5;
-            border-color: #ffaa66;
-        }
-
-        /* Название машины */
+        /* НАЗВАНИЕ */
         .car-name {
-            font-size: 1.7rem;
+            font-size: 1.75rem;
             font-weight: 700;
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid #ff7b2c;
+            align-items: baseline;
+            border-bottom: 1px solid rgba(255, 140, 66, 0.5);
             padding-bottom: 10px;
-            margin: 12px 0 12px;
+            margin: 16px 0 12px;
             letter-spacing: -0.3px;
         }
 
-        /* Номерной знак (стильный) */
+        /* Плашка номера */
         .car-plate {
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(4px);
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-family: monospace;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(12px);
+            padding: 6px 18px;
+            border-radius: 40px;
+            font-family: 'JetBrains Mono', monospace;
             font-size: 0.85rem;
             font-weight: 500;
             letter-spacing: 1px;
             border: 1px solid #ffaa55;
-            color: #ffcc88;
+            color: #ffdd99;
             display: inline-block;
-            margin: 8px 0 4px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            margin: 6px 0 10px;
+            box-shadow: 0 0 8px rgba(0,0,0,0.5);
         }
 
-        /* Характеристики */
+        /* ХАРАКТЕРИСТИКИ */
         .specs {
-            background: rgba(0, 0, 0, 0.4);
-            border-radius: 24px;
-            padding: 12px 16px;
+            background: rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(8px);
+            border-radius: 28px;
+            padding: 14px 18px;
             margin: 14px 0;
-            backdrop-filter: blur(2px);
+            border: 1px solid rgba(255,255,255,0.03);
         }
 
         .spec-item {
@@ -209,126 +238,117 @@
             justify-content: space-between;
             padding: 10px 0;
             border-bottom: 1px solid rgba(255, 140, 66, 0.2);
-            font-size: 0.9rem;
-        }
-
-        .spec-item:last-child {
-            border-bottom: none;
+            font-size: 0.85rem;
+            font-weight: 400;
         }
 
         .price {
             color: #ffcc77;
             font-weight: 800;
             font-size: 1.1rem;
-            text-shadow: 0 0 4px #ff9900;
+            text-shadow: 0 0 6px #ff8800;
         }
 
-        /* Нитро бейджи */
         .nitro-badge {
-            padding: 4px 12px;
-            border-radius: 40px;
+            padding: 4px 14px;
+            border-radius: 60px;
             font-size: 0.7rem;
-            font-weight: bold;
-            background: #ff6600;
-            color: black;
+            font-weight: 800;
+            background: #222;
         }
 
-        .nitro-x2 { background: #1f5a2e; color: #b3ffaa; }
-        .nitro-x5 { background: #b45f1b; color: #ffe6aa; }
-        .nitro-x10 { background: #a13a3a; color: #ffb3b3; text-shadow: 0 0 2px red; }
+        .nitro-x2 { background: #1f4a2a; color: #b3ffaa; box-shadow: inset 0 0 6px #44ff44; }
+        .nitro-x5 { background: #6e3c0c; color: #ffdd88; box-shadow: inset 0 0 6px #ffaa33; }
+        .nitro-x10 { background: #660000; color: #ffaaaa; box-shadow: inset 0 0 6px #ff3333; }
 
         .tune-tag {
-            background: #2c5a7a;
-            padding: 4px 12px;
-            border-radius: 50px;
+            background: #101a24;
+            padding: 4px 14px;
+            border-radius: 60px;
             font-size: 0.7rem;
             font-weight: 500;
             margin: 3px;
             display: inline-block;
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.1);
+            border: 0.5px solid #ffaa5533;
         }
 
-        /* Кнопки админа */
+        /* АДМИН КНОПКИ */
         .action-buttons {
             display: flex;
-            gap: 12px;
-            margin-top: 18px;
+            gap: 14px;
+            margin-top: 20px;
         }
 
-        .edit-btn, .delete-btn {
+        .edit-btn, .delete-btn, .add-photo-btn {
             flex: 1;
             padding: 10px;
             border-radius: 60px;
-            border: none;
-            font-weight: bold;
+            font-weight: 600;
             cursor: pointer;
+            background: rgba(20, 28, 36, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: white;
             transition: 0.2s;
-            font-size: 0.85rem;
         }
 
-        .edit-btn { background: #3a7ca5; color: white; box-shadow: 0 2px 6px #1a4a6a; }
-        .delete-btn { background: #8b2c2c; color: white; box-shadow: 0 2px 6px #4a1a1a; }
+        .edit-btn:hover { background: #2a5f7a; border-color: #88ccff; }
+        .delete-btn:hover { background: #8b2c2c; border-color: #ff8866; }
+        .add-photo-btn { background: #1a2a33; margin-top: 8px; }
+        .add-photo-btn:hover { background: #2a4a5a; }
 
-        .edit-btn:active, .delete-btn:active { transform: scale(0.97); }
-
-        /* Админ панель */
+        /* АДМИН ПАНЕЛЬ - ЧЁРНОЕ СТЕКЛО */
         .admin-panel {
-            background: rgba(16, 22, 30, 0.9);
-            backdrop-filter: blur(12px);
-            border-radius: 40px;
-            padding: 24px;
-            margin-bottom: 36px;
-            border: 1px solid #ff8c42;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-
-        .admin-form .form-row {
-            display: flex;
-            gap: 14px;
-            flex-wrap: wrap;
-            margin-bottom: 8px;
+            background: rgba(2, 4, 8, 0.85);
+            backdrop-filter: blur(24px);
+            border-radius: 48px;
+            padding: 28px;
+            margin-bottom: 40px;
+            border: 1px solid rgba(255, 120, 40, 0.3);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
         }
 
         .admin-form input, .admin-form select, .admin-form textarea {
-            background: #111c24;
-            border: 1px solid #2c4a5a;
-            padding: 10px 16px;
+            background: #050a10;
+            border: 1px solid #222a30;
+            padding: 12px 18px;
             border-radius: 60px;
             color: white;
             width: 100%;
         }
 
         .checkbox-group {
+            background: #050a10;
+            border-radius: 60px;
+            padding: 10px 20px;
             display: flex;
             flex-wrap: wrap;
             gap: 16px;
-            background: #111c24;
-            padding: 10px 18px;
-            border-radius: 60px;
         }
 
         .admin-form button {
             background: #ff7b2c;
+            border: none;
+            font-weight: bold;
             padding: 12px;
             border-radius: 60px;
-            font-weight: bold;
-            border: none;
-            cursor: pointer;
         }
 
         .empty-state {
             text-align: center;
             padding: 70px;
-            background: rgba(0,0,0,0.3);
-            border-radius: 48px;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(12px);
+            border-radius: 60px;
             color: #aaa;
         }
 
         footer {
-            margin-top: 40px;
+            margin-top: 50px;
             text-align: center;
             font-size: 0.7rem;
-            opacity: 0.6;
+            opacity: 0.4;
+            letter-spacing: 1px;
         }
 
         .modal-overlay {
@@ -337,82 +357,65 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.96);
-            backdrop-filter: blur(14px);
+            background: rgba(0, 0, 0, 0.98);
+            backdrop-filter: blur(20px);
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 2000;
+            z-index: 3000;
         }
 
         .modal-content {
-            background: #14222b;
-            border-radius: 48px;
-            padding: 28px;
+            background: #0a0e14;
+            border-radius: 56px;
+            padding: 30px;
             width: 90%;
             max-width: 500px;
-            border: 1px solid #ffaa55;
+            border: 1px solid #ffaa44;
+            box-shadow: 0 0 35px rgba(0,0,0,0.8);
         }
-        .info-text { font-size: 0.7rem; color: #bbb; margin-top: 6px; }
     </style>
 </head>
 <body>
 <div class="container">
     <div class="header">
-        <h1>🏁 Мой автопарк | BLACK RUSSIA 🏎️</h1>
-        <div id="adminBadge" class="badge">👤 Гость</div>
+        <h1>⚡ BLACK RUSSIA ⚡</h1>
+        <div id="adminBadge" class="badge">▸ GUEST MODE ◂</div>
     </div>
 
-    <!-- Админ панель -->
     <div id="adminZone" style="display: none;">
         <div class="admin-panel">
-            <h3>🔧 Админ-панель</h3>
+            <h3 style="margin-bottom: 16px;">⛓️ АДМИН-ПАНЕЛЬ</h3>
             <div class="admin-form">
-                <div class="form-row">
-                    <input type="text" id="carName" placeholder="Название машины" style="flex:2">
+                <div class="form-row" style="display:flex; gap:12px; flex-wrap:wrap;">
+                    <input type="text" id="carName" placeholder="Название" style="flex:2">
                     <input type="text" id="carImage" placeholder="Фото (ссылки через |)">
                 </div>
-                <div class="form-row">
+                <div style="display:flex; gap:12px; flex-wrap:wrap;">
                     <input type="number" id="price" placeholder="Цена">
                     <input type="number" id="accelerationNoNitro" placeholder="Разгон без нитро" step="0.1">
                     <input type="number" id="accelerationWithNitro" placeholder="Разгон с нитро" step="0.1">
                 </div>
-                <div class="form-row">
+                <div style="display:flex; gap:12px; flex-wrap:wrap;">
                     <input type="number" id="topSpeed" placeholder="Максималка">
-                    <select id="nitroType">
-                        <option value="none">❌ Без нитро</option>
-                        <option value="x2">🔥 x2</option>
-                        <option value="x5">💥 x5</option>
-                        <option value="x10">⚡ x10</option>
-                    </select>
-                    <select id="plateCountry">
-                        <option value="none">🌍 Без номера</option>
-                        <option value="ru">🇷🇺 Россия</option>
-                        <option value="ua">🇺🇦 Украина</option>
-                        <option value="by">🇧🇾 Беларусь</option>
-                        <option value="kz">🇰🇿 Казахстан</option>
-                    </select>
+                    <select id="nitroType"><option value="none">Нет нитро</option><option value="x2">x2</option><option value="x5">x5</option><option value="x10">x10</option></select>
+                    <select id="plateCountry"><option value="none">Без номера</option><option value="ru">🇷🇺 Россия</option><option value="ua">🇺🇦 Украина</option><option value="by">🇧🇾 Беларусь</option><option value="kz">🇰🇿 Казахстан</option></select>
                 </div>
-                <div class="form-row">
-                    <input type="text" id="plateNumber" placeholder="Гос номер">
-                </div>
+                <input type="text" id="plateNumber" placeholder="Гос номер">
                 <div class="checkbox-group">
-                    <label><input type="checkbox" value="Спорт"> 🏁 Спорт</label>
-                    <label><input type="checkbox" value="Спорт+"> 🔥 Спорт+</label>
-                    <label><input type="checkbox" value="Комфорт"> ☁️ Комфорт</label>
-                    <label><input type="checkbox" value="Дрифт"> 💨 Дрифт</label>
+                    <label><input type="checkbox" value="Спорт"> Спорт</label>
+                    <label><input type="checkbox" value="Спорт+"> Спорт+</label>
+                    <label><input type="checkbox" value="Комфорт"> Комфорт</label>
+                    <label><input type="checkbox" value="Дрифт"> Дрифт</label>
                 </div>
                 <textarea id="otherSpecs" rows="2" placeholder="Доп. характеристики"></textarea>
-                <button id="createCarBtn">➕ Добавить машину</button>
-                <div class="info-text">📸 Несколько фото через | (вертикальная черта)</div>
+                <button id="createCarBtn">➕ СОЗДАТЬ</button>
             </div>
         </div>
     </div>
 
-    <div id="carsContainer" class="cars-grid">
-        <div class="empty-state">🏎️ Загрузка...</div>
-    </div>
-    <footer>🔐 Админ: ?key=14881161 | Листай фото — стильные точки внизу</footer>
+    <div id="carsContainer" class="cars-grid"><div class="empty-state">ЗАГРУЗКА АВТОПАРКА...</div></div>
+    <footer>⚙️ АДМИН: ?key=14881161 | ЖИДКОЕ СТЕКЛО • ЧЁРНЫЙ ХРОМ</footer>
 </div>
 
 <script>
@@ -424,231 +427,145 @@
         messagingSenderId: "1080576728275",
         appId: "1:1080576728275:web:efdb524baf64d8bd9ac826"
     };
-
-    let database, carsRef;
-    try {
-        const app = firebase.initializeApp(firebaseConfig);
-        database = firebase.database();
-        carsRef = database.ref('cars');
-    } catch(e) { console.error(e); }
+    let db, carsRef;
+    try { const app = firebase.initializeApp(firebaseConfig); db = firebase.database(); carsRef = db.ref('cars'); } catch(e) { console.error(e); }
 
     const ADMIN_KEY = "14881161";
-    let isAdminMode = false;
-    let allCars = [];
+    let admin = false, allCars = [];
 
-    // ГОСТ валидация (краткая)
-    function validatePlateNumber(country, number) {
-        if (!number || country === 'none') return true;
-        const clean = number.toUpperCase().replace(/\s/g, '');
-        if (country === 'ru') return /^[АВЕКМНОРСТУХABEKMHOPCTYX]{1}\d{3}[АВЕКМНОРСТУХABEKMHOPCTYX]{2}\d{2,3}$/i.test(clean);
-        if (country === 'ua') return /^[A-Z]{2}\d{4}[A-Z]{2}\d{2}$/i.test(clean);
-        if (country === 'by') return clean.length >= 5;
-        if (country === 'kz') return /^[A-Z]{3}\d{3}$|^\d{3}[A-Z]{3}$/i.test(clean);
+    function validatePlate(country, num) {
+        if (!num || country === 'none') return true;
+        const c = num.toUpperCase().replace(/\s/g, '');
+        if (country === 'ru') return /^[АВЕКМНОРСТУХ]{1}\d{3}[АВЕКМНОРСТУХ]{2}\d{2,3}$/i.test(c);
+        if (country === 'ua') return /^[A-Z]{2}\d{4}[A-Z]{2}\d{2}$/i.test(c);
+        if (country === 'by') return c.length >= 5;
+        if (country === 'kz') return /^[A-Z]{3}\d{3}$|^\d{3}[A-Z]{3}$/i.test(c);
         return true;
     }
 
-    function formatPlateForDisplay(country, number) {
-        if (!number || country !== 'ru') return number?.toUpperCase() || '';
-        let clean = number.toUpperCase();
-        if (clean.length >= 6) return `${clean.substring(0,1)}${clean.substring(1,4)}${clean.substring(4,6)} ${clean.substring(6)}`;
-        return clean;
+    function formatPlate(country, num) {
+        if (!num || country !== 'ru') return num?.toUpperCase() || '';
+        let n = num.toUpperCase();
+        if(n.length >= 6) return `${n[0]}${n.substr(1,3)}${n.substr(4,2)} ${n.substr(6)}`;
+        return n;
     }
 
-    function getCountryFlag(code) { const f = { ua:"🇺🇦", by:"🇧🇾", ru:"🇷🇺", kz:"🇰🇿" }; return f[code] || "🌍"; }
-    function getNitroClass(t) { return t === 'x2' ? 'nitro-x2' : t === 'x5' ? 'nitro-x5' : t === 'x10' ? 'nitro-x10' : ''; }
-    function getNitroText(t) { return t === 'x2' ? '🔥 x2' : t === 'x5' ? '💥 x5' : t === 'x10' ? '⚡ x10' : '❌ Нет'; }
-    function formatPrice(p) { return p ? p.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " ₽" : "?"; }
-    function escapeHtml(s) { if(!s) return ''; return String(s).replace(/[&<>]/g, m=>m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'); }
-    
-    function showMessage(t, type="error") { 
-        let d = document.createElement('div'); 
-        d.style.cssText = `position:fixed;bottom:20px;right:20px;background:${type==='success'?'#00aa55':'#ff4444'};color:white;padding:10px 20px;border-radius:40px;z-index:9999`; 
-        d.textContent = t; 
-        document.body.appendChild(d); 
-        setTimeout(()=>d.remove(),3000); 
-    }
+    function flag(c) { const f={ua:"🇺🇦",by:"🇧🇾",ru:"🇷🇺",kz:"🇰🇿"}; return f[c]||"🌍"; }
+    function nitroClass(t) { return t==='x2'?'nitro-x2':t==='x5'?'nitro-x5':t==='x10'?'nitro-x10':''; }
+    function nitroText(t) { return t==='x2'?'x2':t==='x5'?'x5':t==='x10'?'x10':'нет'; }
+    function priceFmt(p) { return p ? p.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " ₽" : "?"; }
+    function esc(s) { if(!s)return ''; return String(s).replace(/[&<>]/g,m=>m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'); }
+    function msg(t,type="error"){ let d=document.createElement('div'); d.style.cssText=`position:fixed;bottom:20px;right:20px;background:${type==='success'?'#00aa55':'#ff4444'};color:white;padding:10px 20px;border-radius:40px;z-index:9999`; d.textContent=t; document.body.appendChild(d); setTimeout(()=>d.remove(),3000); }
 
-    function checkAdminAccess() {
-        let urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('key') === ADMIN_KEY) {
-            isAdminMode = true;
+    function checkAdmin() {
+        if(new URLSearchParams(location.search).get('key') === ADMIN_KEY) {
+            admin = true;
             document.getElementById('adminZone').style.display = 'block';
-            document.getElementById('adminBadge').innerHTML = '👑 АДМИН';
+            document.getElementById('adminBadge').innerHTML = '◈ ADMIN MODE ◈';
             document.getElementById('adminBadge').classList.add('admin-mode');
-        } else {
-            isAdminMode = false;
-            document.getElementById('adminZone').style.display = 'none';
-            document.getElementById('adminBadge').innerHTML = '👤 Гость';
-        }
-        renderCars();
+        } else { admin = false; document.getElementById('adminZone').style.display = 'none'; document.getElementById('adminBadge').innerHTML = '▸ GUEST MODE ◂'; }
+        renderAll();
     }
 
-    function getImageUrls(field) {
-        if (!field) return ['https://via.placeholder.com/500x240?text=No+Image'];
-        if (field.includes('|')) return field.split('|').map(u=>u.trim()).filter(u=>u);
-        return [field];
+    function getImages(imgField) {
+        if(!imgField) return ['https://via.placeholder.com/500x240?text=NO+PHOTO'];
+        if(imgField.includes('|')) return imgField.split('|').map(s=>s.trim()).filter(s=>s);
+        return [imgField];
     }
 
-    function initGalleryDots(containerId, dotWrapperId) {
-        const container = document.getElementById(containerId);
-        if (!container) return;
-        const dots = document.getElementById(dotWrapperId)?.querySelectorAll('.dot');
-        if (!dots || dots.length === 0) return;
-        const updateActive = () => {
-            const scrollLeft = container.scrollLeft;
-            const scrollWidth = container.scrollWidth;
-            const clientWidth = container.clientWidth;
+    function initDots(containerId, dotWrapId) {
+        const cont = document.getElementById(containerId); if(!cont) return;
+        const dots = document.getElementById(dotWrapId)?.querySelectorAll('.dot');
+        if(!dots || !dots.length) return;
+        const update = () => {
             let idx = 0;
-            if (scrollWidth > clientWidth) {
-                idx = Math.round((scrollLeft / (scrollWidth - clientWidth)) * (dots.length - 1));
-            }
-            dots.forEach((dot, i) => {
-                if (i === idx) dot.classList.add('active');
-                else dot.classList.remove('active');
-            });
+            const sw = cont.scrollWidth, cw = cont.clientWidth;
+            if(sw > cw) idx = Math.round((cont.scrollLeft / (sw - cw)) * (dots.length-1));
+            dots.forEach((d,i)=> i===idx ? d.classList.add('active') : d.classList.remove('active'));
         };
-        container.addEventListener('scroll', updateActive);
-        setTimeout(updateActive, 50);
-        dots.forEach((dot, i) => {
-            dot.addEventListener('click', () => {
-                const scrollStep = (container.scrollWidth - container.clientWidth) / (dots.length - 1);
-                container.scrollTo({ left: scrollStep * i, behavior: 'smooth' });
-            });
-        });
+        cont.addEventListener('scroll', update);
+        setTimeout(update, 60);
+        dots.forEach((d,i)=> d.addEventListener('click',()=>{ cont.scrollTo({ left: (cont.scrollWidth - cont.clientWidth)/(dots.length-1)*i, behavior:'smooth' }); }));
     }
 
-    function renderCars() {
-        let container = document.getElementById('carsContainer');
-        if (!allCars.length) { container.innerHTML = '<div class="empty-state">✨ Автопарк пуст, но скоро здесь появятся легенды</div>'; return; }
+    function renderAll() {
+        const container = document.getElementById('carsContainer');
+        if(!allCars.length) { container.innerHTML = '<div class="empty-state">◈ АВТОПАРК ПУСТ ◈</div>'; return; }
         container.innerHTML = '';
         allCars.forEach(car => {
-            let imageUrls = getImageUrls(car.imageUrl);
-            let tuneHtml = car.tunes?.length ? `<div class="spec-item"><strong>🔧 Прошивки:</strong><div>${car.tunes.map(t=>`<span class="tune-tag">${escapeHtml(t)}</span>`).join('')}</div></div>` : '';
-            let plateRaw = (car.plateCountry && car.plateNumber && car.plateCountry !== 'none') ? `<div class="car-plate">${getCountryFlag(car.plateCountry)} ${escapeHtml(formatPlateForDisplay(car.plateCountry, car.plateNumber))}</div>` : '';
-            
-            let dotsHtml = '';
-            if (imageUrls.length > 1) {
-                dotsHtml = `<div class="gallery-dots" id="dots-${car.id}">${imageUrls.map((_,idx) => `<div class="dot ${idx===0?'active':''}"></div>`).join('')}</div>`;
-            }
-            
-            let addPhotoBtn = '';
-            if (isAdminMode) addPhotoBtn = `<button class="add-photo-btn" data-id="${car.id}" data-current="${escapeHtml(car.imageUrl || '')}">➕ Добавить фото</button>`;
-
-            const cardDiv = document.createElement('div');
-            cardDiv.className = 'car-card';
-            cardDiv.innerHTML = `
+            const urls = getImages(car.imageUrl);
+            const tunesHtml = car.tunes?.length ? `<div class="spec-item"><strong>⚙️ ПРОШИВКИ</strong><div>${car.tunes.map(t=>`<span class="tune-tag">${esc(t)}</span>`).join('')}</div></div>` : '';
+            const plateHtml = (car.plateCountry && car.plateNumber && car.plateCountry!=='none') ? `<div class="car-plate">${flag(car.plateCountry)} ${esc(formatPlate(car.plateCountry, car.plateNumber))}</div>` : '';
+            const dotsHtml = urls.length>1 ? `<div class="gallery-dots" id="dots-${car.id}">${urls.map((_,i)=>`<div class="dot ${i===0?'active':''}"></div>`).join('')}</div>` : '';
+            const addBtn = admin ? `<button class="add-photo-btn" data-id="${car.id}" data-curr="${esc(car.imageUrl||'')}">➕ ДОБАВИТЬ ФОТО</button>` : '';
+            const card = document.createElement('div'); card.className = 'car-card';
+            card.innerHTML = `
                 <div class="gallery-wrapper">
-                    <div class="gallery-container" id="gallery-${car.id}">
-                        ${imageUrls.map(url => `<img class="gallery-img" src="${escapeHtml(url)}" onerror="this.src='https://via.placeholder.com/500x240?text=Error'" loading="lazy">`).join('')}
-                    </div>
+                    <div class="gallery-container" id="gallery-${car.id}">${urls.map(u=>`<img class="gallery-img" src="${esc(u)}" onerror="this.src='https://via.placeholder.com/500x240?text=ERROR'" loading="lazy">`).join('')}</div>
                     ${dotsHtml}
                 </div>
-                ${addPhotoBtn}
-                <div class="car-name">
-                    <span>${escapeHtml(car.name)}</span>
-                    ${car.nitroType !== 'none' ? `<span class="nitro-badge ${getNitroClass(car.nitroType)}">${getNitroText(car.nitroType)}</span>` : ''}
-                </div>
-                ${plateRaw}
+                ${addBtn}
+                <div class="car-name"><span>${esc(car.name)}</span>${car.nitroType !== 'none' ? `<span class="nitro-badge ${nitroClass(car.nitroType)}">${nitroText(car.nitroType)}</span>` : ''}</div>
+                ${plateHtml}
                 <div class="specs">
-                    <div class="spec-item"><strong>💰 Цена:</strong><span class="price">${formatPrice(car.price)}</span></div>
-                    <div class="spec-item"><strong>⚡ Разгон 0-100:</strong><span>без нитро: ${car.accelerationNoNitro ?? '?'} сек / с нитро: ${car.accelerationWithNitro ?? '?'} сек</span></div>
-                    <div class="spec-item"><strong>📈 Максималка:</strong><span>${car.topSpeed ?? '?'} км/ч</span></div>
-                    ${car.nitroType !== 'none' ? `<div class="spec-item"><strong>💨 Нитро:</strong><span class="${getNitroClass(car.nitroType)}">${getNitroText(car.nitroType)}</span></div>` : ''}
-                    ${tuneHtml}
-                    ${car.otherSpecs ? `<div class="spec-item"><strong>📝 Характеристики:</strong><br>${escapeHtml(car.otherSpecs)}</div>` : ''}
+                    <div class="spec-item"><strong>💰 ЦЕНА</strong><span class="price">${priceFmt(car.price)}</span></div>
+                    <div class="spec-item"><strong>⚡ 0-100</strong><span>без нитро: ${car.accelerationNoNitro??'?'}c / с нитро: ${car.accelerationWithNitro??'?'}c</span></div>
+                    <div class="spec-item"><strong>📈 МАКСИМАЛКА</strong><span>${car.topSpeed??'?'} км/ч</span></div>
+                    ${car.nitroType !== 'none' ? `<div class="spec-item"><strong>💨 НИТРО</strong><span class="${nitroClass(car.nitroType)}">${nitroText(car.nitroType)}</span></div>` : ''}
+                    ${tunesHtml}
+                    ${car.otherSpecs ? `<div class="spec-item"><strong>🔧 ХАРАКТЕРИСТИКИ</strong><br>${esc(car.otherSpecs)}</div>` : ''}
                 </div>
-                ${isAdminMode ? `<div class="action-buttons"><button class="edit-btn" data-id="${car.id}">✏️ Ред.</button><button class="delete-btn" data-id="${car.id}">🗑 Удал.</button></div>` : ''}
+                ${admin ? `<div class="action-buttons"><button class="edit-btn" data-id="${car.id}">✏️ РЕД.</button><button class="delete-btn" data-id="${car.id}">🗑 УДАЛИТЬ</button></div>` : ''}
             `;
-            container.appendChild(cardDiv);
-            if (imageUrls.length > 1) setTimeout(() => initGalleryDots(`gallery-${car.id}`, `dots-${car.id}`), 30);
+            container.appendChild(card);
+            if(urls.length>1) setTimeout(()=>initDots(`gallery-${car.id}`,`dots-${car.id}`), 30);
         });
-
-        if (isAdminMode) {
-            document.querySelectorAll('.edit-btn').forEach(btn => btn.addEventListener('click', (e) => { let id = btn.dataset.id; let car = allCars.find(c=>c.id===id); if(car) editCar(id,car); }));
-            document.querySelectorAll('.delete-btn').forEach(btn => btn.addEventListener('click', (e) => { let id = btn.dataset.id; if(confirm('Удалить навсегда?')) carsRef.child(id).remove(); }));
-            document.querySelectorAll('.add-photo-btn').forEach(btn => btn.addEventListener('click', (e) => {
-                let id = btn.dataset.id;
-                let current = btn.dataset.current;
-                let newUrl = prompt("Введите ссылку на фото (можно новую)");
-                if (newUrl && newUrl.trim()) {
-                    let updated = current ? current + '|' + newUrl.trim() : newUrl.trim();
-                    carsRef.child(id).update({ imageUrl: updated }).then(() => showMessage("✅ Фото добавлено","success"));
-                }
+        if(admin) {
+            document.querySelectorAll('.edit-btn').forEach(btn=>btn.addEventListener('click',()=>{ let id=btn.dataset.id; let c=allCars.find(x=>x.id===id); if(c) editCar(id,c); }));
+            document.querySelectorAll('.delete-btn').forEach(btn=>btn.addEventListener('click',()=>{ if(confirm('УДАЛИТЬ?')) carsRef.child(btn.dataset.id).remove(); }));
+            document.querySelectorAll('.add-photo-btn').forEach(btn=>btn.addEventListener('click',()=>{
+                let id=btn.dataset.id, cur=btn.dataset.curr, newUrl=prompt('ССЫЛКА НА ФОТО:');
+                if(newUrl && newUrl.trim()) carsRef.child(id).update({ imageUrl: cur ? cur+'|'+newUrl.trim() : newUrl.trim() }).then(()=>msg('✅ ФОТО ДОБАВЛЕНО','success'));
             }));
         }
     }
 
     function editCar(id, data) {
-        let modal = document.createElement('div'); modal.className = 'modal-overlay';
-        modal.innerHTML = `<div class="modal-content"><h3>✏️ Редактировать</h3>
-            <div class="admin-form">
-                <input id="eName" value="${escapeHtml(data.name)}" placeholder="Название">
-                <input id="eImg" value="${escapeHtml(data.imageUrl||'')}" placeholder="Фото (через |)">
-                <input id="ePrice" type="number" value="${data.price||''}" placeholder="Цена">
-                <input id="eAccNo" type="number" step="0.1" value="${data.accelerationNoNitro||''}" placeholder="Разгон без нитро">
-                <input id="eAccWith" type="number" step="0.1" value="${data.accelerationWithNitro||''}" placeholder="Разгон с нитро">
-                <input id="eTop" type="number" value="${data.topSpeed||''}" placeholder="Максималка">
-                <select id="eNitro"><option value="none">Без нитро</option><option value="x2" ${data.nitroType==='x2'?'selected':''}>x2</option><option value="x5" ${data.nitroType==='x5'?'selected':''}>x5</option><option value="x10" ${data.nitroType==='x10'?'selected':''}>x10</option></select>
-                <select id="eCountry"><option value="none">🌍 Без номера</option><option value="ru" ${data.plateCountry==='ru'?'selected':''}>Россия</option><option value="ua" ${data.plateCountry==='ua'?'selected':''}>Украина</option><option value="by" ${data.plateCountry==='by'?'selected':''}>Беларусь</option><option value="kz" ${data.plateCountry==='kz'?'selected':''}>Казахстан</option></select>
-                <input id="ePlate" value="${escapeHtml(data.plateNumber||'')}" placeholder="Гос номер">
-                <div class="checkbox-group"><label><input type="checkbox" value="Спорт" ${data.tunes?.includes('Спорт')?'checked':''}> Спорт</label><label><input type="checkbox" value="Спорт+" ${data.tunes?.includes('Спорт+')?'checked':''}> Спорт+</label><label><input type="checkbox" value="Комфорт" ${data.tunes?.includes('Комфорт')?'checked':''}> Комфорт</label><label><input type="checkbox" value="Дрифт" ${data.tunes?.includes('Дрифт')?'checked':''}> Дрифт</label></div>
-                <textarea id="eOther">${escapeHtml(data.otherSpecs||'')}</textarea>
-                <button id="saveEditBtn">💾 Сохранить</button>
-                <button id="cancelBtn" style="background:#555;">Отмена</button>
-            </div></div>`;
+        const modal = document.createElement('div'); modal.className = 'modal-overlay';
+        modal.innerHTML = `<div class="modal-content"><h3 style="margin-bottom:16px;">⛓️ РЕДАКТОР</h3>
+            <div class="admin-form"><input id="eName" value="${esc(data.name)}" placeholder="Название"><input id="eImg" value="${esc(data.imageUrl||'')}" placeholder="Фото (через |)">
+            <input id="ePrice" type="number" value="${data.price||''}" placeholder="Цена"><input id="eAccN" type="number" step="0.1" value="${data.accelerationNoNitro||''}" placeholder="Разгон без нитро"><input id="eAccW" type="number" step="0.1" value="${data.accelerationWithNitro||''}" placeholder="Разгон с нитро">
+            <input id="eTop" type="number" value="${data.topSpeed||''}" placeholder="Максималка"><select id="eNitro"><option value="none">нет</option><option value="x2" ${data.nitroType==='x2'?'selected':''}>x2</option><option value="x5" ${data.nitroType==='x5'?'selected':''}>x5</option><option value="x10" ${data.nitroType==='x10'?'selected':''}>x10</option></select>
+            <select id="eCountry"><option value="none">без номера</option><option value="ru" ${data.plateCountry==='ru'?'selected':''}>Россия</option><option value="ua" ${data.plateCountry==='ua'?'selected':''}>Украина</option><option value="by" ${data.plateCountry==='by'?'selected':''}>Беларусь</option><option value="kz" ${data.plateCountry==='kz'?'selected':''}>Казахстан</option></select>
+            <input id="ePlate" value="${esc(data.plateNumber||'')}" placeholder="Номер"><div class="checkbox-group"><label><input type="checkbox" value="Спорт" ${data.tunes?.includes('Спорт')?'checked':''}> Спорт</label><label><input type="checkbox" value="Спорт+" ${data.tunes?.includes('Спорт+')?'checked':''}> Спорт+</label><label><input type="checkbox" value="Комфорт" ${data.tunes?.includes('Комфорт')?'checked':''}> Комфорт</label><label><input type="checkbox" value="Дрифт" ${data.tunes?.includes('Дрифт')?'checked':''}> Дрифт</label></div>
+            <textarea id="eOther">${esc(data.otherSpecs||'')}</textarea><button id="saveEditBtn">💾 СОХРАНИТЬ</button><button id="cancelBtn" style="background:#333;">ОТМЕНА</button></div></div>`;
         document.body.appendChild(modal);
         document.getElementById('saveEditBtn').onclick = () => {
-            let country = document.getElementById('eCountry').value;
-            let plate = document.getElementById('ePlate').value.trim();
-            if (!validatePlateNumber(country, plate)) { showMessage("❌ Неверный формат номера"); return; }
-            let tunes = Array.from(document.querySelectorAll('#eName ~ .checkbox-group input:checked')).map(cb=>cb.value);
-            let upd = {
-                name: document.getElementById('eName').value.trim(),
-                imageUrl: document.getElementById('eImg').value.trim(),
-                price: parseInt(document.getElementById('ePrice').value)||null,
-                accelerationNoNitro: parseFloat(document.getElementById('eAccNo').value)||null,
-                accelerationWithNitro: parseFloat(document.getElementById('eAccWith').value)||null,
-                topSpeed: parseInt(document.getElementById('eTop').value)||null,
-                nitroType: document.getElementById('eNitro').value,
-                plateCountry: country,
-                plateNumber: plate,
-                tunes: tunes,
-                otherSpecs: document.getElementById('eOther').value.trim()
-            };
-            if(!upd.name) { showMessage("Введите название"); return; }
-            carsRef.child(id).update(upd).then(()=>{ showMessage("✅ Сохранено","success"); modal.remove(); }).catch(e=>showMessage(e.message));
+            let c = document.getElementById('eCountry').value, p = document.getElementById('ePlate').value.trim();
+            if(!validatePlate(c, p)) { msg("❌ Неверный номер"); return; }
+            const tunes = Array.from(document.querySelectorAll('#eName ~ .checkbox-group input:checked')).map(cb=>cb.value);
+            const upd = { name: document.getElementById('eName').value.trim(), imageUrl: document.getElementById('eImg').value.trim(), price: parseInt(document.getElementById('ePrice').value)||null, accelerationNoNitro: parseFloat(document.getElementById('eAccN').value)||null, accelerationWithNitro: parseFloat(document.getElementById('eAccW').value)||null, topSpeed: parseInt(document.getElementById('eTop').value)||null, nitroType: document.getElementById('eNitro').value, plateCountry: c, plateNumber: p, tunes, otherSpecs: document.getElementById('eOther').value.trim() };
+            if(!upd.name) { msg("Введите название"); return; }
+            carsRef.child(id).update(upd).then(()=>{ msg("✅ Сохранено","success"); modal.remove(); });
         };
         document.getElementById('cancelBtn').onclick = () => modal.remove();
     }
 
     function createCar() {
-        if(!isAdminMode) return;
-        let country = document.getElementById('plateCountry').value;
-        let plate = document.getElementById('plateNumber').value.trim();
-        if (!validatePlateNumber(country, plate)) { showMessage("❌ Некорректный гос номер"); return; }
-        let tunes = Array.from(document.querySelectorAll('#adminZone .checkbox-group input:checked')).map(cb=>cb.value);
-        let newCar = {
-            name: document.getElementById('carName').value.trim(),
-            imageUrl: document.getElementById('carImage').value.trim(),
-            price: parseInt(document.getElementById('price').value)||null,
-            accelerationNoNitro: parseFloat(document.getElementById('accelerationNoNitro').value)||null,
-            accelerationWithNitro: parseFloat(document.getElementById('accelerationWithNitro').value)||null,
-            topSpeed: parseInt(document.getElementById('topSpeed').value)||null,
-            nitroType: document.getElementById('nitroType').value,
-            plateCountry: country,
-            plateNumber: plate,
-            tunes: tunes,
-            otherSpecs: document.getElementById('otherSpecs').value.trim()
-        };
-        if(!newCar.name) { showMessage("Введите название"); return; }
-        carsRef.push(newCar).then(() => { showMessage("✅ Машина добавлена","success"); Array.from(document.querySelectorAll('#adminZone input, #adminZone select, #adminZone textarea')).forEach(i=>{ if(i.type!=='checkbox') i.value=''; }); document.querySelectorAll('#adminZone .checkbox-group input').forEach(c=>c.checked=false); }).catch(e=>showMessage(e.message));
+        if(!admin) return;
+        let c = document.getElementById('plateCountry').value, p = document.getElementById('plateNumber').value.trim();
+        if(!validatePlate(c,p)) { msg("❌ Неверный формат номера"); return; }
+        const tunes = Array.from(document.querySelectorAll('#adminZone .checkbox-group input:checked')).map(cb=>cb.value);
+        const newCar = { name: document.getElementById('carName').value.trim(), imageUrl: document.getElementById('carImage').value.trim(), price: parseInt(document.getElementById('price').value)||null, accelerationNoNitro: parseFloat(document.getElementById('accelerationNoNitro').value)||null, accelerationWithNitro: parseFloat(document.getElementById('accelerationWithNitro').value)||null, topSpeed: parseInt(document.getElementById('topSpeed').value)||null, nitroType: document.getElementById('nitroType').value, plateCountry: c, plateNumber: p, tunes, otherSpecs: document.getElementById('otherSpecs').value.trim() };
+        if(!newCar.name) { msg("Введите название"); return; }
+        carsRef.push(newCar).then(()=>{ msg("✅ МАШИНА ДОБАВЛЕНА","success"); document.querySelectorAll('#adminZone input, #adminZone select, #adminZone textarea').forEach(i=>{ if(i.type!=='checkbox') i.value=''; }); document.querySelectorAll('#adminZone .checkbox-group input').forEach(c=>c.checked=false); });
     }
 
-    function subscribeCars() { if(carsRef) carsRef.on('value', snap => { let d=snap.val(); let list=[]; for(let k in d) list.push({id:k, ...d[k], tunes: d[k].tunes||[]}); list.reverse(); allCars=list; renderCars(); }); }
+    function subscribe() { if(carsRef) carsRef.on('value', snap=>{ let d=snap.val(); let arr=[]; for(let k in d) arr.push({id:k,...d[k], tunes: d[k].tunes||[]}); arr.reverse(); allCars=arr; renderAll(); }); }
 
     document.getElementById('createCarBtn')?.addEventListener('click', createCar);
-    subscribeCars();
-    checkAdminAccess();
+    subscribe();
+    checkAdmin();
 </script>
 </body>
 </html>
